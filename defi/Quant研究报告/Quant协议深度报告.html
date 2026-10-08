@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quant（QNT）协议深度报告（2026-10-05）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  .callout.quote { border-color: var(--c5); } .callout.quote b.t { color: var(--c5); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  .reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reason { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .reason.top { background: var(--fill); }
+  .reason b { display: block; margin: 6px 0 4px; }
+  .reason p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .bar100 { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
+  .steps div { background: var(--fill); border-radius: 6px; padding: 8px 6px; text-align: center; font-size: 12px; }
+  .steps div.on { background: var(--fill2); font-weight: 600; outline: 1px solid var(--orange); }
+  .quote-en { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12.5px; background: var(--fill); border-radius: 4px; padding: 8px 10px; display: block; margin: 8px 0; color: var(--fg2); }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid-32, .sim, .reasons { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .reason, .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、Quant 是做什么的</a>
+  <a href="#s2">二、催化剂与事件研究</a>
+  <a href="#s3">三、代币的价值捕获</a>
+  <a href="#s4">四、八个结构性事实</a>
+  <a href="#s5">五、三币对比</a>
+  <a href="#s6">六、CFG 反面案例</a>
+  <a href="#s7">七、筛选器与模拟器</a>
+  <a href="#s8">八、结论与观察指标</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">深度研究</span>数据截至 2026-10-05 · 来源：quant.network 新闻稿、docs.overledger.dev 开发者文档、The Clearing House、UK Finance、英格兰银行、Centrifuge 治理论坛、CoinLore API、Companies House</p>
+  <h1>Quant（QNT）协议深度报告：拿下美国清算所订单的公司，为什么撑不起代币的现金流</h1>
+  <p class="muted">一句话结论：Quant 是一门真实的机构中间件生意——它确实被美国银行持有的清算所选中、被英国六大行用于英镑代币化存款、入选英格兰银行实验室。但 QNT 是一枚在 2026 年官方文档里已经<b>不再必需</b>的代币：付费闸门写明"代币由应用自选"（QNT 与 USDC 并列），唯一绑定 QNT 的质押功能仍停留在测试网。30 亿美元市值建立在 1,461 万枚的固定供应与一个足够大的美国叙事之上，而不是可验证的代币现金流。</p>
+  <div class="stats">
+    <div class="stat"><b>$252.48</b><span>QNT 价格（本周峰值 $373，回撤 −32%）</span></div>
+    <div class="stat blue"><b>$30.5 亿</b><span>流通市值 · 排名 #32</span></div>
+    <div class="stat"><b>1,461 万</b><span>固定总供应，TGE 后零增发</span></div>
+    <div class="stat red"><b>≈0.53 枚</b><span>每客户每年公开可验证的 QNT 消耗</span></div>
+    <div class="stat orange"><b>$8,830 万</b><span>同赛道对照 CFG 的市值（#203）</span></div>
+  </div>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、Quant 是做什么的</h2>
+  <p class="lead">Quant 不是一条公链，而是银行与多条分布式账本之间的"中间件层"：它卖的是让代币化存款能够在不同链、不同机构、以及法币支付轨道之间完成清算、编排与结算的软件。理解这一点是理解后面一切的前提——<b>买它软件的是银行，买它代币的是市场，这是两群人。</b></p>
+
+  <h3>1.1 定位：账本之上的编排层，而不是又一条链</h3>
+  <p class="muted">Quant Network 是一家英国公司（Companies House 编号 09798383，2015 年成立，原名 REMITT LTD），创始人兼 CEO 为 Gilbert Verdian，2018 年发行 QNT。核心产品 Overledger 是面向企业的多账本（multi-DLT）平台：同一套凭证、同一套 API、同一套执行环境，接入公链（Ethereum、Polygon、Solana…）、公共许可链与私有许可链（Fabric、Corda、Canton…）。</p>
+  <p class="muted">按官方开发者文档的定义，它不是"再发一条公链让别人迁过来"，而是在既有账本之上做统一接入与编排——银行不必替换核心系统，只需增加一层连接能力。这也是为什么它的客户名单里全是银行、清算所与央行，而不是散户。</p>
+
+  <h3>1.2 产品栈</h3>
+  <table>
+    <tr><th>组件</th><th>职责</th></tr>
+    <tr><td>Overledger Gateway</td><td>统一入口：认证、路由、限流、可观测性，并托管编排</td></tr>
+    <tr><td>Connectors</td><td>按 DLT 族（EVM、Fabric、Solana、Corda、Canton、Sui…）抽象 RPC；Quant 自营节点默认提供，客户也可自带节点</td></tr>
+    <tr><td>Flow Apps / 编排</td><td>把多步骤业务（签名、部署、合规检查、支付）做成可驱动的工作流；支持 Quant 自建与客户外部托管</td></tr>
+    <tr><td>Overledger Firewall</td><td>对调用方执行策略：网络访问、App 访问、方法、速率；链上部分由 Fusion Firewall 合约镜像执行</td></tr>
+    <tr><td>Fusion Rollup</td><td>自称"Layer 2.5"的多账本乐观 rollup：同时锚定多条 L1，单个合约可接收来自多条链的存款与跨链消息</td></tr>
+    <tr><td>Quant Connect UI / MCP</td><td>人类通道（网页）与 Agent 通道（Model Context Protocol）共用同一套步骤描述</td></tr>
+  </table>
+  <p class="small">机构侧品牌另有 QuantNet（跨机构结算协调）、TDaaS（代币化存款服务）、PayScript（可编程支付规则）等，功能上归入"接入与编排 / 跨机构结算 / 银行侧发币"三类工作</p>
+
+  <h3>1.3 商业模式与代币设计</h3>
+  <div class="grid2">
+    <div>
+      <h4>公司怎么赚钱</h4>
+      <p class="muted" style="font-size:13px">典型的企业中间件生意：交易费、SaaS 型产品、企业级产品、IP 授权。客户是按法币签约的银行与清算机构，合同金额官方从未披露。Companies House 的登记资料显示，<b>FY2025（截至 2025-09-30）首次提交完整账目（38 页）</b>，此前历年均为小公司豁免账目——这是公司规模跨过英国"小公司"门槛的正式信号，也说明这门生意确实在变大。</p>
+    </div>
+    <div>
+      <h4>代币的原始设计</h4>
+      <p class="muted" style="font-size:13px">QNT 总量 <b>14,612,493 枚，固定不变</b>，2018 年 TGE 后永久停止铸造，无通胀、无质押产出。官方条款明确：持有 QNT <b>不授予任何治理权、不参与公司会议、不享有分红</b>，且条款公司可单方面修改。原始设计里它的用途是支付平台授权费、消费费与网关质押。</p>
+    </div>
+  </div>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、催化剂与事件研究：同样量级的背书，只有一次被定价</h2>
+  <p class="lead">这是整份报告最有信息量的部分。2025 年 9 月与 2026 年 2 月，Quant 拿到了<b>同等量级甚至更硬的机构背书</b>——英国六大行、英格兰银行——市场给出的定价是 0。真正引爆的只有 2026-09-24 那一件事，而它恰恰是<b>公告里唯一一个字都没提到 QNT</b> 的那件。</p>
+
+  <h3>2.1 事件时间线</h3>
+  <table>
+    <tr><th>时间</th><th>事件</th><th>对 QNT 的价格影响</th></tr>
+    <tr><td>2025-09-26</td><td><b>UK Finance 英镑存款代币化（GBTD）试点</b>：巴克莱、汇丰、劳埃德、NatWest、Nationwide、桑坦德 + Quant / EY / 年利达，基于受监管负债网络（RLN），试点至 2026 年中</td><td class="r">≈ 0</td></tr>
+    <tr><td>2025-10-16</td><td>英格兰银行发布 Synchronisation Lab 参与条款（模拟实验，非采购）</td><td class="r">≈ 0</td></tr>
+    <tr><td>2026-02-11</td><td><b>英央行 Synchronisation Lab 公布 18 家入选机构</b>（含 Quant、Chainlink 等），2026 春季启动、为期六个月</td><td class="r">≈ 0</td></tr>
+    <tr><td>2026-06</td><td><b>The Clearing House 公布 On-Chain Money Initiative</b>（多家美国大行支持）</td><td class="r">≈ 0</td></tr>
+    <tr class="hl"><td>2026-09-24</td><td><b>The Clearing House 正式选定 Quant</b>，提供互操作、编排与交易管理层，网络对接 RTP 与 CHIPS，预计 2027 上半年向参与机构开放</td><td class="r"><b>当日 +62%</b></td></tr>
+    <tr><td>2026-09-27</td><td>—</td><td class="r">盘中高 $337.51，收 $284.80</td></tr>
+    <tr><td>2026-09-30 前后</td><td>UK Finance 确认 GBTD 已有<b>真实客户交易</b>在 Quant 构建的平台上运行（含 Monzo 等）</td><td class="r">叠加助推</td></tr>
+    <tr class="bad"><td>2026-10-01 起</td><td>杠杆、清算与休眠巨鲸向交易所转账同步出现</td><td class="r">峰值 $373 后回落</td></tr>
+    <tr><td>2026-10-05</td><td>—</td><td class="r">$252.48（距峰值 −32%）</td></tr>
+  </table>
+
+  <h3>2.2 价格事件研究</h3>
+  <div class="chart" id="ch-price"></div>
+  <p class="small">图：QNT 价格与事件对齐（美元）· 2026-09-23 与 09-24 为按当日 +62% 与 09-27 开盘价反推的近似值 · 来源：Yahoo Finance 历史、CoinLore 日线、CoinMarketCal 事件</p>
+  <div class="callout warn"><b class="t">事件研究给出的结论</b>同一家公司、同一批技术、同样顶级的机构名单——2025-09、2026-02、2026-06 三次被市场定价为 0。真正引爆的是"美国大行持有的清算所 + 美元轨道（RTP / CHIPS）"这个<b>叙事等级</b>，再叠加 1,461 万枚的极小供应量与杠杆轧空。市场买的不是"技术被采用"，而是"美国银行清算层被拿下"这个故事。</div>
+
+  <h3>2.3 The Clearing House 的分量</h3>
+  <div class="grid-32">
+    <div>
+      <p class="muted" style="font-size:13px">TCH 是<b>由美国大行共同持有的清算所</b>，运营 RTP（实时支付网络）与 CHIPS（美元大额清算），是美国支付基础设施的核心一环。按官方与 PR Newswire 的表述，Quant 为 On-Chain Money Initiative 提供"互操作、编排与交易管理层"，把代币化存款接到机构已经在用的法币支付轨道上，让代币化存款在保留原有监管保护的同时实现自动化、7×24 的资金移动。</p>
+      <p class="muted" style="font-size:13px">这就是市场愿意付钱的原因：如果这套东西真的成为美国银行体系代币化存款的标准中间层，那是一个数量级远超英国试点的市场。</p>
+    </div>
+    <div>
+      <div class="callout info"><b class="t">但请把这三句话连起来读</b>① 官方公告<b>没有一个字</b>提到 QNT 代币；② 网络要 <b>2027 上半年</b>才对参与机构开放，中间有 12–18 个月空窗；③ CryptoSlate / TokenPost 的报道标题就是"<b>QNT 的角色不明</b>"——软件供应商定了，但没有给出任何 QNT 购买方式。</div>
+    </div>
+  </div>
+
+  <h3>2.4 三个放大器：为什么 1,461 万枚会把叙事放大成这样</h3>
+  <div class="grid3">
+    <div class="card"><div class="hd">供应量<span class="tag blue">1461 万</span></div><div class="bd">市值 = 价格 × 供应量。QNT 总量只有 1,461 万枚且零增发，价格每涨 $100 就"凭空"多出约 15 亿美元市值。反过来，要吸走 1 亿美元买盘，在 $250 时只相当于流通盘的约 3%——价格必然被打飞。</div></div>
+    <div class="card"><div class="hd">筹码沉淀<span class="tag green">抛压小</span></div><div class="bd">QNT 自 2021 年高点（约 $428）阴跌五年，筹码集中在长期持有者手中。突破 2021 高点区间触发了趋势与动量资金，而上方几乎没有套牢盘。</div></div>
+    <div class="card"><div class="hd">杠杆与轧空<span class="tag orange">放大器</span></div><div class="bd">官方称代币总量小、杠杆重、巨鲸向交易所搬货，"一小时就能出几个百分点的 K 线"。暴涨期间出现：7 年前以 $22.57 建仓的地址三年来首次动作，卖出 9,000 QNT（约 $199.8 万）。</div></div>
+  </div>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、代币如何捕捉价值：从"必须"退到"可选"</h2>
+  <p class="lead">结论：价值捕获的<b>管道曾经存在</b>，但在 2026 年的官方开发者文档里，它已经被放开成"可选的"；而唯一能把 QNT 变回必需品的质押机制，至今没有上线。</p>
+
+  <h3>3.1 一手证据：现行官方文档（docs.overledger.dev）</h3>
+  <p class="muted">第 6.5 节《Payments, x402 settlement gates》，原文：</p>
+  <span class="quote-en">"<b>The app chooses the token.</b> Each gated action declares its own token, amount, and recipient in the <code>X402Descriptor</code> it returns. Apps are free to price in <b>QNT</b>, a <b>stablecoin (USDC, USDT, …)</b>, or any other ERC-20 supported on the chain the descriptor targets. Different actions within the same app, or different versions of the same app, can price in different tokens."</span>
+  <p class="muted" style="font-size:13px">技术实现是 <b>x402 + Uniswap Permit2</b>。这句话的含义是：<b>付费闸门的记账单位由应用自行选择，QNT 与 USDC 处于完全并列地位。</b>换言之，TCH 那条网络即便真的按笔收费，也完全可以只用 USDC 结算，一分钱不经过 QNT。</p>
+  <div class="grid2" style="margin-top:12px">
+    <div>
+      <h4>接入流程里没有代币前置条件</h4>
+      <p class="muted" style="font-size:13px">现行 Authentication 章节<b>完全没有出现 QNT 或许可费</b>：注册 Quant Connect 账号 → 取 JWT → mint API key（<code>fk_&lt;keyId&gt;.&lt;secret&gt;</code>）→ 直接调用，只有 300 req/min 的限速。</p>
+    </div>
+    <div>
+      <h4>QNT 在现行文档中只剩一处</h4>
+      <p class="muted" style="font-size:13px">在 Connectors 章节的节点选择里，QNT 只作为<b>节点路由打分的一个权重因子</b>（与延迟、错误率并列）。而承载这个功能的 Staking 章节，正文只有一句：<b>"Chapter under construction… once the new testnet QNT Staking experience lands."</b></p>
+    </div>
+  </div>
+
+  <h3>3.2 漂移链：三年里机制被逐级放开</h3>
+  <table>
+    <tr><th>时间</th><th>文档 / 文件</th><th>QNT 的地位</th></tr>
+    <tr><td>2020</td><td>社区经济论文（仅存第三方镜像）</td><td>授权<b>必须</b>用 QNT 支付；授权期内<b>全额锁定</b>；Treasury 按市价回收 / 放回；企业平台费以 QNT 计</td></tr>
+    <tr><td>2023-04</td><td>Overledger 2.1.5 release notes</td><td>生产环境年费 <b>£100，必须以 QNT 支付</b>，不付费拿不到生产环境 Client ID</td></tr>
+    <tr class="hl"><td>2026-06</td><td><b>现行 docs.overledger.dev</b></td><td><b>代币由应用自选</b>（QNT / 稳定币 / 任意 ERC-20）；Authentication 章节零 QNT；QNT 仅剩路由质押权重；质押章节 under construction</td></tr>
+  </table>
+  <p class="small">官方未见任何解释此变动的公告。需保留的边界：不能排除 2023 年那条"£100 QNT-only"仍适用于老的 Overledger Enterprise 通道（现行文档描述的是新的 Quant Connect / Fusion / Flow App 产品面）；但事实是——在现行公开文档里已经找不到任何一处 QNT-only 的强制性表述。</p>
+
+  <h3>3.3 价值捕获记分卡</h3>
+  <table>
+    <tr><th>通道</th><th>状态</th><th>证据</th></tr>
+    <tr class="bad"><td>接入准入门槛</td><td><b>不存在</b></td><td>Authentication 章节零 QNT；注册 + API key 即可调用</td></tr>
+    <tr class="bad"><td>支付计价</td><td><b>可选，非必需</b></td><td>§6.5 原文："Apps are free to price in QNT, a stablecoin (USDC, USDT, …), or any other ERC-20"</td></tr>
+    <tr class="bad"><td>法币付款</td><td><b>已确认可行</b></td><td>PANews："Quant 既允許客戶以美元支付平台費用，也支持 QNT 支付……客戶並非必須通過持續購買 QNT 才能使用服務"</td></tr>
+    <tr class="bad"><td>质押</td><td><b>未上线</b></td><td>/docs/staking："Chapter under construction… new testnet QNT Staking experience"</td></tr>
+    <tr class="bad"><td>锁仓 / 金库</td><td><b>无可验证数据</b></td><td>仅 2020 年论文描述；<b>无合约地址、无金库地址、无锁仓量看板</b>。第三方核查结论一致</td></tr>
+    <tr class="bad"><td>治理权</td><td>无</td><td>白皮书明示持有 QNT 不授予对公司治理的任何权利或影响力</td></tr>
+    <tr class="bad"><td>分红 / 现金流权</td><td>无</td><td>Gate Learn（暴涨期发布）："銀行或清算機構購買軟體或服務，並不會自動為代幣持有者創造股息或現金流權利"</td></tr>
+  </table>
+
+  <h3>3.4 量级测算：把叙事市值翻译成代币需求</h3>
+  <div class="grid-32">
+    <div>
+      <p class="muted" style="font-size:13px">唯一公开、可验证的强制性口径是 2023 年那条生产环境授权费：<b>£100 / 年 / 生产许可</b>。按 $252 的价格换算：</p>
+      <table>
+        <tr><th>项目</th><th class="r">数值</th></tr>
+        <tr><td>£100 折美元（约 1.34）</td><td class="r">≈ $134</td></tr>
+        <tr class="hl"><td><b>每个客户每年消耗的 QNT</b></td><td class="r"><b>≈ 0.53 枚</b></td></tr>
+        <tr><td>即便 10,000 家企业客户</td><td class="r">≈ 5,300 枚/年 ≈ $134 万/年</td></tr>
+        <tr><td>当前流通市值（按 1,454 万枚）</td><td class="r">≈ $36.6 亿</td></tr>
+        <tr class="bad"><td>按 10 倍市销率隐含需要的年收入</td><td class="r">≈ $3.66 亿/年</td></tr>
+        <tr class="bad"><td>即每客户年均 QNT 支出需高出公开口径</td><td class="r">约 4–5 个数量级</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="callout warn"><b class="t">这道算术题的意义</b>要解释 30 亿美元以上的市值，只有两条路：<b>要么</b>企业合同里的交易费 / SaaS / IP 授权也以 QNT 计价且金额巨大；<b>要么</b>需要 200 万以上的付费客户。<b>而这两条路径，公开文档里一条都没有规模披露；三家机构的官方公告里，一个 QNT 字都没有。</b></div>
+      <p class="muted" style="font-size:13px">更关键的是：Quant 完全有能力、也很可能是<b>直接向银行收法币</b>。公司的商业收入与代币需求之间，没有任何合约级的绑定。</p>
+    </div>
+  </div>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、八个结构性事实（按重要性排序）</h2>
+  <p class="lead">把这轮行情拆到底，剩下的是八件互不依赖、且都可以独立验证的事实。前两条解释"为什么这不是价值重估"，中间四条解释"为什么价格还是涨了"，最后两条是横向参照。</p>
+  <div class="reasons" id="reasons"></div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、三币对比：AVAX / QNT / CFG 为什么差这么多</h2>
+  <p class="lead">常有观察者把这三者归为"有实体公司 + 发币 + 被大机构用于 RWA"的同一模式。事实是它们是<b>三种完全不同的资产类型</b>，定价锚也完全不同。而市值排序恰好与"代币必要性"排序一致——但 QNT 与 CFG 之间的 34 倍差距，主要来自供应量、流动性与叙事可传播性，与 RWA 采用质量无关。</p>
+
+  <h3>5.1 硬数据（2026-10-05）</h3>
+  <table>
+    <tr><th>指标</th><th class="r">AVAX</th><th class="r">QNT</th><th class="r">CFG</th></tr>
+    <tr><td>资产类型</td><td class="r">L1 公链原生资产</td><td class="r">公司中间件访问代币</td><td class="r">协议治理代币</td></tr>
+    <tr><td>市值排名</td><td class="r">#27</td><td class="r">#32</td><td class="r"><b>#203</b></td></tr>
+    <tr><td>单价</td><td class="r">$10.95</td><td class="r">$252.48</td><td class="r"><b>$0.15595</b></td></tr>
+    <tr><td>流通量</td><td class="r">4.223 亿</td><td class="r">1,207 万（CoinLore）<br>1,454 万（CoinGecko）</td><td class="r"><b>5.662 亿</b></td></tr>
+    <tr class="hl"><td>流通市值</td><td class="r"><b>$46.2 亿</b></td><td class="r"><b>$30.5 亿</b></td><td class="r"><b>$8,830 万</b></td></tr>
+    <tr><td>24h 成交</td><td class="r">$1.77 亿</td><td class="r">$1.74 亿</td><td class="r"><b>$188 万</b></td></tr>
+    <tr><td>距 2021 高点</td><td class="r">约 −92%（高点 ≈$145）</td><td class="r">约 −41%（高点 ≈$428）</td><td class="r">约 −93%（高点 $2.19）</td></tr>
+    <tr><td>供应机制</td><td class="r">硬顶约 7.16 亿 + 手续费销毁</td><td class="r"><b>1,461 万固定，零增发</b></td><td class="r"><b>3% 永续通胀，无硬顶</b></td></tr>
+    <tr><td>硬需求</td><td class="r">gas + 质押 + 建子网须用 AVAX</td><td class="r">可选计价；质押未上线</td><td class="r"><b>无</b>（费用开关提案被否）</td></tr>
+    <tr><td>现货 ETF</td><td class="r">有（VAVX，2026-01-26）</td><td class="r">无</td><td class="r">无</td></tr>
+  </table>
+
+  <h3>5.2 单价是没有信息量的指标</h3>
+  <div class="grid3">
+    <div>
+      <div class="chart" id="ch-mcap"></div>
+      <p class="small">图：流通市值（百万美元）</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-supply"></div>
+      <p class="small">图：流通量（百万枚）——单价差异几乎全部来自这里</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-liq"></div>
+      <p class="small">图：24h 成交额（百万美元）· CFG 是 QNT 的约 1%</p>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">把这句话记住</b>CFG 的 $0.156 只说明它有 5.66 亿枚，不说明它便宜。<b>如果 CFG 也只有 1,461 万枚，同样 8,830 万美元的市值对应单价就是 $6.04</b>——立刻"看起来正常"了。</div>
+
+  <h3>5.3 四个真正的分水岭</h3>
+  <div class="grid4">
+    <div class="box"><b>① 硬需求</b><p>有没有"用了这个网络就必须买/锁这个币"的机制？AVAX 有（gas、验证者与委托质押、子网安全共享）；QNT 是可选的、质押未上线；CFG 的费用开关被投票否决。</p></div>
+    <div class="box"><b>② 供应机制</b><p>定额还是通胀？QNT 零增发（价格弹性最大）；AVAX 有硬顶与销毁对冲；CFG 3% 永续通胀且全部流向基金会，只稀释持有人。</p></div>
+    <div class="box"><b>③ 收入落点</b><p>钱进的是协议/代币，还是公司/基金管理人？AVAX 的价值落在网络；QNT 落在公司（代币无股权）；CFG 落在基金会与基金管理人。</p></div>
+    <div class="box"><b>④ 流动性</b><p>日成交额能否装下目标仓位？CFG 最大单一盘口日成交仅约 $56 万，机构资金无法从容进出。这是最"结构性、最难自己走出来"的一环。</p></div>
+  </div>
+
+  <h3>5.4 AVAX 的机构线：Spruce / Evergreen 子网</h3>
+  <div class="grid-32">
+    <div>
+      <p class="muted" style="font-size:13px">2026 年 4 月，Avalanche 的 <b>Spruce（Evergreen 系列）子网从测试网转入生产环境</b>，参与方包括 T. Rowe Price（$1.6T AUM）、Wellington Management（$1.3T）、WisdomTree（$110B+ ETF 发行商）与 Cumberland（DRW 旗下）。这个模式的关键在于：<b>机构在 Avalanche 上跑自己的合规结算层，而该子网共享 AVAX 主网的验证者经济</b>——也就是说，机构上线子网会直接转化为 AVAX 的质押与安全需求。</p>
+      <p class="muted" style="font-size:13px">这是三者中<b>唯一"机构采用 → 代币被锁定"有机制传导</b>的一条。同时也要看到风险：这是一场仍未证明的赌注，如果 Spruce 停留在永久试点，架构就输了。</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>2026 年关键进展</th><th>内容</th></tr>
+        <tr><td>Avalanche9000</td><td>子网部署成本降约 99%，亚秒级终局</td></tr>
+        <tr><td>ISO 20022</td><td>支持与 Swift / Fedwire / CHAPS 同源的金融报文标准</td></tr>
+        <tr><td>竞争格局</td><td>Canton（Broadridge DLR 约 $2,800 亿/日 代币化美债回购）、JPMorgan Kinexys、Tempo</td></tr>
+        <tr class="hl"><td>VanEck VAVX</td><td>2026-01-26 上市，美国首只现货 AVAX ETF</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、CFG 反面案例：项目方自己放弃了代币</h2>
+  <p class="lead">CFG 常被当成"同赛道被低估的标的"。但一手治理文件显示的事实更彻底：这不是"价值捕获管道还没接通"，而是<b>发行方已经正式把价值捕获机制从代币换成股权</b>。CFG 的低市值因此是正确定价，而不是错杀。</p>
+
+  <h3>6.1 五重一手证据</h3>
+  <table>
+    <tr><th>#</th><th>事实</th><th>原文 / 来源</th></tr>
+    <tr class="bad"><td>1</td><td>代币<b>无任何经济权利</b></td><td>"As a token, CFG <b>does not directly confer economic rights</b> to token holders."（CP172 FAQ，官方）</td></tr>
+    <tr class="bad"><td>2</td><td>收入<b>明确不进代币</b></td><td>CP162：CNF 接收 Anemoy 全部费用、100% 净收益留基金会；<b>2025-09-30 因未达 400 万 CFG 法定人数被否决</b></td></tr>
+    <tr class="bad"><td>3</td><td>官方<b>明确拒绝回购</b></td><td>"Will there be a buyback? <b>No.</b> … not building a buy-and-burn."；2026-02 并拒绝公布运营费用</td></tr>
+    <tr class="bad"><td>4</td><td><b>治理权已上交</b></td><td>CP171 移交 CNF；论坛官方回复："CFG holders <b>cannot</b> decide [CEO 任免] through a formal Snapshot vote"</td></tr>
+    <tr class="bad"><td>5</td><td><b>CP172 转向股权</b></td><td>2026-08 提出、09 月通过：以股权取代 CFG；明示将关停 CFG 公开市场流动性支持、不设回购不分红。8 个月内同一 CEO 从"唯一价值捕获机制是 CFG"反转，直接引发 CEO 不信任投票 RFC</td></tr>
+  </table>
+  <p class="small">注意第 2 条的细节：CP162 不是被"投票否决"，而是<b>没凑够法定人数</b>——连反对的人都懒得来投。这比否决更能说明持有者基座的状态。</p>
+
+  <h3>6.2 事件研究：市场是正确地定价，不是错杀</h3>
+  <div class="grid-32">
+    <div>
+      <table>
+        <tr><th>事件</th><th>性质</th><th class="r">CFG 反应</th></tr>
+        <tr><td>JTRSY 破 $10 亿 + S&amp;P 上调 AAAf</td><td>基本面重大</td><td class="r">基本不动</td></tr>
+        <tr><td>Coinbase 战略投资（2026-05-05）</td><td>一线背书 + 融资</td><td class="r">不动</td></tr>
+        <tr><td>NYLIM 上链 / Arc 上线三只基金</td><td>机构采用与分发</td><td class="r">−5.39%（前后 7 日）</td></tr>
+        <tr class="hl"><td><b>上线 Binance 现货</b></td><td><b>纯流动性事件</b></td><td class="r"><b>+60%</b></td></tr>
+      </table>
+      <p class="small">基本面利好不涨、上所就暴涨——这恰恰证明市场已经读懂了"CFG 不捕获协议价值"。</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-cfgtvl"></div>
+      <p class="small">图：CFG 市值 vs 自身协议 TVL（百万美元）· 市值 / TVL ≈ 4.4%–5.3%</p>
+    </div>
+  </div>
+  <div class="callout warn"><b class="t">结构性错配的数量级</b>业务规模已达头部（Janus Henderson、Apollo、NYLIM、S&amp;P、Coinbase；TVL 从 2025Q3 的 $12 亿增至 2026Q1 的 $17 亿，峰值 $20 亿；JTRSY 规模 $8.82 亿以上；2026 年预测收入 $1,500 万），代币市值却停在尾部。<b>市值只有自己协议 TVL 的约 1/20。</b>而 TVL 约 $4 亿的 Maple（SYRUP）市值为 $3.038 亿，"市值低于 TVL"的程度远小于 CFG。</div>
+
+  <h3>6.3 结构：钱到底进了谁的账户</h3>
+  <table>
+    <tr><th>实体</th><th>角色</th></tr>
+    <tr><td>Centrifuge Network Foundation, Inc.（CNF）</td><td>开曼群岛 foundation company，<b>无股东</b>；掌握治理与监督、接收协议费用、决定 CEO 任免</td></tr>
+    <tr><td>Centrifuge, Inc.</td><td>拟设立的股权实体（开曼豁免有限责任公司）——<b>CP172 之后价值捕获的落点</b></td></tr>
+    <tr><td>Centrifuge Labs</td><td>运营实体，CEO 属此；负责市场、产品、合作与收入增长</td></tr>
+    <tr><td>Anemoy</td><td>基金管理人，2023 年由 Centrifuge 孵化，官方定位为 "our asset management arm"——<b>真实管理费的主要落点</b></td></tr>
+  </table>
+  <p class="small">附注：Coinbase 的七位数战略投资投向的是<b>公司实体而非代币</b>，且 Coinbase 现货至今未上线 CFG。此外，2025–2026 代币迁移已于 2025-12-04 永久关闭、个案审查 2026-04-10 结束，2026 年 8–9 月仍有持有人报告 legacy wCFG 无法兑换。</p>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、四维筛选器与情景模拟器</h2>
+  <h3>7.1 用这个顺序问，而不是看单价或"采用度"</h3>
+  <table>
+    <tr><th>顺序</th><th>问题</th><th>决定什么</th><th>三币答案</th></tr>
+    <tr><td>1</td><td>流通市值 / FDV 与供应机制：通胀还是定额？还有多少解锁？</td><td>价格弹性</td><td>QNT 定额最紧；AVAX 有硬顶与销毁；CFG 3% 永续通胀</td></tr>
+    <tr><td>2</td><td>硬需求：有没有"用了就必须买/锁"的机制？费用开关真打开了吗？</td><td>价值地板</td><td>AVAX 有；QNT 可选；CFG 被否</td></tr>
+    <tr><td>3</td><td>收入落点：钱进协议/代币，还是公司/基金管理人？</td><td>估值天花板</td><td>AVAX 落网络；QNT 落公司；CFG 落基金会</td></tr>
+    <tr><td>4</td><td>流动性：日成交能否装下目标仓位？有无衍生品与一线所？</td><td>能不能被买</td><td>AVAX ≈ QNT ≫ CFG</td></tr>
+  </table>
+
+  <h3>7.2 情景模拟器：支撑 QNT 市值需要多少代币计费收入</h3>
+  <p class="lead">拖动滑块即可调整假设，结果实时更新。默认值对应当前状态：市值 = 价格 × 供应量；隐含所需年收入 = 市值 ÷ 市销率；实际代币收入 = 每客户年支出 × 客户数。这个模拟器不是在预测价格，而是把"30 亿美元市值"翻译成"需要多少真实的 QNT 计费需求才能自洽"。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)" id="simstats"></div>
+      <table id="simtable"></table>
+      <h4>客户数 → 实际代币收入 vs 支撑市值所需的收入（对数横轴）</h4>
+      <div class="chart" id="ch-sim1"></div>
+      <p class="small">横轴为客户数（对数），纵轴为百万美元 · 两条线的交点就是"需要多少客户才能自洽"</p>
+      <h4>每客户年支出 → 覆盖市值所需的客户数</h4>
+      <div class="chart" id="ch-sim2"></div>
+      <p class="small">横轴为每客户每年以 QNT 计价的支出（对数），纵轴为客户数（对数）· 本报告模型估算</p>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">为什么用市销率而不是市盈率</b>QNT 没有任何公开的代币计价收入与成本口径，无从计算利润。市销率（市值 ÷ 收入）是可用的最宽松的锚。默认取 10 倍——这是一个对高增长软件公司偏乐观的倍数；倍数越高越容易"自洽"，所以这个模拟器实际上是在<b>给多头最有利的假设</b>。</div>
+
+  <h3>7.3 别忘了分母：整个代币化 RWA 市场还很小</h3>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><b>$264 亿</b><span>代币化 RWA 总规模（2026-03）</span></div>
+    <div class="stat"><b>$276 亿</b><span>代币化 RWA 总规模（2026-04，同比约 4 倍）</span></div>
+    <div class="stat orange"><b>≈ 28%</b><span>三家市值合计（约 $77 亿）占整个 RWA 市场的比例</span></div>
+  </div>
+  <p class="muted" style="font-size:13px">这意味着这些市值<b>不是在给当下的 RWA 收入定价</b>，而是在给"未来谁成为承销轨道"的看涨期权定价。期权价格由叙事强度 × 流动性 × 供应杠杆决定，与当下的 RWA 采用质量弱相关。谁的价格更贵，取决于叙事杠杆，而不取决于谁在 RWA 上做得更好。</p>
+
+  <!-- ============ 八 ============ -->
+  <h2 id="s8">八、结论、观察指标与数据缺口</h2>
+  <h3>8.1 三句话结论</h3>
+  <div class="grid3">
+    <div class="card"><div class="hd">作为公司</div><div class="bd">真实且在赢。被美国大行持有的清算所选中、被英国六大行用于英镑代币化存款、入选英央行实验室，FY2025 首次提交完整账目，规模跨过小公司门槛。这些都是有官方文件支撑的事实。</div></div>
+    <div class="card"><div class="hd">作为代币</div><div class="bd">机制已被文档放开。付费闸门"代币由应用自选"（QNT 与 USDC 并列）、接入无代币前置、唯一绑定 QNT 的质押功能仍未上线；公开可验证的强制性口径只剩 £100/年 ≈ 0.53 枚 QNT/客户。公司可以收法币，收入与代币之间没有合约级绑定。</div></div>
+    <div class="card"><div class="hd">作为价格</div><div class="bd">QNT 本质上是一份"美国银行代币化存款标准层 + 1,461 万枚固定供应"的看涨期权。公司的成功是真的，代币捕获的通道是断的——在出现"必须用 QNT 结算"的官方证据之前，公司签单与币价上涨之间没有传导链条。</div></div>
+  </div>
+
+  <h3>8.2 可执行观察清单</h3>
+  <table>
+    <tr><th>观察点</th><th>为什么关键</th><th>方向</th></tr>
+    <tr><td><b>TCH 网络上任何一个 Flow App 的 <code>X402Descriptor</code> 用什么代币计价</b></td><td>框架规定每个付费动作自己声明代币；若用 USDC/USDT，说明连按笔收费都绕过 QNT</td><td class="r">决定性</td></tr>
+    <tr><td>Staking 章节何时上线、是否强制质押 QNT</td><td>这是唯一能让 QNT 从"可选"回到"必需"的开关</td><td class="r">利好 / 利空</td></tr>
+    <tr><td>文档是否回退到 QNT-only 口径</td><td>历史方向是"必须 → 可以"，看是否反向</td><td class="r">利好</td></tr>
+    <tr><td>Companies House FY2026 报表（账目截止 2026-09-30，到期 2027-06-30）</td><td>第一次可能拿到公司营收硬数字，用于与市值对照</td><td class="r">中性</td></tr>
+    <tr><td>老地址（成本 ≈$22.57 那批）继续向交易所搬运的节奏</td><td>供给压力的直接证据</td><td class="r">利空</td></tr>
+    <tr><td>TCH 网络 2027H1 是否按期开放、参与机构名单与生产用例</td><td>12–18 个月空窗期内任何延期都会被重定价</td><td class="r">双向</td></tr>
+  </table>
+
+  <h3>8.3 数据缺口与口径冲突（明确标注，未编造）</h3>
+  <div class="grid2">
+    <div>
+      <h4>未找到公开证据</h4>
+      <ul class="small">
+        <li>QNT 锁仓合约地址、金库地址、锁仓量看板</li>
+        <li>"七个钱包控制过半供应"的具体地址与身份（原始报告与地址均未能核实，<b>建议不要继续引用</b>）</li>
+        <li>暴涨期间可核查的交易所充值地址与净流入数据（仅标题级二手报道）</li>
+        <li>Quant 公司的具体营收、利润、估值、付费客户数、TCH 合同金额</li>
+        <li>Quant 官方对"QNT 价值捕获"批评的回应，或 2025–2026 年的代币经济更新</li>
+        <li>CFG 的团队规模、Centrifuge Labs 与 Anemoy 注册地、完整融资总额、期权市场</li>
+      </ul>
+    </div>
+    <div>
+      <h4>口径冲突（引用时须注明）</h4>
+      <ul class="small">
+        <li><b>QNT 流通量</b>：CoinLore 1,207 万 vs CoinGecko 1,454 万 → 市值 $30.5 亿 vs $36.6 亿</li>
+        <li><b>QNT 总量字段</b>：某些数据站的 4,546.7 万是 2018 年募资硬顶框架，不是今日供应量</li>
+        <li><b>CFG 总量</b>：CoinLore 6.28 亿 / Coinspeaker 5.78 亿 / <b>官方 6.97 亿</b>（含 CP149 增发 1.15 亿）——聚合商口径落后官方一年以上</li>
+        <li><b>CFG ATH</b>：$2.19（2021-10-15）vs $2.58，两源均非一手；但"较 ATH 跌约 93%"的结论不变</li>
+        <li><b>CFG TVL</b>：官方 $17 亿 vs 第三方私募信贷口径 $4.65 亿</li>
+        <li><b>QNT 价格峰值</b>：$373（Gate 实盘帖）与 $357 报道并存</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b class="t">证据等级说明</b>本报告中标注"官方文档 / 新闻稿 / 治理论坛原文"的为直接核对的一手材料（docs.overledger.dev §6.5 与 Staking 章节、Centrifuge 治理论坛 CP162 / CP171 / CP172、UK Finance 与英格兰银行新闻稿与参与条款、Companies House 登记）。机构公告的转述部分因目标站点 403 或地域限制，来自多语种专业媒体的一致转述，已在正文注明。quant.network 主站在本次核查环境中被 DNS 劫持，官方新闻稿与 PDF 无法直接打开，相关引用均标注了间接来源。</div>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://docs.overledger.dev/docs/flow-apps">Overledger 开发者文档 §6.5 x402 付费闸门</a> · <a href="https://docs.overledger.dev/docs/staking">Staking 章节（under construction）</a> · <a href="https://docs.overledger.dev/docs/overview">Overview / 词汇表</a></li>
+    <li><a href="https://www.theclearinghouse.org/payment-systems/Articles/2026/09/The-Clearing-House-Partners-with-Quant-to-Advance-the--On-Chain-Money-Initiative">The Clearing House 官方公告</a> · <a href="https://www.prnewswire.com/news-releases/the-clearing-house-partners-with-quant-to-advance-the-on-chain-money-initiative-302888598.html">PR Newswire 原文</a> · <a href="https://cryptoslate.com/us-bank-group-taps-quant-for-tokenized-deposits-but-qnts-role-is-left-in-doubt/">CryptoSlate：QNT 角色不明</a></li>
+    <li><a href="https://www.ukfinance.org.uk/news-and-insight/press-release/uk-banks-complete-first-live-customer-transactions-using-tokenised">UK Finance GBTD 新闻稿</a> · <a href="https://www.bankofengland.co.uk/payments/rtgs-future-roadmap/synchronisation-lab-terms-of-participation">英央行 Synchronisation Lab 参与条款</a></li>
+    <li><a href="https://www.findas.org/tokenomics-review/the-tokenomics-of-quant-qnt">FinDaS：QNT 代币经济审计</a> · <a href="https://8blocks.io/audits/quant-network-tokenomics-audit">8blocks 审计（BB / 55）</a> · <a href="https://gov.centrifuge.io/t/cp162-enable-protocol-revenue-through-cnf-managed-fee-flows/7050">CP162（被否）</a> · <a href="https://gov.centrifuge.io/t/cp171-aligning-for-execution-transparency-and-cfg-value-accrual-through-centrifuge-network-foundation/7132">CP171</a></li>
+    <li><a href="https://find-and-update.company-information.service.gov.uk/company/09798383">Companies House：QUANT NETWORK LTD 09798383</a> · <a href="https://api.coinlore.net/api/tickers/?start=0&amp;limit=100">CoinLore API（AVAX / QNT）</a> · <a href="https://api.coinlore.net/api/ticker/?id=49753">CoinLore API（CFG）</a></li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。部分数据为第三方口径或本报告估算（含事件研究中的价格反推、量级测算与模拟器结果），可能与官方数据存在差异。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); if (!host) return; host.innerHTML = "";
+    const W = 640, H = opt.height || 260, L = 48, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+    }
+    const every = Math.ceil(cats.length / 12);
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      el("polyline", { points: s.data.map((v, i) => `${x(i)},${y(v)}`).join(" "), fill: "none", stroke: col, "stroke-width": 2 }, svg);
+      s.data.forEach((v, i) => {
+        const c = el("circle", { cx: x(i), cy: y(v), r: 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); if (!host) return; host.innerHTML = "";
+    const horiz = !!opt.horizontal;
+    const n = cats.length, m = series.length;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = 640, L = horiz ? (opt.labelWidth || 150) : 48, R = 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = Math.min(40, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], x0 = L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const col = m === 1 ? color(opt.colorEach ? i : (v < 0 ? 1 : 0)) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: Math.min(y(v), y(0)), width: bw - 2, height: Math.max(1, Math.abs(y(v) - y(0))), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x0 + bw / 2 - 1, y: (v >= 0 ? y(v) - 4 : y(v) + 12), "text-anchor": "middle" }, svg, fmt(v));
+        });
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = m === 1 ? color(opt.colorEach ? i : 0) : color(si, s.tone);
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.max(1, Math.abs(x(v) - x(0))), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  /* ---------- 静态图表 ---------- */
+  lineChart("ch-price",
+    ["25-09-22", "26-02-09", "26-04-07", "26-07-06", "26-09-23", "26-09-24", "26-09-27", "26-10-01", "26-10-05"],
+    [{ name: "QNT 价格（美元）", data: [90.9, 69.68, 75.26, 66.13, 94, 153, 284.8, 373, 252.48], tone: "--c1" }],
+    { height: 280 });
+
+  barChart("ch-mcap", ["AVAX", "QNT", "CFG"],
+    [{ name: "流通市值（百万美元）", data: [4623, 3048, 88] }], { horizontal: true, labelWidth: 60, colorEach: true });
+
+  barChart("ch-supply", ["AVAX", "QNT", "CFG"],
+    [{ name: "流通量（百万枚）", data: [422.3, 12.07, 566.2] }], { horizontal: true, labelWidth: 60, colorEach: true });
+
+  barChart("ch-liq", ["AVAX", "QNT", "CFG"],
+    [{ name: "24h 成交（百万美元）", data: [176.6, 173.6, 1.88] }], { horizontal: true, labelWidth: 60, colorEach: true });
+
+  barChart("ch-cfgtvl", ["CFG 流通市值", "Centrifuge 协议 TVL"],
+    [{ name: "百万美元", data: [88.3, 1700] }], { horizontal: true, labelWidth: 120, colorEach: true, height: 100 });
+
+  /* ---------- 八个结构性事实 ---------- */
+  const REASONS = [
+    ["根本原因", "red", "1. 三家机构的官方公告里，一个字都没提到 QNT", "The Clearing House 的公告只说选定 Quant 提供互操作与编排层；UK Finance 的新闻稿全文只说平台 'developed by Quant'；英格兰银行的参与条款里连一行代币措辞都没有。CryptoSlate 与 TokenPost 的报道标题就是「QNT 的角色不明」。"],
+    ["根本原因", "red", "2. 现行文档把付费代币改成「应用自选」——QNT 与 USDC 并列", "Overledger 文档 §6.5 原文：'Apps are free to price in QNT, a stablecoin (USDC, USDT, …), or any other ERC-20.' 技术实现是 x402 + Permit2。这意味着即便 TCH 网络真的按笔收费，也完全可以只用 USDC 结算。"],
+    ["价值捕获", "orange", "3. 唯一绑定 QNT 的质押功能仍「under construction」", "Connectors 章节里 QNT 只剩「节点路由打分权重」一个角色，而承载该功能的 Staking 章节正文只有一句：等新的测试网 QNT 质押体验上线。也就是说，让 QNT 从可选回到必需的开关至今没有打开。"],
+    ["价值捕获", "orange", "4. 公司可以收法币，收入与代币之间没有合约级绑定", "官方口径允许客户以美元支付平台费用。加上接入流程（注册 + API key）没有任何代币前置、无锁仓地址、无金库看板，公司签约与代币需求之间不存在可验证的传导。"],
+    ["供给", "blue", "5. 1,461 万枚固定供应放大了叙事杠杆——这是价格的来源，不是价值的来源", "市值 = 价格 × 供应量，零增发让小流通盘对增量资金极其敏感。要吸走 1 亿美元买盘，在 $250 时只相当于流通盘的约 3%。这解释了涨幅，但不构成价值捕获。"],
+    ["周期", "", "6. 五年下跌趋势 + 沉淀筹码，突破时上方没有套牢盘", "QNT 自 2021 年高点（约 $428）一路阴跌至 $60–95 区间盘整一年多，筹码集中在长期持有者手里。突破 2021 高点区间直接触发趋势与动量资金，抛压结构极为有利。"],
+    ["交易结构", "", "7. 流动性会自我强化：QNT 日成交是 CFG 的约 92 倍", "QNT / AVAX 日成交都在 1.7 亿美元量级，且近期新增了 OKX 永续；CFG 日成交仅 $188 万、最大单一盘口约 $56 万。大资金进不去 → 没有价格发现 → 市值更低，这是一个负向闭环。"],
+    ["横向参照", "", "8. 对照组 CFG：发行方已正式把价值捕获从代币换成股权", "CP172 通过后代币转换为股权，官方 FAQ 承认 'CFG does not directly confer economic rights'、明确拒绝回购，并将关停 CFG 流动性支持。同样是「公司签单、代币不涨」，CFG 走到了终点，QNT 停在中途。"],
+  ];
+  document.getElementById("reasons").innerHTML = REASONS.map((r, i) =>
+    `<div class="reason${i < 2 ? " top" : ""}"><span class="tag ${r[1]}">${r[0]}</span><b>${r[2]}</b><p>${r[3]}</p></div>`).join("");
+
+  /* ---------- 模拟器 ---------- */
+  const DEF = { price: 252.48, supply: 14.6125, ps: 10, arpu: 134, clients: 100 };
+  const PRESETS = [
+    ["当前", {}],
+    ["公开口径：£100/年授权费，100 家客户", { arpu: 134, clients: 100 }],
+    ["给多头最有利：每客户 $100 万/年，10 倍市销率", { arpu: 1000000, ps: 10, clients: 100 }],
+    ["假设 QNT 全部被采用：每客户 $13.4 万/年", { arpu: 134000, clients: 500 }],
+    ["价格回到 $373 峰值", { price: 373 }],
+    ["按 CoinGecko 流通量 1,454 万枚", { supply: 14.544 }],
+  ];
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); return a >= 10000 ? `${s}$${(a / 100000000).toFixed(2)} 亿` : a >= 100 ? `${s}$${(a / 10000).toFixed(1)} 万` : `${s}$${Math.round(a).toLocaleString("en-US")}`; };
+  const CTRL = [
+    ["市场"],
+    ["price", "QNT 价格", 5, 500, 0.5, (v) => "$" + v.toFixed(2)],
+    ["supply", "供应量（百万枚）", 5, 46, 0.0125, (v) => v.toFixed(4) + "M"],
+    ["估值假设"],
+    ["ps", "假设市销率（P/S）", 2, 60, 1, (v) => v + "x"],
+    ["代币需求假设"],
+    ["arpu", "每客户每年以 QNT 计价的支出", 100, 2000000, 100, (v) => "$" + Math.round(v).toLocaleString("en-US")],
+    ["clients", "付费客户数（企业级）", 10, 2000000, 10, (v) => Math.round(v).toLocaleString("en-US")],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => {
+      if (c.length === 1) return `<h4>${c[0]}</h4>`;
+      return `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`;
+    }).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]], S); });
+    const supplyAbs = S.supply * 1e6;
+    const mcap = S.price * supplyAbs;
+    const needRev = mcap / S.ps;
+    const actualRev = S.arpu * S.clients;
+    const cover = actualRev / needRev;
+    const needClients = needRev / S.arpu;
+    const qntPerClient = S.arpu / S.price;
+    const annualQnt = actualRev / S.price;
+    const pctSupply = (annualQnt / supplyAbs) * 100;
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(mcap), `流通市值（${S.supply.toFixed(2)}M 枚 × $${S.price.toFixed(2)}）`],
+      ["", usd(needRev), `支撑市值所需的年收入（${S.ps}x P/S）`],
+      ["", usd(actualRev), `当前假设下的实际代币收入`],
+      [cover >= 1 ? "green" : "red", (cover >= 1 ? cover.toFixed(2) + "x 覆盖" : "缺口 " + (1 / cover).toFixed(0) + "x"), "实际收入 / 所需收入"],
+      ["orange", Math.round(needClients).toLocaleString("en-US"), "自洽所需的客户数"],
+      ["", qntPerClient.toFixed(2) + " 枚", "每客户每年消耗的 QNT"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["按公开口径（£100/年 ≈ $134）每客户消耗", (134 / S.price).toFixed(2) + " 枚 QNT"],
+      ["实际年消耗占供应量比例", pctSupply < 0.01 ? pctSupply.toFixed(4) + "%" : pctSupply.toFixed(2) + "%"],
+      ["若按现价买回全部年消耗所需金额", usd(annualQnt * S.price)],
+      ["需要的年收入相当于每客户年均支出提高", (needRev / (134 * S.clients)).toFixed(0) + " 倍（对比 £100 口径）"],
+      ["隐含的市值 / 公开口径强制收入", (mcap / Math.max(1, 134 * Math.max(1, S.clients))).toFixed(0) + "x"],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+
+    const CL = [10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000, 1000000];
+    lineChart("ch-sim1", CL.map((c) => c.toLocaleString("en-US")), [
+      { name: "实际代币收入（百万美元）", data: CL.map((c) => Math.round(((S.arpu * c) / 1e6) * 100) / 100), tone: "--c3" },
+      { name: "支撑市值所需收入（百万美元）", data: CL.map(() => Math.round((needRev / 1e6) * 100) / 100), tone: "--c2" },
+    ], { height: 240 });
+
+    const AR = [134, 1000, 10000, 100000, 1000000, 10000000];
+    lineChart("ch-sim2", AR.map((a) => "$" + a.toLocaleString("en-US")), [
+      { name: "覆盖市值所需的客户数", data: AR.map((a) => Math.max(1, Math.round(needRev / a))), tone: "--c4" },
+    ], { height: 220 });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>

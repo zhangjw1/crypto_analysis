@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aave 项目研究报告 · 2026-10-08</title>
+<style>
+:root {
+  --bg: #fcfcfc; --surface: #ffffff; --text: #1a1a1a; --text2: #4d4d4d; --text3: #8a8a8a; --text4: #b0b0b0;
+  --stroke: #e6e6e6; --stroke2: #efefef; --fill: #f3f3f3; --fill2: #f8f8f8;
+  --accent: #2f6fb0; --c-info: #2e79b5; --c-success: #1f8a65; --c-danger: #c04848; --c-warning: #c98a1a; --c-neutral: #8888a8;
+  --c-green: #1f8a65; --c-blue: #2e79b5; --c-gray: #9a9ab4; --c-orange: #e09a2b; --c-pink: #c85898;
+  --t-success: rgba(31,138,101,.08); --t-danger: rgba(192,72,72,.08); --t-warning: rgba(201,138,26,.09); --t-info: rgba(46,121,181,.08);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+html[data-theme="dark"] {
+  --bg: #161616; --surface: #1c1c1c; --text: #e6e6e6; --text2: #b4b4b4; --text3: #8a8a8a; --text4: #5c5c5c;
+  --stroke: #2e2e2e; --stroke2: #262626; --fill: #262626; --fill2: #202020;
+  --accent: #599ce7; --c-info: #5b9fd8; --c-success: #3fb08a; --c-danger: #e06a6a; --c-warning: #e0a840; --c-neutral: #9a9ab8;
+  --c-green: #3fb08a; --c-blue: #5b9fd8; --c-gray: #8a8aa8; --c-orange: #f0a848; --c-pink: #d878b0;
+  --t-success: rgba(63,176,138,.12); --t-danger: rgba(224,106,106,.12); --t-warning: rgba(224,168,64,.12); --t-info: rgba(91,159,216,.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+.page { max-width: 1120px; margin: 0 auto; padding: 32px 24px 64px; }
+h1 { font-size: 24px; line-height: 1.35; margin: 4px 0 8px; font-weight: 600; }
+h2 { font-size: 19px; margin: 0; font-weight: 600; }
+h3 { font-size: 15px; margin: 0 0 8px; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--text2); } .faint { color: var(--text3); } .small { font-size: 12px; line-height: 1.5; }
+.caption { font-size: 12px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+.stack > * + * { margin-top: 14px; } .stack-lg > * + * { margin-top: 22px; } .stack-sm > * + * { margin-top: 8px; }
+.grid { display: grid; gap: 16px; } .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); } .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0,1fr)); } .g6 { grid-template-columns: repeat(6, minmax(0,1fr)); } .g32 { grid-template-columns: 3fr 2fr; }
+.gsim { grid-template-columns: minmax(0,1fr) minmax(0,1.5fr); align-items: start; gap: 24px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.stat .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.stat .l { font-size: 12px; color: var(--text3); line-height: 1.45; margin-top: 2px; }
+.v.success { color: var(--c-success); } .v.danger { color: var(--c-danger); } .v.warning { color: var(--c-warning); } .v.info { color: var(--c-info); }
+.strip { padding: 14px 0; border-top: 1px solid var(--stroke); border-bottom: 1px solid var(--stroke); }
+.lead { border-left: 2px solid var(--accent); padding-left: 12px; font-weight: 500; }
+.sec-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 8px; }
+.sec-head .idx { color: var(--accent); font-weight: 600; font-size: 13px; }
+.pill { display: inline-flex; align-items: center; border: 1px solid var(--stroke); background: transparent; color: var(--text2); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.pill:hover { background: var(--fill2); }
+.pill.active { background: var(--fill); color: var(--text); font-weight: 600; border-color: var(--fill); }
+.pill.sm { padding: 2px 10px; font-size: 12px; border-color: transparent; background: var(--t-info); color: var(--c-info); }
+.pill.sm.active { background: var(--c-info); color: #fff; }
+.card { border: 1px solid var(--stroke); border-radius: 8px; background: var(--surface); }
+.card-h { padding: 8px 14px; border-bottom: 1px solid var(--stroke2); font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; gap: 8px; }
+.card-b { padding: 14px; }
+.callout { border: 1px solid var(--stroke); border-radius: 8px; padding: 12px 14px; background: var(--fill2); }
+.callout .t { font-weight: 600; margin-bottom: 4px; }
+.callout.info { background: var(--t-info); border-color: transparent; } .callout.info .t { color: var(--c-info); }
+.callout.warning { background: var(--t-warning); border-color: transparent; } .callout.warning .t { color: var(--c-warning); }
+.callout.danger { background: var(--t-danger); border-color: transparent; } .callout.danger .t { color: var(--c-danger); }
+.callout.success { background: var(--t-success); border-color: transparent; } .callout.success .t { color: var(--c-success); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl { border: 1px solid var(--stroke); border-radius: 8px; overflow-x: auto; }
+th { text-align: left; font-weight: 500; color: var(--text3); font-size: 12px; padding: 8px 12px; border-bottom: 1px solid var(--stroke); background: var(--fill2); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--stroke2); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+tr.success td { background: var(--t-success); } tr.danger td { background: var(--t-danger); } tr.warning td { background: var(--t-warning); } tr.info td { background: var(--t-info); }
+hr { border: none; border-top: 1px solid var(--stroke); margin: 8px 0; }
+.mech { padding: 12px 0; border-top: 1px solid var(--stroke2); }
+.mech .n { color: var(--text3); font-size: 12px; width: 22px; display: inline-block; font-variant-numeric: tabular-nums; }
+.mech .body { padding-left: 26px; margin-top: 4px; }
+.bullet { display: flex; gap: 8px; } .bullet::before { content: ""; width: 4px; height: 4px; border-radius: 2px; background: var(--text3); margin-top: 9px; flex-shrink: 0; }
+.chart { position: relative; width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--stroke); border-radius: 6px; padding: 6px 10px; font-size: 12px; line-height: 1.5; white-space: nowrap; z-index: 5; display: none; }
+.ubar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--fill); gap: 2px; }
+.ubar span { display: block; height: 100%; }
+.ubar-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+.tl { display: grid; grid-template-columns: 92px 14px 1fr; gap: 10px; }
+.tl .d { font-size: 12px; color: var(--text3); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.tl .dot { display: flex; flex-direction: column; align-items: center; }
+.tl .dot b { width: 8px; height: 8px; border-radius: 4px; background: var(--text4); margin-top: 6px; }
+.tl .dot b.danger { background: var(--c-danger); } .tl .dot b.success { background: var(--c-success); } .tl .dot b.warning { background: var(--c-warning); }
+.tl .dot s { width: 1px; flex: 1; background: var(--stroke); margin-top: 4px; }
+.tl .c { padding-bottom: 14px; } .tl .c .t { font-weight: 600; }
+.score { display: inline-flex; gap: 3px; } .score i { width: 14px; height: 6px; border-radius: 2px; background: var(--fill); } .score i.on { background: var(--accent); }
+.gloss-panel { border-left: 2px solid var(--accent); padding-left: 12px; margin-top: 8px; }
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; }
+.steps div { background: var(--fill2); border-radius: 6px; padding: 8px 10px; font-size: 12px; }
+pre { font-family: var(--mono); font-size: 12px; line-height: 1.55; background: var(--fill2); border: 1px solid var(--stroke); border-radius: 6px; padding: 10px 12px; overflow-x: auto; color: var(--text2); margin: 0; }
+code { font-family: var(--mono); font-size: .92em; background: var(--fill); padding: 1px 4px; border-radius: 3px; }
+.slider .top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.slider .top span:first-child { color: var(--text2); } .slider .top span:last-child { font-weight: 600; text-align: right; }
+.slider input { width: 100%; accent-color: var(--accent); }
+.grp { font-size: 12px; font-weight: 600; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.theme-btn { border: 1px solid var(--stroke); background: transparent; color: var(--text2); border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+section[data-sec] { scroll-margin-top: 16px; }
+.divider { border-top: 1px solid var(--stroke); margin: 8px 0; }
+@media (max-width: 860px) { .g2, .g3, .g4, .g32, .gsim { grid-template-columns: 1fr; } .g6 { grid-template-columns: repeat(3, minmax(0,1fr)); } .steps { grid-template-columns: 1fr; } }
+@media print {
+  .nav, .theme-btn, .no-print { display: none !important; }
+  section[data-sec] { display: block !important; }
+  .page { max-width: none; padding: 0; }
+  .card, .tbl, .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="page stack-lg">
+
+<header class="stack-sm">
+  <div class="topbar">
+    <span class="small faint">项目研究报告 · 数据截至 2026-10-08</span>
+    <button class="theme-btn" id="themeBtn">切换深色 / 浅色</button>
+  </div>
+  <h1>Aave：DeFi 借贷龙头的护城河、经营数据与 Kelp 事件之后的信任问题</h1>
+  <p class="muted">Aave 是部署在 23 条链上的非托管借贷协议，产品包括 V3、V4（Hub/Spoke 架构）、GHO 稳定币和面向机构的 Horizon RWA 市场。本报告回答三个问题：它凭什么做到最大，代币值多少，以及 Kelp 事件之后还值不值得信任；并附 TVL 原生数量拆解和可交互的情景模拟器。</p>
+</header>
+
+<div class="grid g6 strip">
+  <div class="stat"><div class="v">$18.7B</div><div class="l">TVL（借贷类第一）</div></div>
+  <div class="stat"><div class="v">$12.8B</div><div class="l">未偿借款</div></div>
+  <div class="stat"><div class="v">$718M</div><div class="l">12 个月费用</div></div>
+  <div class="stat"><div class="v">$92.7M</div><div class="l">12 个月协议收入</div></div>
+  <div class="stat"><div class="v info">$172.95</div><div class="l">AAVE 价格 · 市值 $2.67B</div></div>
+  <div class="stat"><div class="v warning">29x</div><div class="l">市值 / 12 个月收入</div></div>
+</div>
+
+<div class="grid g3">
+  <div class="stack-sm"><div class="small faint">问题一 · 为什么能赢</div><p>多资产共享池加上 E-Mode、闪电贷和多链扩张形成流动性网络效应；Compound 在 2021 年后连续自伤，错过了 LST 与 L2 两波增量。</p></div>
+  <div class="stack-sm"><div class="small faint">问题二 · 代币值多少</div><p>季度收入从 $41M 降到 $13M，回购停摆，现金开支已超过收入。现价约等于“收入恢复到约 $1.1 亿 × 25 倍”的基准情景，不算便宜。</p></div>
+  <div class="stack-sm"><div class="small faint">问题三 · 还能信任吗</div><p>合约没有出问题，存款人零损失；但暴露了风控和治理短板，代价主要由 DAO 金库和代币持有人承担。</p></div>
+</div>
+
+<div class="row nav" id="tabs">
+  <button class="pill active" data-tab="all">全部</button>
+  <button class="pill" data-tab="moat">01 护城河</button>
+  <button class="pill" data-tab="econ">02 经营与估值</button>
+  <button class="pill" data-tab="kelp">03 Kelp 事件</button>
+  <button class="pill" data-tab="trust">04 信任评估</button>
+  <button class="pill" data-tab="sim">05 情景模拟器</button>
+</div>
+
+<!-- ============================ 01 护城河 ============================ -->
+<section data-sec="moat" class="stack-lg">
+  <div>
+    <div class="sec-head"><span class="idx">01</span><h2>为什么 Aave 的 TVL 这么高，又为什么能击败 Compound</h2></div>
+    <p class="lead">Compound 发明了“池化借贷 + 算法利率”，Aave 则把这个模型做成了一个不断扩张的流动性网络：上币更快、资产更全、链更多、产品层层叠加（闪电贷、aToken、E-Mode、GHO），再加上专业化的风险治理，形成“流动性越深 → 利率越好、清算越稳 → 越多协议把 Aave 当默认货币市场 → 流动性更深”的飞轮。Compound 则在 2021 年后连续自伤（激励失控、分发漏洞、团队转向、治理攻击），错过了 LST 和 L2 两波最大的增量。</p>
+  </div>
+
+  <div class="gloss" data-terms="flashloan,emode,atoken,reserveFactor,hubspoke"></div>
+
+  <div>
+    <h3>Aave 与 Compound TVL 对比（季度初快照）</h3>
+    <div class="chart" id="ch-tvl"></div>
+    <div class="caption">单位：十亿美元（TVL，按 DefiLlama 口径扣除已借出资产）。来源：DefiLlama API，2020-10 至 2026-10。</div>
+  </div>
+
+  <div class="grid g3">
+    <div class="stat"><div class="v">2021Q2</div><div class="l">Compound 最后一次领先（$7.8B vs $4.6B）</div></div>
+    <div class="stat"><div class="v info">~12x</div><div class="l">当前 Aave / Compound TVL 倍数（$18.7B vs $1.58B）</div></div>
+    <div class="stat"><div class="v">34.7%</div><div class="l">Aave 占全部借贷协议 TVL 份额（517 个协议）</div></div>
+  </div>
+
+  <div>
+    <h3>六个关键的设计与经营差异</h3>
+    <div class="mech"><span class="n">01</span><b>资产广度与上币速度：把“长尾资产”变成借贷需求</b>
+      <div class="body"><p class="muted">Aave 从 V1 起就采用多资产共享池，并积极上架 LST（wstETH、weETH）、LRT、Pendle PT、USDe/sUSDe 等新资产。每一类新资产都带来一批“抵押—借款—循环”的需求，TVL 随着加密市场的新叙事一起增长。</p>
+      <p class="small faint">对比 Compound：风格保守；V3（Comet）甚至改为“每个市场只能借一种资产（通常是 USDC）”，安全性更高但把流动性切成碎片，失去了网络效应。</p></div></div>
+    <div class="mech"><span class="n">02</span><b>E-Mode（高效模式）：LST 质押套利的发动机</b>
+      <div class="body"><p class="muted">V3 的 E-Mode 允许价格高度相关的资产（如 wstETH 抵押借 WETH）使用高达 93% 的 LTV。“质押收益 − ETH 借款利率”的利差可以被放大 10 倍以上，循环杠杆资金因此大量沉淀在 Aave。Blockworks 统计，事件前 WETH 借款对应的抵押品中有 98.5%（$5.43B / $5.52B）是 ETH LST。</p>
+      <p class="small faint">对比 Compound：没有同等级别的相关资产高杠杆模式，错过了 2023 年上海升级之后的 LST 浪潮。注意：这同时也是 Kelp 事件中风险放大的根源（见第三部分）。</p></div></div>
+    <div class="mech"><span class="n">03</span><b>产品创新密度：闪电贷、aToken、利率模式、隔离模式</b>
+      <div class="body"><p class="muted">Aave 首创闪电贷（套利、清算、债务迁移的基础设施），aToken 是生息且可组合的 1:1 存款凭证，还有浮动/稳定利率、信用委托、隔离模式、供给/借款上限、Portal 等。这些“乐高积木”让 Aave 成为其他协议默认集成的货币市场（Pendle、Ethena、EtherFi、各类收益金库）。</p>
+      <p class="small faint">对比 Compound：cToken 采用汇率模型，集成友好度较差；V3 之后新功能迭代慢，集成方逐渐转向 Aave 和 Morpho。</p></div></div>
+    <div class="mech"><span class="n">04</span><b>多链扩张：先占住每一条链的“默认借贷协议”位置</b>
+      <div class="body"><p class="muted">2021 年上线 Polygon、Avalanche 并配合流动性挖矿，V3 之后部署到 Arbitrum、Optimism、Base 以及 Plasma、Monad、Mantle 等 20+ 条链，目前覆盖 23 条链。新链生态通常把 Aave 的部署当作启动流动性的标配。</p>
+      <p class="small faint">对比 Compound：多链扩张慢、规模小，主要 TVL 仍在以太坊主网。</p></div></div>
+    <div class="mech"><span class="n">05</span><b>专业化风险治理与“兜底文化”</b>
+      <div class="body"><p class="muted">Aave DAO 长期雇用 Gauntlet、Chaos Labs、LlamaRisk 等风险服务商，引入 Guardian 紧急冻结、Risk Steward 参数快速调整、CAPO 预言机、Safety Module/Umbrella 坏账保险。2022 年 CRV 事件约 $1.9M 坏账由 DAO 全额覆盖，没有让存款人承担损失，“不让存款人受损”的声誉成为吸引机构资金的关键。</p>
+      <p class="small faint">对比 Compound：2021 年 9 月出现 COMP 分发漏洞（约 $8,000 万 COMP 被错误发放），且合约修复受治理时间锁限制；2024 年又遭遇“Golden Boys”治理攻击，试图把金库中约 49.9 万枚 COMP 划走。</p></div></div>
+    <div class="mech"><span class="n">06</span><b>代币经济与团队连续性</b>
+      <div class="body"><p class="muted">Aave 较早停止大规模流动性挖矿，转向用协议收入回购（2025 年 4 月起累计约 $42.9M），并以质押 AAVE 作为坏账保险。创始人 Stani Kulechov 一直主导 Aave，从 V1 到 V4 的路线没有中断。</p>
+      <p class="small faint">对比 Compound：COMP 在 2020 年开创“流动性挖矿”，引来大量雇佣兵资本，激励停止后资金随即离开。创始人 Robert Leshner 在 2023 年转去做 Superstate，Compound 失去核心推动力。</p></div></div>
+  </div>
+
+  <div class="stack">
+    <div>
+      <h3>剔除价格：用原生数量看资金真实流向</h3>
+      <p class="muted">美元 TVL 同时受“币价”和“数量”影响。Aave 的存款里，ETH 类资产约占一半，BTC 类约占 30%，所以 ETH 跌 40% 时，即使没人取款，美元 TVL 也会大幅下降。下面把 TVL 拆成原生数量：ETH 类资产按 ETH 等值计（wstETH 等按其 ETH 价值折算），BTC 类按 BTC 计，稳定币按美元计。</p>
+    </div>
+    <div class="grid g2">
+      <div><b class="small">美元 TVL 与 ETH 计价 TVL</b>
+        <div class="chart" id="ch-tvleth"></div>
+        <div class="caption">ETH 计价 TVL = 美元 TVL ÷ 当日 ETH 价格。美元口径 2025-10 见顶，ETH 口径却一直涨到 2026-03（12.6M ETH），说明这段时间的下跌主要来自币价。来源：DefiLlama，每月 1 日。</div></div>
+      <div><b class="small">抵押品原生数量：LST/LRT 与 BTC</b>
+        <div class="chart" id="ch-coll"></div>
+        <div class="caption">这两类主要用作抵押品、很少被借出，DefiLlama 的未借出余额基本等于存款量。来源：DefiLlama 分币种余额，每月 1 日。</div></div>
+    </div>
+    <div class="grid g2">
+      <div><b class="small">以太坊 Core 市场 WETH 存款与借款</b>
+        <div class="chart" id="ch-weth"></div>
+        <div class="caption">单位：百万 WETH。来源：Aavescan，每月 1 日；仅以太坊 Core 市场，不含 Prime 和其他链。</div></div>
+      <div><b class="small">以太坊 Core 市场 USDC + USDT 存款</b>
+        <div class="chart" id="ch-stable"></div>
+        <div class="caption">单位：十亿美元。来源：Aavescan，每月 1 日。稳定币是 Kelp 事件中跑得最快的资金：4 月到 5 月减少 53%。</div></div>
+    </div>
+    <div>
+      <b class="small">三个阶段的“价格效应”与“数量效应”</b>
+      <div class="tbl" style="margin-top:8px"><table>
+        <tr><th>阶段</th><th class="r">美元 TVL</th><th class="r">ETH 价格</th><th class="r">LST/LRT（ETH 等值）</th><th class="r">BTC 类</th><th class="r">Core 稳定币存款</th><th class="r">Core WETH 存款</th><th>判断</th></tr>
+        <tr><td>2025-10 → 2026-04-17（事件前）</td><td class="r">$43.3B → $26.1B（-40%）</td><td class="r">-43%</td><td class="r">455 万 → 483 万（+6%）</td><td class="r">7.77 万 → 8.11 万（+4%）</td><td class="r">$11.8B → $8.2B（-30%）</td><td class="r">244 万 → 297 万（+22%）</td><td>以价格下跌为主；ETH/BTC 抵押品仍在净流入，稳定币已开始流出</td></tr>
+        <tr class="danger"><td>2026-04-17 → 05-01（事件冲击）</td><td class="r">$26.1B → $14.1B（-46%）</td><td class="r">-4%</td><td class="r">483 万 → 339 万（-30%）</td><td class="r">8.11 万 → 5.38 万（-34%）</td><td class="r">$8.2B → $3.8B（-53%）</td><td class="r">297 万 → 210 万（-29%）</td><td>真实资金出逃，几乎与价格无关</td></tr>
+        <tr class="success"><td>2026-06-01 → 10-08（修复期）</td><td class="r">$13.9B → $18.7B（+35%）</td><td class="r">+28%</td><td class="r">278 万 → 339 万（+22%）</td><td class="r">5.94 万 → 6.76 万（+14%）</td><td class="r">$4.4B → $5.1B（+16%）</td><td class="r">193 万 → 219 万（+13%）</td><td>价格回升与真实回流大约各占一半</td></tr>
+      </table></div>
+      <div class="caption">Core 稳定币和 WETH 列的“事件前”起点为 2025-11-01，终点为 2026-04-01（Aavescan 月度快照）。LST/LRT 列不含 WETH；WETH 大部分被借出，DefiLlama 只记录未借出部分，因此单独用 Aavescan 的存款口径。</div>
+    </div>
+    <div class="grid g4">
+      <div class="stat"><div class="v warning">70%</div><div class="l">LST/LRT 数量恢复到事件前的比例</div></div>
+      <div class="stat"><div class="v">83%</div><div class="l">BTC 类数量恢复比例</div></div>
+      <div class="stat"><div class="v danger">62%</div><div class="l">Core 稳定币存款恢复比例</div></div>
+      <div class="stat"><div class="v warning">74%</div><div class="l">Core WETH 存款恢复比例</div></div>
+    </div>
+    <div class="callout"><div class="t">怎么读这组数据</div>事件前半年美元 TVL 跌了 40%，但抵押品数量还在增长，说明用户没有离开，只是币价下跌。事件后五天的下跌则几乎全部是真实流出。到今天，按数量算 Aave 只恢复了事件前的 60–80%，最慢的是稳定币存款。稳定币是 Aave 收入的主要来源，这也解释了为什么收入恢复比 TVL 更慢。后续跟踪资金流向时，建议看 ETH 计价 TVL 和稳定币存款量，而不是美元 TVL。</div>
+  </div>
+</section>
+
+<div class="divider all-only"></div>
+
+<!-- ============================ 02 经营与估值 ============================ -->
+<section data-sec="econ" class="stack-lg">
+  <div>
+    <div class="sec-head"><span class="idx">02</span><h2>经营数据与代币价值</h2></div>
+    <p class="lead">Aave 仍是全行业现金流最强的借贷协议（年化利息费用约 $7.2 亿），但留给 DAO 的部分只有约 13%，而且这一部分在 2025Q3 见顶后连续四个季度下滑：季度收入从 $41.4M 降到 $13.4M，回购从每季约 $11M 降到 0。按当前约 $27 亿的市值，市场给出的估值大致是“温和复苏”情景，价格已经不算便宜。AAVE 是一个押注“收入回到 $1 亿以上、回购重启”的期权，而不是一个被低估的现金牛。</p>
+  </div>
+
+  <div class="grid g4">
+    <div class="stat"><div class="v">$18.7B</div><div class="l">TVL（扣除借出）；总存款约 $31.5B</div></div>
+    <div class="stat"><div class="v">$12.8B</div><div class="l">未偿借款</div></div>
+    <div class="stat"><div class="v">$718M</div><div class="l">过去 12 个月费用（借款人支付）</div></div>
+    <div class="stat"><div class="v warning">$92.7M</div><div class="l">过去 12 个月协议收入（归 DAO）</div></div>
+  </div>
+
+  <div class="grid g2">
+    <div><h3>季度费用：借款人支付的总利息与清算费</h3><div class="chart" id="ch-fees"></div>
+      <div class="caption">单位：百万美元。来源：DefiLlama 利润表（Gross Protocol Revenue），2024Q1–2026Q3。</div></div>
+    <div><h3>季度协议收入：DAO 实际留存的部分</h3><div class="chart" id="ch-rev"></div>
+      <div class="caption">单位：百万美元。来源：DefiLlama 利润表（Gross Profit），2024Q1–2026Q3。</div></div>
+  </div>
+
+  <div class="grid g32">
+    <div><h3>月度协议收入</h3><div class="chart" id="ch-revm"></div>
+      <div class="caption">单位：百万美元。来源：DefiLlama，2025-01 至 2026-09。2025-09 峰值 $15.4M，2026-07 谷底 $3.9M。</div></div>
+    <div><h3>季度 AAVE 回购金额</h3><div class="chart" id="ch-buyback"></div>
+      <div class="caption">单位：百万美元。来源：DefiLlama Holders Revenue / TokenBuybacks。2026-04-19 起暂停，2026-06-24 后链上再无回购记录。</div></div>
+  </div>
+
+  <div class="stack-sm">
+    <h3>收入为什么在下滑</h3>
+    <div class="bullet"><p><b>规模收缩：</b>总存款从事件前的 $48.5B 降到约 $31.5B，ETH 价格从 2025 年高点明显回落，以美元计的利息规模同步缩小。</p></div>
+    <div class="bullet"><p><b>利率压缩：</b>稳定币借款利率从 2024 年的 8–12% 降到 2026 年的 5–8%；DAO 治理文件承认借款费用较峰值下降约 25%。</p></div>
+    <div class="bullet"><p><b>竞争分流：</b>Morpho 凭借隔离金库和更高的资金利用率（约 82%，Aave 约 53%），在 2026 年 4 月首次在年化信贷收入上超过 Aave（$127M vs $119M）。Spark 在事件期间吸走了约 $1.3B 存款。</p></div>
+    <div class="bullet"><p><b>一次性收入消退：</b>2025Q4 至 2026Q2 每季有 $27–31M 的清算费，来自市场暴跌，不可持续；2026Q3 清算费只剩 $0.5M。事件之后，部分收入还要用于偿还 Mantle 的信用额度。</p></div>
+  </div>
+
+  <div class="gloss" data-terms="reserveFactor,atoken,umbrella,utilization"></div>
+
+  <div class="grid g2" style="gap:24px">
+    <div class="stack-sm">
+      <h3>协议收入用什么币计价</h3>
+      <p class="muted">两者都不是。Aave 的收入是多币种的：借款人付什么币，DAO 就收什么币。稳定币借款的利息收到 USDC、USDT，WETH 借款的利息收到 WETH，GHO 的利息收到 GHO，清算罚金收到被清算的抵押品（常见是 ETH、LST、BTC）。这些收入以 aToken 形式留在金库里继续生息，DefiLlama 等数据平台再按当时价格折算成美元展示。</p>
+      <div>
+        <div class="ubar-top"><span>当前年化协议收入的币种构成（估算）</span><span>约 $59M / 年</span></div>
+        <div class="ubar"><span style="width:60%;background:var(--c-green)"></span><span style="width:26%;background:var(--c-blue)"></span><span style="width:14%;background:var(--c-gray)"></span></div>
+        <div class="legend" style="margin-top:6px"><span><i style="background:var(--c-green)"></i>稳定币约 60%</span><span><i style="background:var(--c-blue)"></i>ETH 约 26%</span><span><i style="background:var(--c-gray)"></i>GHO、BTC、清算及其他约 14%</span></div>
+      </div>
+      <div class="caption">估算方法：各类借款余额 × 借款利率 × 储备金率（WETH 约 2.0M 枚 × 2.0% × 15%，稳定币约 $6.8B × 4.7% × 11%），并校准到 DefiLlama 30 天年化收入。可在情景模拟器里调整。</div>
+      <div class="callout info"><div class="t">和 Lido 的关键区别</div>Lido 的收入 100% 是 ETH，ETH 涨多少收入就涨多少。Aave 的收入大部分是稳定币，ETH 价格是间接影响：ETH 越贵，用户手里的抵押品越值钱，能借的稳定币越多，稳定币借款需求和利率随之上升。所以 Aave 收入对 ETH 价格的弹性小于 1，但在牛市里会通过“借款需求”放大。</div>
+    </div>
+    <div class="stack-sm">
+      <h3>回购在收入超过多少后开启</h3>
+      <p class="muted">Aave 没有像 Lido 那样“收入超过某个基准才回购”的固定门槛。唯一写明量化条件的是 2024 年的 Aavenomics 原始设计；实际执行中，回购一直是“固定预算 + 财务委员会酌情调整”，现在则改成了没有公布门槛的自动回购。</p>
+      <div class="tbl"><table>
+        <tr><th>时间</th><th>规则</th><th>收入门槛</th></tr>
+        <tr class="info"><td>2024-07 原始设计</td><td>需同时满足：金库净持有 ≥ 2 年服务商开支；90 天年化收入 ≥ 全部开支（含回购预算和 Umbrella 预算）的 150%</td><td>有：收入 ≥ 1.5 × 总开支</td></tr>
+        <tr><td>2025-04 起步</td><td>每周固定买入 $100 万，持续 6 个月</td><td>无，固定预算</td></tr>
+        <tr><td>2025 下半年</td><td>年预算 $5,000 万，每周 $25 万–$175 万，财务委员会可在 ±75% 内调节</td><td>无，酌情调节</td></tr>
+        <tr><td>2026-03</td><td>年预算降至 $3,000 万，改用 ETH 资产支付，保留 12 个月稳定币开支储备</td><td>隐含：先保开支储备</td></tr>
+        <tr class="danger"><td>2026-04-19</td><td>因 Kelp 事件暂停，后由 ARFC 追认</td><td>—</td></tr>
+        <tr class="warning"><td>2026-06-27 Aavenomics 3.0</td><td>“100% 协议和 GHO 收入归 AAVE”，链上自动执行，只有治理投票才能停止</td><td>未公布；6/24 后链上无回购</td></tr>
+      </table></div>
+      <div class="caption">来源：Aave 治理论坛 [TEMP CHECK] AAVEnomics update、[ARFC] Aavenomics implementation: Part one、Aave DAO Funding Insights、[ARFC] Pause AAVE Buybacks；ForkLog、The Defiant。</div>
+    </div>
+  </div>
+
+  <div class="callout warning"><div class="t">按 2024 年的门槛算，现在离重启回购还很远</div>DAO 2026 年的现金开支预算约 $7,800 万：服务商约 $5,100 万（主要是 Aave Labs），sGHO 激励约 $1,400 万，Umbrella 约 $830 万，流动性委员会约 $500 万；此外每年还要发放约 13.8 万枚 AAVE（服务商 5.75 万枚、stkAAVE 约 8 万枚）。如果套用“收入 ≥ 1.5 × 总开支”，加上 $3,000 万回购预算，需要约 $1.6 亿年化收入，即使不回购也需要约 $1.2 亿。当前年化收入只有约 $5,900 万，连现金开支都覆盖不了（治理文件预计 Aave Labs 产品收入划转给 DAO 后可抵消约 $1,000 万，仍不够）。这就是回购迟迟没有重启的根本原因，比 Kelp 债务本身更关键。</div>
+
+  <div>
+    <h3>代币与资产负债表概况</h3>
+    <div class="tbl"><table>
+      <tr><th>指标</th><th>数值</th><th>解读</th></tr>
+      <tr><td>价格 / 市值 / FDV</td><td>$172.95 / $2.67B / $2.77B</td><td>距 2021 年高点 $661 仍低 74%；30 天上涨 30.6%，从 4 月低点 $80 翻倍</td></tr>
+      <tr class="success"><td>流通 / 最大供应</td><td>1,544 万 / 1,600 万（96.5%）</td><td>几乎没有解锁抛压，这是优点</td></tr>
+      <tr><td>质押规模</td><td>$4.3 亿（市值的 16%）</td><td>质押 AAVE 仍是旧 Safety Module 的一部分；坏账保险主力已转向 Umbrella（aToken/GHO 质押）</td></tr>
+      <tr><td>累计回购</td><td>$42.9M，约 20.5 万枚（1.28% 供应）</td><td>回购的代币进入金库而非销毁，可被再次使用；销毁方案仍在讨论</td></tr>
+      <tr class="warning"><td>DAO 金库（DefiLlama 可追踪部分）</td><td>$1.40 亿，其中 73% 是 AAVE 自身</td><td>非 AAVE 资产仅约 $3,700 万，流动性储备偏薄</td></tr>
+      <tr class="danger"><td>Kelp 事件后负债</td><td>Mantle 信用额度最高 30,000 ETH（约 $7,900 万）</td><td>按当前日均约 $16.7 万收入粗算，全部还清需要一年以上</td></tr>
+      <tr class="warning"><td>市销率</td><td>约 29x（12 个月）/ 约 45x（月度年化）</td><td>以当前收入衡量偏贵；只有收入回到 $1 亿以上才算合理</td></tr>
+    </table></div>
+    <div class="caption">来源：DefiLlama（2026-10-08）、TokenBuybacks、Aave 治理论坛 ARFC、Woofun Research。金库只统计 DefiLlama 能追踪的部分，Collector 中的 aToken 可能未完全计入。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><span>估值计算器：年化协议收入 × 市销率</span><span>按 1,600 万枚完全稀释供应</span></div>
+    <div class="card-b stack">
+      <div class="stack-sm"><div class="small muted">年化协议收入（百万美元）</div><div class="row" id="calcRev"></div>
+        <div class="small faint">参考：当前 30 天年化约 $59M；过去 12 个月 $92.7M；2025 全年约 $124M；2025Q3 年化峰值约 $166M。</div></div>
+      <div class="stack-sm"><div class="small muted">市销率（市值 / 协议收入）</div><div class="row" id="calcMult"></div>
+        <div class="small faint">参考：AAVE 当前约 29x（过去 12 个月）或 45x（当前月度年化）；2025 年大部分时间在 30–40x。</div></div>
+      <hr>
+      <div class="grid g3" id="calcOut"></div>
+      <p class="small faint">注意：协议收入不等于持币人利润。DAO 还要支付服务商预算（仅 Aave Labs 一家约 $51M/年）、偿还 Mantle 的信用额度，因此按净利润计算的倍数会显著更高。</p>
+    </div>
+  </div>
+
+  <div>
+    <h3>三种情景（12–18 个月）</h3>
+    <div class="tbl"><table>
+      <tr><th>情景</th><th>核心假设</th><th class="r">年化收入</th><th class="r">市销率</th><th class="r">隐含价格</th></tr>
+      <tr class="danger"><td>悲观</td><td>ETH 持续弱势，存款停在 $30B 左右，Morpho/Spark 继续分流，收入优先还债，回购不重启</td><td class="r">$60M</td><td class="r">20x</td><td class="r">约 $75</td></tr>
+      <tr><td>基准</td><td>利用率恢复，V4 Hub/Spoke 与 Horizon RWA、代币化股票逐步贡献，Mantle 债务大部分还清后回购重启</td><td class="r">$110M</td><td class="r">25x</td><td class="r">约 $172</td></tr>
+      <tr class="success"><td>乐观</td><td>新一轮 DeFi 周期，存款回到 $45B 以上，GHO 扩张，Aavenomics 3.0 引入销毁</td><td class="r">$180M</td><td class="r">30x</td><td class="r">约 $338</td></tr>
+    </table></div>
+    <div class="caption">隐含价格 = 年化收入 × 市销率 ÷ 1,600 万枚。倍数和收入均为假设，不构成投资建议。</div>
+  </div>
+</section>
+
+<div class="divider all-only"></div>
+
+<!-- ============================ 03 Kelp ============================ -->
+<section data-sec="kelp" class="stack-lg">
+  <div>
+    <div class="sec-head"><span class="idx">03</span><h2>Kelp 事件：Aave 扮演了什么角色</h2></div>
+    <p class="lead">漏洞不在 Aave，而在 Kelp 的 LayerZero 跨链桥配置（1-of-1 DVN，只需要一个验证者签名）。但 Aave 是攻击者把“凭空印出来的 rsETH”兑换成约 $1.9 亿真实 WETH 的地方。它先是变现通道和坏账承担方，随后变成挤兑中心，最后又成为救助的组织者。最终存款人没有承担损失，但代价由 DAO 金库、未来收入和代币持有人承担。</p>
+  </div>
+
+  <div class="gloss" data-terms="dvn,emode,utilization,umbrella"></div>
+
+  <div class="grid g4">
+    <div class="stat"><div class="v danger">116,500</div><div class="l">被凭空释放的 rsETH（约 $2.92 亿，约占供应的 18%）</div></div>
+    <div class="stat"><div class="v danger">163,183 ETH</div><div class="l">最初的资金缺口</div></div>
+    <div class="stat"><div class="v warning">-$15.1B</div><div class="l">3.5 天内存款外流（$48.5B → $30.7B）</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">存款人承担的损失；Umbrella 未被罚没</div></div>
+  </div>
+
+  <div class="grid g2" style="gap:24px">
+    <div>
+      <h3>事件时间线（2026 年）</h3>
+      <div id="timeline"></div>
+    </div>
+    <div class="stack">
+      <div>
+        <h3>163,183 ETH 缺口是怎么补上的</h3>
+        <div class="ubar-top"><span>资金来源构成</span><span>单位：ETH</span></div>
+        <div class="ubar"><span style="width:53.9%;background:var(--c-green)"></span><span style="width:8.9%;background:var(--c-blue)"></span><span style="width:18.4%;background:var(--c-orange)"></span><span style="width:15.3%;background:var(--c-pink)"></span><span style="width:3.5%;background:var(--c-gray)"></span></div>
+        <div class="legend" style="margin-top:6px"><span><i style="background:var(--c-green)"></i>追回</span><span><i style="background:var(--c-blue)"></i>捐赠</span><span><i style="background:var(--c-orange)"></i>Mantle 借款</span><span><i style="background:var(--c-pink)"></i>DAO 金库</span><span><i style="background:var(--c-gray)"></i>追加捐赠</span></div>
+        <div class="tbl" style="margin-top:8px"><table>
+          <tr><th>来源</th><th class="r">ETH</th><th class="r">占比</th><th>谁承担</th></tr>
+          <tr><td>冻结与清算追回</td><td class="r">87,955</td><td class="r">54%</td><td>攻击者</td></tr>
+          <tr><td>生态伙伴捐赠</td><td class="r">14,570</td><td class="r">9%</td><td>EtherFi、Lido 等</td></tr>
+          <tr class="warning"><td>Mantle 信用额度</td><td class="r">≤30,000</td><td class="r">18%</td><td>Aave 未来收入（需偿还）</td></tr>
+          <tr class="danger"><td>Aave DAO 金库</td><td class="r">25,000</td><td class="r">15%</td><td>AAVE 持有人</td></tr>
+          <tr><td>后续追加捐赠（估算）</td><td class="r">约 5,700</td><td class="r">4%</td><td>生态伙伴</td></tr>
+        </table></div>
+        <div class="caption">来源：Aave 治理论坛《[ARFC] rsETH Incident Funding Update》。最后一行为缺口减去其他来源后的推算值。</div>
+      </div>
+      <div class="callout danger"><div class="t">直接经济代价约由 AAVE 持有人承担 1/3</div>25,000 ETH 金库出资加最高 30,000 ETH 的借款，合计约占缺口的 1/3。这直接导致 2026Q2 至今回购基本停摆、金库非 AAVE 资产变薄，也是 AAVE 在 4 月跌到 $80 的主要原因。</div>
+    </div>
+  </div>
+
+  <div>
+    <h3>Aave 的四重角色</h3>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><span>变现通道</span><span>主要失误</span></div><div class="card-b small muted">凭空释放的 rsETH 本身不值钱，是 Aave 的深度流动性让它变成了 $1.9 亿真实 WETH。rsETH 在 Core 市场 E-Mode 下的 LTV 高达 93%，L2 上的 rsETH DEX 流动性又很薄。治理论坛有代表直言：这类资产按风险分级最多只配 50% LTV 的隔离额度。上币时只评估了资产价格相关性，没有评估跨链桥配置（1-of-1 DVN）这类基础设施风险。</div></div>
+      <div class="card"><div class="card-h"><span>坏账承担方</span><span>被动承担</span></div><div class="card-b small muted">攻击者的健康因子停在 1.01，Aave 的清算机制按设计正常运行，但抵押品本身没有储备支撑，清算也无法覆盖债务。Aave 的合约和预言机都没有出错，风险来自“抵押品的抵押品”。</div></div>
+      <div class="card"><div class="card-h"><span>风险传导器</span><span>结构性问题</span></div><div class="card-b small muted">在共享池模型下，WETH 出借人实际上成了第三层亏损承担者。Blockworks 指出，4 天内 30% 以上的存款被提走，USDC/USDT/WETH 利用率全部顶到 100%，与 rsETH 无关的存款人也取不出钱。这是共享池模型最大的弱点，也是 Morpho/Spark 这类隔离市场的卖点。</div></div>
+      <div class="card"><div class="card-h"><span>救助组织者</span><span>处置出色</span></div><div class="card-b small muted">几小时内冻结市场，通过治理清算攻击者仓位，牵头组织 DeFi United，5 周内恢复全部储备，存款人零损失，Umbrella 质押者没有被罚没。这延续了 2022 年 CRV 事件时“DAO 兜底、存款人不受损”的做法。</div></div>
+    </div>
+  </div>
+
+  <div>
+    <h3>对 Aave 的影响</h3>
+    <div class="tbl"><table>
+      <tr><th>维度</th><th>短期冲击（4–5 月）</th><th>当前状态（10 月）</th></tr>
+      <tr><td>存款 / TVL</td><td>存款 -36.7%；TVL $26.3B → $14.1B，有记录以来最大单周流出 -$8.67B</td><td>TVL 回升至 $18.7B，仍比事件前低约 30%</td></tr>
+      <tr><td>原生数量（剔除价格）</td><td>LST/LRT -144 万 ETH（-30%），BTC -2.7 万枚（-34%），Core 稳定币 -$44 亿（-53%）</td><td>分别恢复到事件前的 70%、83%、62%</td></tr>
+      <tr><td>市场份额</td><td>存款份额 68% → 61% 以下，借款份额 65.5%（一年多来最低）</td><td>仍是第一（借贷类 TVL 的 34.7%），Morpho 已到 $11.2B</td></tr>
+      <tr><td>收入</td><td>4 月 Morpho 年化信贷收入首次超过 Aave</td><td>月度收入约 $4.9M，只有 2025 年峰值的 1/3</td></tr>
+      <tr><td>金库与负债</td><td>金库出资 25,000 ETH，背上 Mantle 信用额度</td><td>还债期间回购停摆，代币持有人回报推迟</td></tr>
+      <tr><td>代币价格</td><td>最低约 $80</td><td>$173，30 天上涨 31%（V4 上线代币化股票、DeFi 整体反弹）</td></tr>
+      <tr><td>治理先例</td><td>通过治理强制清算、Arbitrum 冻结资金，引发“抗审查性”争议</td><td>冻结的 $7,100 万卷入美国联邦法院诉讼，尚未了结</td></tr>
+    </table></div>
+    <div class="caption">来源：Blockworks Intel、Gate/EmberCN 链上数据、DefiLlama、Aavescan、CryptoTimes、Aave 治理论坛。</div>
+  </div>
+</section>
+
+<div class="divider all-only"></div>
+
+<!-- ============================ 04 信任 ============================ -->
+<section data-sec="trust" class="stack-lg">
+  <div>
+    <div class="sec-head"><span class="idx">04</span><h2>Aave 还值得信任吗</h2></div>
+    <p class="lead">需要分两种身份回答。作为存款人：值得，而且仍是行业中最可信的选择之一。在蓝筹资产（USDC、ETH、wstETH）上，Aave 刚证明了自己在极端情况下会兜底。作为 AAVE 持有人：需要打折扣。事件暴露的风控漏洞、核心贡献者流失、权力向 Aave Labs 集中，以及回购停摆，意味着代币回报至少要等到 Mantle 债务大部分还清、上币框架完成改革之后。</p>
+  </div>
+  <div>
+    <h3>信任评分卡</h3>
+    <div class="tbl"><table id="scorecard"><tr><th>维度</th><th>评分</th><th>依据</th></tr></table></div>
+    <div class="caption">评分为本报告的主观判断，5 分为最高。</div>
+  </div>
+  <div class="grid g2" style="gap:24px">
+    <div class="stack-sm">
+      <h3>对存款人的建议</h3>
+      <div class="bullet"><p>优先使用以太坊 Core 市场的蓝筹资产；对 LRT、跨链桥资产作为抵押品的市场保持警惕。</p></div>
+      <div class="bullet"><p>关注你所存资产市场中“循环杠杆抵押品”的占比。WETH 出借人实际上承担着 LST/LRT 的尾部风险。</p></div>
+      <div class="bullet"><p>V4 的 Hub/Spoke 架构把不同风险资产隔离到不同 Spoke，迁移完成后结构性风险会下降，可以优先选择隔离市场。</p></div>
+    </div>
+    <div class="stack-sm">
+      <h3>对 AAVE 持有人的跟踪清单</h3>
+      <div class="bullet"><p><b>收入：</b>月度协议收入能否回到 $8–10M 以上（当前约 $4.9M）。</p></div>
+      <div class="bullet"><p><b>回购：</b>Aavenomics 3.0 的链上回购是否真正恢复，销毁方案是否落地。</p></div>
+      <div class="bullet"><p><b>债务：</b>Mantle 信用额度的偿还进度，以及 $7,100 万冻结 ETH 诉讼的结果。</p></div>
+      <div class="bullet"><p><b>风控改革：</b>是否出台针对 LRT/跨链资产的分级上币框架（如 LTV 上限、桥配置审查）。</p></div>
+      <div class="bullet"><p><b>增长：</b>V4 迁移进度、代币化股票与 Horizon RWA 的规模；对 Morpho 的份额变化。</p></div>
+      <div class="bullet"><p><b>治理：</b>BGD 离开后 V3 的维护团队，以及 Aave Labs 与 DAO 之间的制衡机制。</p></div>
+    </div>
+  </div>
+  <div class="callout info"><div class="t">一句话结论</div>Aave 依然是 DeFi 借贷的“基础设施级”协议，护城河受损但没有被击穿：它输掉的是一部分份额和一年左右的现金流，没有输掉存款人的本金。AAVE 当前约 $173 的价格大致对应基准情景，赔率取决于收入能否回到 $1 亿以上，而这又高度依赖 ETH 周期和 V4 能否把“共享池的效率”与“隔离市场的安全”结合起来。</div>
+</section>
+
+<div class="divider all-only"></div>
+
+<!-- ============================ 05 模拟器 ============================ -->
+<section data-sec="sim" class="stack-lg">
+  <div>
+    <div class="sec-head"><span class="idx">05</span><h2>情景模拟器</h2></div>
+    <p class="lead">拖动滑块调整假设，右侧结果实时更新，设置会保存在本机浏览器。默认值对应当前状态：协议收入 = Σ（借款余额 × 借款利率 × 储备金率）+ 其他收入；还债 = 收入 × 还债比例，直到 Mantle 额度还清；回购按所选规则计算。</p>
+  </div>
+  <div class="row no-print" id="presets"></div>
+  <div class="stack-sm">
+    <div class="row" id="rules"></div>
+    <div class="small faint" id="ruleDesc"></div>
+  </div>
+  <div class="grid gsim">
+    <div class="card"><div class="card-h"><span>假设参数</span><span><button class="theme-btn no-print" id="simReset">恢复默认</button></span></div><div class="card-b stack" id="sliders"></div></div>
+    <div class="stack-lg">
+      <div class="grid g3" id="simStats"></div>
+      <div id="simMix"></div>
+      <div class="tbl"><table id="simTable"></table></div>
+      <div><h3>ETH 价格 → 年收入、年利润与年回购（其他参数取左侧当前值）</h3><div class="chart" id="ch-sim-eth"></div>
+        <div class="caption">横轴为 ETH 价格（美元），纵轴为百万美元。稳定币借款按（ETH 价格 ÷ 当前价格）^弹性 缩放，ETH 借款数量保持不变。本报告模型估算。</div></div>
+      <div><h3>AAVE 价格 → 每年净回购占供应比例</h3><div class="chart" id="ch-sim-aave"></div>
+        <div class="caption">横轴为 AAVE 价格（美元），纵轴为每年净回购占 1,600 万总供应的百分比。负值表示排放多于回购，即净稀释。</div></div>
+    </div>
+  </div>
+  <div class="callout"><div class="t">模型的几个结论（按默认值）</div>当前收入约 $5,900 万，低于约 $7,800 万的现金开支，三种规则下的结果差异很大：按 2024 年的盈余门槛规则，回购为 0；按固定预算回购 $3,000 万，金库每年要额外流出数千万美元；按“100% 收入”口径，回购虽然看起来最多，但开支只能靠金库或 Labs 产品收入填补。此外，每年约 13.8 万枚的排放意味着回购要超过约 $2,400 万（按 $173 计算）才能实现净通缩。Mantle 债务默认假设 30,000 ETH 已全额提取，实际提取额未公开。</div>
+</section>
+
+<div class="divider"></div>
+<p class="caption">数据来源：DefiLlama（TVL、分币种余额、费用、收入、利润表、代币数据）、Aavescan（以太坊 Core 市场存借款）、Aave 治理论坛（rsETH Incident Report、[ARFC] rsETH Incident Funding Update、[ARFC] Pause AAVE Buybacks、Aave DAO Funding Insights、[TEMP CHECK] AAVEnomics update、BGD/ACI 离开公告）、Blockworks Intel、TokenBuybacks、The Defiant、ForkLog、CryptoTimes、Cryptonomist。本报告不构成投资建议。</p>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- 数据
+  const TVL_Q = ["20Q4","21Q1","21Q2","21Q3","21Q4","22Q1","22Q2","22Q3","22Q4","23Q1","23Q2","23Q3","23Q4","24Q1","24Q2","24Q3","24Q4","25Q1","25Q2","25Q3","25Q4","26Q1","26Q2","26Q3","26Q4"];
+  const AAVE_TVL_Q = [1.47,1.74,4.55,9.48,12.73,14.21,13.72,5.79,5.54,3.68,5.54,5.82,4.8,6.63,11.67,12.46,12.58,20.41,17.18,25.0,43.32,31.1,24.31,12.17,19.17];
+  const COMP_TVL_Q = [0.82,1.92,7.82,6.55,9.17,8.9,6.68,2.66,2.35,1.64,2.03,1.89,1.95,2.28,2.84,2.29,2.01,2.71,2.15,2.59,2.86,1.91,1.41,1.11,1.61];
+  const FIN_Q = ["24Q1","24Q2","24Q3","24Q4","25Q1","25Q2","25Q3","25Q4","26Q1","26Q2","26Q3"];
+  const FEES_Q = [77.6,104.97,100.57,173.34,192.46,138.35,296.12,280.77,197.61,155.57,99.21];
+  const REV_Q = [11.91,18.23,15.73,25.93,27.14,19.75,41.42,35.85,25.37,20.17,13.39];
+  const BUYBACK_Q = [0,0,0,0,0,11.56,11.41,9.83,9.41,0.73,0];
+  const REV_M_LABELS = ["25-01","25-02","25-03","25-04","25-05","25-06","25-07","25-08","25-09","25-10","25-11","25-12","26-01","26-02","26-03","26-04","26-05","26-06","26-07","26-08","26-09"];
+  const REV_M = [11.32,9.39,6.42,5.33,6.61,7.81,10.7,15.33,15.4,15.09,12.06,8.71,10.12,8.85,6.4,8.39,6.67,5.11,3.94,4.55,4.91];
+  const TOK_M = ["25-01","25-02","25-03","25-04","25-05","25-06","25-07","25-08","25-09","25-10","25-11","25-12","26-01","26-02","26-03","26-04","26-05","26-06","26-07","26-08","26-09","26-10"];
+  const TVL_USD_M = [20.41,22.11,18.11,17.18,19.71,24.46,25.0,33.9,39.16,43.32,37.27,30.9,31.1,29.57,24.65,24.31,14.11,13.88,12.17,14.27,18.19,19.17];
+  const TVL_ETH_M = [6.13,6.7,8.1,9.42,10.99,9.71,10.04,9.18,8.9,10.45,9.7,10.32,10.45,11.98,12.55,11.57,6.25,6.91,7.76,7.66,7.36,7.14];
+  const LST_ETH_M = [3.14,3.32,3.42,4.03,4.13,4.45,4.13,4.52,4.32,4.55,4.56,4.37,4.68,5.48,5.1,4.83,3.39,2.78,3.03,3.17,3.47,3.38];
+  const BTC_K_M = [51.2,50.9,55.5,63.9,67.8,70.1,67.0,79.4,73.3,77.7,76.3,77.7,81.8,77.5,81.9,82.1,53.8,59.4,64.7,67.1,68.6,67.8];
+  const CORE_M = ["25-11","25-12","26-01","26-02","26-03","26-04","26-05","26-06","26-07","26-08","26-09","26-10"];
+  const WETH_SUP = [2.44,3.0,3.28,3.43,2.95,2.97,2.1,1.93,2.03,2.11,2.14,2.09];
+  const WETH_BOR = [2.12,2.13,2.38,2.98,2.73,2.6,2.08,1.54,1.63,1.73,1.78,1.75];
+  const STABLE_SUP = [11.75,10.7,10.5,10.59,9.26,8.22,3.83,4.41,4.66,4.97,5.04,5.12];
+  const PRICE = 172.95, SUPPLY_FDV = 16, SUPPLY_CIRC = 15.44;
+
+  // ---------------------------------------------------------------- 工具
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const TONE = { info: "var(--c-info)", warning: "var(--c-warning)", success: "var(--c-success)", danger: "var(--c-danger)", neutral: "var(--c-neutral)", orange: "var(--c-orange)" };
+  function usdM(m) {
+    const sign = m < 0 ? "-" : "", a = Math.abs(m);
+    if (a >= 100) return sign + "$" + (a / 100).toFixed(2) + " 亿";
+    return sign + "$" + Math.round(a * 100).toLocaleString("en-US") + " 万";
+  }
+  const round1 = (v) => Math.round(v * 10) / 10;
+
+  // ---------------------------------------------------------------- 图表
+  const charts = [];
+  function niceStep(raw) {
+    if (!(raw > 0)) return 1;
+    const e = Math.pow(10, Math.floor(Math.log10(raw)));
+    const f = raw / e;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e;
+  }
+  function fmtNum(v) {
+    const a = Math.abs(v);
+    if (a >= 1000) return Math.round(v).toLocaleString("en-US");
+    if (a >= 100) return v.toFixed(0);
+    if (a >= 10) return v.toFixed(1);
+    return v.toFixed(2).replace(/\.?0+$/, "") || "0";
+  }
+
+  function drawChart(el, cfg) {
+    const type = cfg.type || "line";
+    const W = Math.max(el.clientWidth, 280), H = cfg.height || 220;
+    const padL = 46, padR = 12, padT = 10, padB = 26;
+    const pw = W - padL - padR, ph = H - padT - padB;
+    const n = cfg.categories.length;
+    const all = cfg.series.flatMap((s) => s.data);
+    let mn = Math.min(0, ...all), mx = Math.max(0, ...all);
+    if (mx === mn) mx = mn + 1;
+    const step = niceStep((mx - mn) / 4);
+    mx = Math.ceil(mx / step) * step; mn = Math.floor(mn / step) * step;
+    const y = (v) => padT + ph - ((v - mn) / (mx - mn)) * ph;
+    const band = pw / n;
+    const x = type === "line" ? (i) => padL + (n === 1 ? pw / 2 : (i * pw) / (n - 1)) : (i) => padL + band * (i + 0.5);
+    const sfx = cfg.suffix || "";
+    let svg = `<svg width="${W}" height="${H}" style="display:block">`;
+    for (let v = mn; v <= mx + step / 2; v += step) {
+      const yy = y(v).toFixed(1);
+      svg += `<line x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}" style="stroke:var(--stroke2)" />`;
+      svg += `<text x="${padL - 6}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" style="fill:var(--text3);font-size:11px">${fmtNum(v)}${sfx}</text>`;
+    }
+    if (mn < 0) svg += `<line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--text4)" />`;
+    const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(pw / 46))));
+    cfg.categories.forEach((c, i) => {
+      if (i % every !== 0 && i !== n - 1) return;
+      if (i === n - 1 && i % every !== 0 && (n - 1) % every < every / 2) return;
+      svg += `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" style="fill:var(--text3);font-size:11px">${esc(c)}</text>`;
+    });
+    if (type === "line") {
+      cfg.series.forEach((s) => {
+        const col = TONE[s.tone] || TONE.info;
+        const pts = s.data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+        if (cfg.fill) svg += `<polygon points="${x(0)},${y(Math.max(mn, 0))} ${pts} ${x(n - 1)},${y(Math.max(mn, 0))}" style="fill:${col};opacity:.12" />`;
+        svg += `<polyline points="${pts}" style="fill:none;stroke:${col};stroke-width:2" />`;
+        if (n <= 30) s.data.forEach((v, i) => { svg += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.5" style="fill:${col}" />`; });
+      });
+    } else {
+      const k = cfg.series.length, gw = band * 0.72, bw = gw / k;
+      cfg.series.forEach((s, j) => {
+        const col = TONE[s.tone] || TONE.info;
+        s.data.forEach((v, i) => {
+          const x0 = padL + band * i + (band - gw) / 2 + j * bw;
+          const y0 = y(Math.max(v, 0)), y1 = y(Math.min(v, 0));
+          svg += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${Math.max(0.5, y1 - y0).toFixed(1)}" rx="2" style="fill:${col}" />`;
+        });
+      });
+    }
+    svg += `<line class="hover-line" x1="0" x2="0" y1="${padT}" y2="${padT + ph}" style="stroke:var(--text4);display:none" />`;
+    svg += `<rect class="hover-area" x="${padL}" y="${padT}" width="${pw}" height="${ph}" style="fill:transparent" />`;
+    svg += `</svg>`;
+    const legend = cfg.series.length > 1 || cfg.legend
+      ? `<div class="legend">${cfg.series.map((s) => `<span><i style="background:${TONE[s.tone] || TONE.info}"></i>${esc(s.name)}</span>`).join("")}</div>` : "";
+    el.innerHTML = legend + svg + `<div class="tip"></div>`;
+    const area = $(".hover-area", el), line = $(".hover-line", el), tip = $(".tip", el);
+    const svgEl = $("svg", el);
+    area.addEventListener("mousemove", (ev) => {
+      const r = svgEl.getBoundingClientRect();
+      const mx2 = ev.clientX - r.left;
+      let i = type === "line" ? Math.round(((mx2 - padL) / pw) * (n - 1)) : Math.floor((mx2 - padL) / band);
+      i = Math.max(0, Math.min(n - 1, i));
+      const xx = x(i);
+      line.setAttribute("x1", xx); line.setAttribute("x2", xx); line.style.display = "";
+      tip.innerHTML = `<b>${esc(cfg.categories[i])}</b><br>` + cfg.series.map((s) => `<span style="color:${TONE[s.tone] || TONE.info}">●</span> ${esc(s.name)}：${fmtNum(s.data[i])}${sfx}`).join("<br>");
+      tip.style.display = "block";
+      const offTop = svgEl.offsetTop;
+      const left = xx + 12 + tip.offsetWidth > W ? xx - tip.offsetWidth - 12 : xx + 12;
+      tip.style.left = left + "px"; tip.style.top = offTop + padT + "px";
+    });
+    area.addEventListener("mouseleave", () => { line.style.display = "none"; tip.style.display = "none"; });
+  }
+  function chart(id, cfg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const entry = charts.find((c) => c.el === el);
+    if (entry) entry.cfg = cfg; else charts.push({ el, cfg });
+    if (el.offsetParent !== null) drawChart(el, cfg);
+  }
+  function redrawAll() { charts.forEach((c) => { if (c.el.offsetParent !== null) drawChart(c.el, c.cfg); }); }
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redrawAll, 120); });
+
+  // ---------------------------------------------------------------- 静态图表
+  function initCharts() {
+    chart("ch-tvl", { categories: TVL_Q, series: [{ name: "Aave（全版本）", data: AAVE_TVL_Q, tone: "info" }, { name: "Compound（V2+V3）", data: COMP_TVL_Q, tone: "neutral" }], height: 250, suffix: "B" });
+    chart("ch-tvleth", { categories: TOK_M, series: [{ name: "美元 TVL（十亿美元）", data: TVL_USD_M, tone: "info" }, { name: "ETH 计价 TVL（百万 ETH）", data: TVL_ETH_M, tone: "warning" }], height: 230 });
+    chart("ch-coll", { categories: TOK_M, series: [{ name: "LST/LRT 等 ETH 类抵押品（百万 ETH 等值，不含 WETH）", data: LST_ETH_M, tone: "success" }, { name: "BTC 类抵押品（万 BTC）", data: BTC_K_M.map((v) => Math.round(v * 10) / 100), tone: "neutral" }], height: 230 });
+    chart("ch-weth", { type: "bar", categories: CORE_M, series: [{ name: "WETH 存款（百万枚）", data: WETH_SUP, tone: "info" }, { name: "WETH 借款（百万枚）", data: WETH_BOR, tone: "warning" }], height: 210 });
+    chart("ch-stable", { type: "bar", categories: CORE_M, series: [{ name: "USDC + USDT 存款", data: STABLE_SUP, tone: "success" }], height: 210, suffix: "B" });
+    chart("ch-fees", { type: "bar", categories: FIN_Q, series: [{ name: "费用", data: FEES_Q, tone: "info" }], height: 210, suffix: "M" });
+    chart("ch-rev", { type: "bar", categories: FIN_Q, series: [{ name: "协议收入", data: REV_Q, tone: "warning" }], height: 210, suffix: "M" });
+    chart("ch-revm", { categories: REV_M_LABELS, series: [{ name: "月度协议收入", data: REV_M, tone: "warning" }], height: 210, suffix: "M", fill: true });
+    chart("ch-buyback", { type: "bar", categories: FIN_Q, series: [{ name: "回购", data: BUYBACK_Q, tone: "success" }], height: 210, suffix: "M" });
+  }
+
+  // ---------------------------------------------------------------- 术语标签
+  const GLOSSARY = {
+    flashloan: { term: "闪电贷", summary: "无抵押、在同一笔交易里借出并归还的贷款；没还上，整笔交易回滚。", body: `
+      <p class="small muted">以太坊交易是原子性的：要么全部执行成功，要么全部撤销。闪电贷利用这一点，允许任何人在一笔交易里先借走池子里的资金，只要在交易结束前连本带息还回来就行。借款人没有违约的可能，所以不需要抵押品。Aave 在 2020 年的 V1 中首创了这一功能。</p>
+      <div class="steps">
+        <div><b>1. 发起</b><br><span class="muted">用户合约调用 Pool.flashLoanSimple()，指定资产、数量和接收合约</span></div>
+        <div><b>2. 放款</b><br><span class="muted">Pool 把资产直接转给接收合约，不检查抵押</span></div>
+        <div><b>3. 回调</b><br><span class="muted">Pool 调用接收合约的 executeOperation()，用户在这里执行套利、清算或换抵押品</span></div>
+        <div><b>4. 归还</b><br><span class="muted">接收合约授权 Pool 拉回“本金 + 手续费”</span></div>
+        <div><b>5. 校验</b><br><span class="muted">Pool 用 transferFrom 收回资金；任何一步失败，整笔交易回滚，等于从未发生</span></div>
+      </div>
+      <pre>// 单资产（最常用）
+Pool.flashLoanSimple(receiver, asset, amount, params, referralCode)
+
+// 多资产；interestRateModes[i] = 2 时不归还，直接转成浮动利率债务（需要有抵押）
+Pool.flashLoan(receiver, assets[], amounts[], interestRateModes[], onBehalfOf, params, referralCode)
+
+// 接收合约必须实现的回调
+function executeOperation(assets, amounts, premiums, initiator, params) returns (bool)
+
+// 每次调用都会触发的事件，可用于链上识别
+event FlashLoan(target, initiator, asset, amount, interestRateMode, premium, referralCode)</pre>
+      <div class="tbl"><table>
+        <tr><th>项目</th><th>说明</th></tr>
+        <tr><td>手续费</td><td>治理参数 <code>FLASHLOAN_PREMIUM_TOTAL</code>，当前 0.05%；V3.4 起全部归协议金库，白名单地址（FLASH_BORROWER 角色）可免费</td></tr>
+        <tr><td>收入规模</td><td>2025Q4 $122 万、2026Q1 $85 万、2026Q3 $8.3 万，在协议收入里占比很小</td></tr>
+        <tr><td>正当用途</td><td>套利、清算（无本金清算他人仓位）、抵押品置换、债务迁移（如从 Compound 搬到 Aave）、自我清算</td></tr>
+        <tr><td>被滥用</td><td>攻击者常用它瞬间放大资金去操纵预言机或治理（bZx 2020、Cream 2021、Euler 2023）。闪电贷本身不是漏洞，是放大器</td></tr>
+        <tr><td>链上标签</td><td>监听 Pool 合约的 <code>FlashLoan</code> 事件，或在交易追踪中识别 <code>executeOperation</code> 回调，就可以把交易打上“闪电贷”标签，用于风控和数据分析</td></tr>
+      </table></div>` },
+    emode: { term: "E-Mode", summary: "价格高度相关的资产之间允许更高的抵押率（最高约 93%）。", body: `<p class="small muted">High Efficiency Mode。用户进入某个类别（如“ETH 相关资产”）后，用 wstETH 抵押借 WETH 时，抵押率可以从普通模式的约 80% 提高到 93% 左右，清算线也更高。这让“质押收益 − 借款利率”的循环杠杆可以放大到 10 倍以上，是 Aave 吸引 LST 资金的核心机制，也是 rsETH 风险被放大的原因。</p>` },
+    atoken: { term: "aToken", summary: "存款凭证，1:1 对应底层资产，余额随利息自动增长。", body: `<p class="small muted">存入 1,000 USDC 会得到 1,000 aUSDC，利息以余额增长的方式体现（rebase）。aToken 可以自由转账、作为其他协议的抵押品，这种可组合性让 Aave 成为 DeFi 的默认货币市场。DAO 收取的协议收入也以 aToken 形式存放在金库（Collector）里，并继续生息。</p>` },
+    reserveFactor: { term: "储备金率", summary: "借款利息中归 DAO 的比例，这就是 Aave 的“协议收入”来源。", body: `<p class="small muted">Reserve Factor。借款人支付的利息中，储备金率对应的部分进入 DAO 金库，其余分给存款人。主要资产的储备金率在 10–20% 之间（USDC、USDT 约 10%，WETH 约 15%，部分长尾资产更高），GHO 的利息则 100% 归 DAO。按全协议加权，DAO 大约留下利息的 13%。收入是以借款人支付的那种币收取的：稳定币利息收到稳定币，WETH 利息收到 WETH。</p>` },
+    umbrella: { term: "Umbrella", summary: "新版坏账保险：质押 aToken 或 GHO 赚奖励，出现坏账时被罚没。", body: `<p class="small muted">取代旧 Safety Module 的坏账保险机制。用户质押 aUSDC、aUSDT、aWETH、GHO 等获得奖励；某个资产出现链上记录的坏账并超过 DAO 承担的部分后，自动罚没该资产对应的质押金。每个资产的保险彼此独立。Kelp 事件中，DAO 通过治理调整参数，避免了 Umbrella 被罚没。</p>` },
+    dvn: { term: "DVN", summary: "LayerZero 的去中心化验证网络；Kelp 只配置了 1 个验证者。", body: `<p class="small muted">Decentralized Verifier Network。LayerZero 跨链消息需要由应用自己配置的 DVN 验证。安全配置通常要求多个独立 DVN 同时签名（如 2-of-3）。Kelp 的 Unichain→以太坊路由是 1-of-1，攻击者只需攻破或欺骗一个验证者，就能伪造“源链已销毁”的消息，让以太坊端释放 rsETH。</p>` },
+    utilization: { term: "利用率", summary: "借出金额 ÷ 存款金额；100% 时存款人取不出钱。", body: `<p class="small muted">Aave 用利用率决定利率：超过最优点（稳定币通常 90%）后利率陡升，以吸引还款和新存款。利用率到 100% 意味着池子里已经没有闲置资金，存款人只能等借款人还款或被清算后才能取出。Kelp 事件中 USDC、USDT、WETH 都被打到 100%，这是挤兑扩散的直接原因。</p>` },
+    hubspoke: { term: "Hub/Spoke", summary: "V4 架构：流动性集中在 Hub，风险隔离在各个 Spoke。", body: `<p class="small muted">V4 把“流动性”和“风险”拆开：Hub 统一管理某类资产的流动性和利率，各个 Spoke 是独立的借贷市场，有自己的抵押品清单和参数。高风险资产（如 LRT、代币化股票）放在单独的 Spoke 里，出问题时不会像 V3 共享池那样传导给所有存款人。2026 年 9 月在 Base 上线的代币化股票市场就是一个独立的 Equities Hub。</p>` },
+  };
+  function initGlossary() {
+    $$(".gloss").forEach((box) => {
+      const terms = box.dataset.terms.split(",");
+      box.innerHTML = `<div class="row"><span class="small faint">术语标签</span>${terms.map((k) => `<button class="pill sm" data-k="${k}" title="${esc(GLOSSARY[k].summary)}">${GLOSSARY[k].term}</button>`).join("")}</div><div class="gloss-panel" style="display:none"></div>`;
+      const panel = $(".gloss-panel", box);
+      $$(".pill", box).forEach((b) => b.addEventListener("click", () => {
+        const open = b.classList.contains("active");
+        $$(".pill", box).forEach((x) => x.classList.remove("active"));
+        if (open) { panel.style.display = "none"; return; }
+        b.classList.add("active");
+        const g = GLOSSARY[b.dataset.k];
+        panel.innerHTML = `<div class="stack-sm"><b>${g.term}：${esc(g.summary)}</b>${g.body}</div>`;
+        panel.style.display = "";
+      }));
+    });
+  }
+
+  // ---------------------------------------------------------------- 时间线与评分卡
+  function initTimeline() {
+    const items = [
+      ["04-18 17:35", "danger", "Kelp 跨链桥被伪造消息攻破", "攻击者向 Kelp 的 Unichain→以太坊 rsETH 路由发送伪造的 LayerZero 消息。该路由只配置了 1 个 DVN 验证者，没有源链销毁也通过了验证，116,500 rsETH 被释放给攻击者。外界报道将其关联到朝鲜 Lazarus 组织。"],
+      ["04-18 当晚", "danger", "rsETH 存入 Aave，借出真实 WETH", "攻击者分 7 个地址在 Aave 以太坊 Core 市场和 Arbitrum 存入 89,567 rsETH，借出 82,650 WETH 和 821 wstETH，健康因子停在 1.01–1.03。"],
+      ["04-18 至 19", "warning", "Guardian 冻结市场，回购暂停", "几小时内冻结 rsETH/wrsETH，随后冻结 WETH 市场并调高利率；4 月 19 日起暂停 AAVE 回购，保留资产负债表的弹性。"],
+      ["04-20", "danger", "事件报告：坏账区间 $1.24 亿–$2.30 亿", "损失规模取决于 rsETH 的损失如何在主网和 L2 之间分摊。AAVE 最低跌到约 $80。USDC、USDT、WETH 等市场利用率达到 100%，存款人无法取款。"],
+      ["04-21", "warning", "Arbitrum 安全委员会冻结 30,765 ETH", "约 $7,100 万资金被冻结。5 月 1 日，无关诉讼的判决债权人对这笔资金提出限制令；5 月 8 日法院允许将其转给 Aave LLC，但限制令随之转移。目前仍在诉讼中。"],
+      ["04 月下旬", "", "治理提案 477：强制清算攻击者仓位", "通过治理执行清算，把 rsETH 抵押品转入 DAO 服务商多签“Recovery Guardian”，并预先调整 Umbrella 参数，确保质押者不被罚没。"],
+      ["05 月", "", "DeFi United 筹资方案通过", "已追回 87,955 ETH；EtherFi、Lido、Ethena、Ink、BGD、Stani 等捐赠 14,570 ETH；Mantle 提供最高 30,000 ETH 信用额度；Aave DAO 金库出资 25,000 ETH（当时约 $5,750 万）。"],
+      ["05-25/26", "success", "rsETH 1:1 储备完全恢复", "最后一批 20,373.72 rsETH 回填至 LayerZero 适配器，Aave 全部市场恢复正常，存款人没有被削减余额。"],
+    ];
+    $("#timeline").innerHTML = items.map(([d, tone, t, b]) => `<div class="tl"><div class="d">${d}</div><div class="dot"><b class="${tone}"></b><s></s></div><div class="c"><div class="t">${t}</div><div class="small muted">${b}</div></div></div>`).join("");
+
+    const rows = [
+      ["合约安全", 5, "V2/V3 运行 5 年以上，核心合约从未被攻破。2026 年 3 月有一次 $86 万的预言机配置错误，资金已全部追回。"],
+      ["危机处置能力", 5, "冻结、清算、筹资、恢复储备一气呵成，存款人零损失。这是 DeFi 少见的完整救援记录。"],
+      ["风险参数治理", 2, "rsETH 以 93% LTV 上架、L2 流动性很薄、没有审查跨链桥配置，属于风控失误。核心技术服务商 BGD Labs 已于 4 月离开。"],
+      ["资产负债表", 3, "金库非 AAVE 资产变薄，背负 Mantle 债务，现金开支超过收入，抵御下一次同等规模事件的能力明显下降。"],
+      ["组织与治理", 2, "Aave Labs 掌控品牌、渠道和大量投票权；BGD、ACI 相继退出；“Aave Will Win”提案以 52% 微弱优势通过，且有 Labs 关联地址为自己的约 $5,100 万预算投票。"],
+      ["持币人价值捕获", 2, "制度上已承诺 100% 收入归 AAVE（AWW + Aavenomics 3.0），但链上数据显示 2026Q3 回购为 0，承诺尚未兑现。"],
+    ];
+    $("#scorecard").insertAdjacentHTML("beforeend", rows.map(([k, s, w]) => `<tr class="${s >= 4 ? "success" : s <= 2 ? "warning" : ""}"><td>${k}</td><td><span class="score">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= s ? "on" : ""}"></i>`).join("")}</span></td><td>${w}</td></tr>`).join(""));
+  }
+
+  // ---------------------------------------------------------------- 估值计算器
+  function initCalc() {
+    const REV = [60, 90, 120, 180], MULT = [15, 20, 25, 30, 40];
+    const st = { rev: 90, mult: 25 };
+    const render = () => {
+      $("#calcRev").innerHTML = REV.map((v) => `<button class="pill ${st.rev === v ? "active" : ""}" data-v="${v}">$${v}M</button>`).join("");
+      $("#calcMult").innerHTML = MULT.map((v) => `<button class="pill ${st.mult === v ? "active" : ""}" data-v="${v}">${v}x</button>`).join("");
+      const cap = (st.rev * st.mult) / 1000, price = (st.rev * st.mult) / SUPPLY_FDV, diff = (price / PRICE - 1) * 100;
+      $("#calcOut").innerHTML = `<div class="stat"><div class="v">$${cap.toFixed(2)}B</div><div class="l">隐含市值</div></div>
+        <div class="stat"><div class="v info">$${price.toFixed(0)}</div><div class="l">隐含单价</div></div>
+        <div class="stat"><div class="v ${diff >= 0 ? "success" : "danger"}">${diff >= 0 ? "+" : ""}${diff.toFixed(0)}%</div><div class="l">相对现价 $${PRICE}</div></div>`;
+      $$("#calcRev .pill").forEach((b) => b.onclick = () => { st.rev = +b.dataset.v; render(); });
+      $$("#calcMult .pill").forEach((b) => b.onclick = () => { st.mult = +b.dataset.v; render(); });
+    };
+    render();
+  }
+
+  // ---------------------------------------------------------------- 情景模拟器
+  const SIM_DEFAULT = { eth: 2570, aave: 173, ethBorrow: 2.0, ethRate: 2.0, ethRf: 15, stableBorrow: 6.8, stableRate: 4.7, stableRf: 11, elasticity: 0.5, otherRev: 5, opex: 78, emissions: 138, debtEth: 30, debtShare: 50, rule: "surplus", cap: 30 };
+  const PRESETS = [
+    ["当前", {}],
+    ["熊市：ETH $1,600，稳定币借款 $50 亿", { eth: 1600, aave: 100, ethBorrow: 1.7, stableBorrow: 5.0, stableRate: 4.0 }],
+    ["温和复苏：ETH $3,500，稳定币借款 $90 亿", { eth: 3500, aave: 220, ethBorrow: 2.4, stableBorrow: 9.0, stableRate: 5.0 }],
+    ["重现 2025Q3：ETH $4,400，稳定币借款 $140 亿", { eth: 4400, aave: 300, ethBorrow: 3.0, ethRate: 2.3, stableBorrow: 14, stableRate: 5.5, otherRev: 10 }],
+    ["Mantle 债务已还清", { debtEth: 0 }],
+    ["开支压缩到 $5,000 万", { opex: 50 }],
+  ];
+  const RULES = [
+    ["surplus", "盈余门槛（2024 设计）", "回购 = min（上限，收入 ÷ 1.5 − 开支 − 还债），即收入至少是“开支 + 回购”的 1.5 倍才回购"],
+    ["fixed", "固定预算（2025–26 执行）", "每年固定回购上限金额，不管盈亏；收入不够时动用金库"],
+    ["all", "100% 收入（Aavenomics 3.0 口径）", "扣除还债后的全部收入用于回购，开支另由金库或其他收入承担"],
+  ];
+  const SLIDERS = [
+    ["市场"],
+    ["eth", "ETH 价格", 1000, 8000, 50, (s) => "$" + s.eth.toLocaleString("en-US")],
+    ["aave", "AAVE 价格", 40, 700, 1, (s) => "$" + s.aave],
+    ["ETH 借款（收入以 ETH 收取）"],
+    ["ethBorrow", "WETH 借款余额", 0.5, 5, 0.05, (s) => s.ethBorrow.toFixed(2) + "M ETH（" + usdM(s.ethBorrow * s.eth) + "）"],
+    ["ethRate", "WETH 借款利率", 0.5, 6, 0.05, (s) => s.ethRate.toFixed(2) + "%"],
+    ["ethRf", "WETH 储备金率", 5, 30, 1, (s) => s.ethRf + "%"],
+    ["稳定币借款（收入以稳定币收取）"],
+    ["stableBorrow", "稳定币借款余额", 2, 25, 0.1, (s) => "$" + s.stableBorrow.toFixed(1) + "B"],
+    ["stableRate", "稳定币借款利率", 2, 12, 0.05, (s) => s.stableRate.toFixed(2) + "%"],
+    ["stableRf", "稳定币加权储备金率", 5, 25, 0.5, (s) => s.stableRf + "%"],
+    ["elasticity", "稳定币借款对 ETH 价格的弹性（仅用于下方曲线）", 0, 1.5, 0.05, (s) => s.elasticity.toFixed(2)],
+    ["otherRev", "其他收入（GHO、清算、闪电贷、Labs 产品）", 0, 60, 1, (s) => usdM(s.otherRev)],
+    ["DAO 财务与回购"],
+    ["opex", "DAO 年现金开支", 30, 120, 1, (s) => usdM(s.opex)],
+    ["emissions", "AAVE 年排放（服务商 + 质押奖励）", 0, 250, 1, (s) => s.emissions + "k 枚"],
+    ["debtEth", "Mantle 剩余债务（假设已全额提取）", 0, 30, 0.5, (s) => (s.debtEth * 1000).toLocaleString("en-US") + " ETH"],
+    ["debtShare", "收入中用于还债的比例", 0, 100, 5, (s) => s.debtShare + "%"],
+    ["cap", "年回购上限 / 预算", 0, 100, 1, (s) => usdM(s.cap)],
+  ];
+  const OTHER_BORROW_M = 900, OTHER_RATE = 1.5, OTHER_RF = 20;
+
+  function computeAave(s, ethPrice) {
+    const P = ethPrice || s.eth;
+    const stableB = ethPrice ? s.stableBorrow * Math.pow(P / s.eth, s.elasticity) : s.stableBorrow;
+    const ethFees = s.ethBorrow * P * (s.ethRate / 100);
+    const stableFees = stableB * 1000 * (s.stableRate / 100);
+    const otherFees = OTHER_BORROW_M * (OTHER_RATE / 100);
+    const fees = ethFees + stableFees + otherFees;
+    const ethRev = ethFees * (s.ethRf / 100), stableRev = stableFees * (s.stableRf / 100), otherRev = otherFees * (OTHER_RF / 100) + s.otherRev;
+    const rev = ethRev + stableRev + otherRev;
+    const debtUsd = (s.debtEth * 1000 * P) / 1e6;
+    const debtService = debtUsd > 0 ? Math.min(debtUsd, rev * (s.debtShare / 100)) : 0;
+    let buyback = 0;
+    if (s.rule === "fixed") buyback = s.cap;
+    else if (s.rule === "surplus") buyback = Math.max(0, Math.min(s.cap, rev / 1.5 - s.opex - debtService));
+    else buyback = Math.max(0, rev - debtService);
+    return { fees, ethRev, stableRev, otherRev, rev, debtUsd, debtService, buyback, treasuryFlow: rev - s.opex - debtService - buyback };
+  }
+  function surplusStartEth(s) {
+    for (let p = 500; p <= 20000; p += 50) {
+      const r = computeAave(Object.assign({}, s, { rule: "surplus" }), p);
+      if (r.rev / 1.5 - s.opex - r.debtService > 0) return p;
+    }
+    return null;
+  }
+
+  let sim;
+  try { sim = Object.assign({}, SIM_DEFAULT, JSON.parse(localStorage.getItem("aave-sim") || "{}")); } catch (e) { sim = Object.assign({}, SIM_DEFAULT); }
+
+  function initSim() {
+    $("#presets").innerHTML = PRESETS.map(([l], i) => `<button class="pill" data-i="${i}">${l}</button>`).join("");
+    $$("#presets .pill").forEach((b) => b.onclick = () => { sim = Object.assign({}, SIM_DEFAULT, { rule: sim.rule }, PRESETS[+b.dataset.i][1]); buildSliders(); updateSim(); });
+    $("#simReset").onclick = () => { sim = Object.assign({}, SIM_DEFAULT); buildSliders(); updateSim(); };
+    buildSliders();
+    updateSim();
+  }
+  function buildSliders() {
+    $("#sliders").innerHTML = SLIDERS.map((d) => d.length === 1
+      ? `<div class="grp">${d[0]}</div>`
+      : `<div class="slider" data-k="${d[0]}"><div class="top"><span>${d[1]}</span><span class="val"></span></div><input type="range" min="${d[2]}" max="${d[3]}" step="${d[4]}" value="${sim[d[0]]}"></div>`).join("");
+    $$("#sliders .slider").forEach((el) => {
+      $("input", el).addEventListener("input", (e) => { sim[el.dataset.k] = Number(e.target.value); updateSim(); });
+    });
+  }
+  function updateSim() {
+    try { localStorage.setItem("aave-sim", JSON.stringify(sim)); } catch (e) {}
+    SLIDERS.forEach((d) => {
+      if (d.length === 1) return;
+      const el = $(`#sliders .slider[data-k="${d[0]}"]`);
+      if (!el) return;
+      $(".val", el).textContent = d[5](sim);
+      if (d[0] === "cap") el.style.display = sim.rule === "all" ? "none" : "";
+    });
+    $("#rules").innerHTML = RULES.map(([id, l]) => `<button class="pill ${sim.rule === id ? "active" : ""}" data-r="${id}">${l}</button>`).join("");
+    $$("#rules .pill").forEach((b) => b.onclick = () => { sim.rule = b.dataset.r; updateSim(); });
+    $("#ruleDesc").textContent = RULES.find((r) => r[0] === sim.rule)[2];
+
+    const r = computeAave(sim);
+    const mcap = sim.aave * SUPPLY_CIRC;
+    const boughtK = (r.buyback / sim.aave) * 1000;
+    const netK = boughtK - sim.emissions;
+    const pct = (netK / (SUPPLY_FDV * 1000)) * 100;
+    const profit = r.rev - sim.opex;
+    const pe = profit > 0 ? mcap / profit : null;
+    const start = surplusStartEth(sim);
+    const payoff = r.debtService > 0 ? r.debtUsd / r.debtService : 0;
+    const stat = (v, l, tone) => `<div class="stat"><div class="v ${tone || ""}">${v}</div><div class="l">${l}</div></div>`;
+    $("#simStats").innerHTML =
+      stat(usdM(r.rev), `协议年收入（年费用 ${usdM(r.fees)}）`, "info") +
+      stat(usdM(profit), "年利润（收入 − 现金开支）", profit >= 0 ? "success" : "danger") +
+      stat(usdM(r.buyback), "AAVE 年回购", r.buyback > 0 ? "success" : "warning") +
+      stat(pct.toFixed(2) + "%", `净回购占供应（买入 ${boughtK.toFixed(0)}k − 排放 ${sim.emissions}k）`, pct > 0 ? "success" : "danger") +
+      stat(usdM(r.treasuryFlow), "金库年净流量（收入 − 开支 − 还债 − 回购）", r.treasuryFlow >= 0 ? "success" : "danger") +
+      stat(pe ? pe.toFixed(1) + "x" : "亏损", `市值 / 利润（市值 ${usdM(mcap)}）`, pe && pe < 25 ? "success" : pe ? "" : "danger");
+    const sh = (v) => ((v / r.rev) * 100).toFixed(0);
+    $("#simMix").innerHTML = `<div class="ubar-top"><span>收入币种构成</span><span>ETH ${sh(r.ethRev)}% · 稳定币 ${sh(r.stableRev)}% · 其他 ${sh(r.otherRev)}%</span></div>
+      <div class="ubar"><span style="width:${sh(r.stableRev)}%;background:var(--c-green)"></span><span style="width:${sh(r.ethRev)}%;background:var(--c-blue)"></span><span style="width:${sh(r.otherRev)}%;background:var(--c-gray)"></span></div>`;
+    const rows = [
+      ["ETH 计价的收入", Math.round((r.rev * 1e6) / sim.eth).toLocaleString("en-US") + " ETH / 年"],
+      ["其中直接以 ETH 收取", Math.round((r.ethRev * 1e6) / sim.eth).toLocaleString("en-US") + " ETH / 年"],
+      ["每年还债", usdM(r.debtService) + (r.debtService > 0 ? `，约 ${payoff.toFixed(1)} 年还清` : "")],
+      ["盈余门槛规则下回购启动的 ETH 价格", start ? "$" + start.toLocaleString("en-US") : "ETH 到 $20,000 也无法启动（还债占用收入；可试“Mantle 债务已还清”预设）"],
+      ["市销率（市值 / 收入）", (mcap / r.rev).toFixed(1) + "x"],
+      ["回购收益率（回购 / 流通市值）", ((r.buyback / mcap) * 100).toFixed(2) + "%"],
+      ["每年买入 AAVE", `${boughtK.toFixed(1)}k 枚（占流通 ${((boughtK / (SUPPLY_CIRC * 1000)) * 100).toFixed(2)}%）`],
+    ];
+    $("#simTable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + rows.map(([a, b]) => `<tr><td>${a}</td><td class="r">${b}</td></tr>`).join("");
+
+    const ethGrid = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 8000];
+    const aaveGrid = [50, 100, 150, 200, 300, 400, 600];
+    chart("ch-sim-eth", {
+      categories: ethGrid.map((p) => "$" + p.toLocaleString("en-US")),
+      series: [
+        { name: "协议年收入（百万美元）", data: ethGrid.map((p) => round1(computeAave(sim, p).rev)), tone: "info" },
+        { name: "年利润（百万美元）", data: ethGrid.map((p) => round1(computeAave(sim, p).rev - sim.opex)), tone: "warning" },
+        { name: "年回购（百万美元）", data: ethGrid.map((p) => round1(computeAave(sim, p).buyback)), tone: "success" },
+      ],
+      height: 240,
+    });
+    chart("ch-sim-aave", {
+      categories: aaveGrid.map((p) => "$" + p),
+      series: [{ name: `年回购 ${usdM(r.buyback)} 扣除 ${sim.emissions}k 枚排放后的净回购（%）`, data: aaveGrid.map((p) => Math.round(((((r.buyback / p) * 1000 - sim.emissions) / (SUPPLY_FDV * 1000)) * 10000)) / 100), tone: "warning" }],
+      height: 210, suffix: "%", legend: true,
+    });
+  }
+
+  // ---------------------------------------------------------------- 标签页与主题
+  function initTabs() {
+    const apply = (tab) => {
+      $$("#tabs .pill").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+      $$("section[data-sec]").forEach((s) => { s.style.display = tab === "all" || s.dataset.sec === tab ? "" : "none"; });
+      $$(".all-only").forEach((d) => { d.style.display = tab === "all" ? "" : "none"; });
+      try { localStorage.setItem("aave-tab", tab); } catch (e) {}
+      requestAnimationFrame(redrawAll);
+    };
+    $$("#tabs .pill").forEach((b) => b.onclick = () => apply(b.dataset.tab));
+    let saved = "all"; try { saved = localStorage.getItem("aave-tab") || "all"; } catch (e) {}
+    apply(saved);
+    window.addEventListener("beforeprint", () => { $$("section[data-sec]").forEach((s) => (s.style.display = "")); redrawAll(); });
+  }
+  function initTheme() {
+    let t = null; try { t = localStorage.getItem("aave-theme"); } catch (e) {}
+    if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = t;
+    $("#themeBtn").onclick = () => {
+      const nt = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = nt;
+      try { localStorage.setItem("aave-theme", nt); } catch (e) {}
+    };
+  }
+
+  initTheme();
+  initGlossary();
+  initTimeline();
+  initCalc();
+  initCharts();
+  initSim();
+  initTabs();
+})();
+</script>
+</body>
+</html>

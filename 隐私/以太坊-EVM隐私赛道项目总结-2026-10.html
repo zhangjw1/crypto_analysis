@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>以太坊 / EVM 隐私赛道深度报告（2026-10-05）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24; --c8: #0598bc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e; --c8: #39c5cf;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  code { background: var(--fill2); border-radius: 4px; padding: 1px 6px; font-family: Consolas, "Courier New", monospace; font-size: 12px; }
+  .reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reason { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .reason.top { background: var(--fill); }
+  .reason b { display: block; margin: 6px 0 4px; }
+  .reason p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .spectrum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 12px 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .spectrum div { padding: 12px 14px; font-size: 13px; color: var(--fg2); }
+  .spectrum div + div { border-left: 1px solid var(--line); }
+  .spectrum b { display: block; color: var(--fg); margin-bottom: 4px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 8px 0; }
+  .steps div { background: var(--fill); border-radius: 6px; padding: 8px 6px; text-align: center; font-size: 12px; }
+  .steps div.on { background: var(--fill2); font-weight: 600; outline: 1px solid var(--orange); }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid-32, .sim, .reasons, .spectrum { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } .spectrum div + div { border-left: 0; border-top: 1px solid var(--line); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .reason, .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、赛道全景</a>
+  <a href="#s2">二、RAILGUN</a>
+  <a href="#s3">三、Zama</a>
+  <a href="#s4">四、Aztec</a>
+  <a href="#s5">五、Fhenix</a>
+  <a href="#s6">六、横向对比与估值</a>
+  <a href="#s7">七、RAIL 估值模拟器</a>
+  <a href="#s8">八、排序与观察信号</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">赛道研究</span>数据截至 2026-10-05 · 来源：railgun.org、L2BEAT、Zama Litepaper、Aztec 官网与博客、Fhenix 官网及 CoFHE 文档、DefiLlama、CoinGecko、Chainwire、Multicoin</p>
+  <h1>以太坊 / EVM 隐私赛道深度报告：四个项目、三种隐私路线，谁能把隐私变成生意</h1>
+  <p class="muted">一句话结论：RAILGUN 是唯一有稳定真实收入的项目，但收入两年没有增长，估值约为年收入的 39 倍；Zama 的技术、资金和机构叙事最强，市场给了接近 10 亿美元的 FDV，后续解锁是主要压力；Aztec 的可编程隐私空间最大，但连续出现严重漏洞，币价已跌到公开销售估值的一半以下；Fhenix 是起步较晚的 Zama 挑战者，10 月 21 日主网是近期催化剂，目前还没有代币可以投资。</p>
+  <div class="stats">
+    <div class="stat"><b>4 个</b><span>覆盖项目（3 个已发币）</span></div>
+    <div class="stat blue"><b>约 $9.5 亿</b><span>ZAMA FDV（赛道最高）</span></div>
+    <div class="stat green"><b>约 $430 万</b><span>RAILGUN 年化手续费</span></div>
+    <div class="stat red"><b>-56%</b><span>AZTEC FDV 相对公开销售</span></div>
+    <div class="stat orange"><b>10-21</b><span>Fhenix 主网计划上线</span></div>
+  </div>
+  <p class="small">未纳入：VVV、ZEC、ZEN、DASH（不属于 EVM 新项目）；Arcium（Solana 生态）、Miden（非 EVM）。数据为整理时的近似值，价格和市值变化很快。</p>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、赛道全景</h2>
+  <h3>1.1 三种隐私路线</h3>
+  <p class="lead">“隐私”在这四个项目里指的不是同一件事。RAILGUN 隐藏的是“谁和谁交易”，Zama 和 Fhenix 隐藏的是“余额和金额是多少”，Aztec 让开发者自己决定哪些状态私有、哪些公开。客户、监管压力和估值逻辑都因此不同。</p>
+  <div class="spectrum">
+    <div><b>匿名性 · RAILGUN</b>隐藏发送方、接收方和金额，类似“链上现金”。主要用户是个人、交易员、DAO 和鲸鱼。监管敏感度高，容易被拿来和 Tornado Cash 类比。</div>
+    <div><b>可编程隐私 · Aztec</b>私有状态和公开状态可以在同一个应用中混合使用，适用范围最广。代价是需要使用新的 L2 和 Noir 语言，技术复杂度最高。</div>
+    <div><b>机密性 · Zama / Fhenix</b>隐藏余额、金额和合约状态，但发送方、接收方和交易时间通常可见，类似“银行账户”。更适合企业、机构、稳定币和 RWA 发行方。</div>
+  </div>
+
+  <h3>1.2 一页速览</h3>
+  <table>
+    <tr><th>项目</th><th>定位</th><th>核心技术</th><th>状态</th><th>代币</th><th class="r">市值</th><th class="r">FDV</th></tr>
+    <tr><td>RAILGUN</td><td>EVM 链上的隐私资金池和隐私 DeFi 入口</td><td>zk-SNARK（Groth16）、加密 UTXO、Merkle 树</td><td>2021 年起运行；Ethereum、Arbitrum、Polygon、BSC</td><td>RAIL</td><td class="r">约 $1.67 亿</td><td class="r">约 $2.78 亿（按 100M 最大供应）</td></tr>
+    <tr><td>Zama</td><td>面向 EVM 链的 FHE 机密计算协议</td><td>FHE 协处理器、MPC 门限解密</td><td>主网已运行一年多</td><td>ZAMA</td><td class="r">约 $2.15 亿</td><td class="r">约 $9.5 亿</td></tr>
+    <tr class="bad"><td>Aztec</td><td>以太坊上的隐私 L2</td><td>客户端 ZK 证明、PLONK、Noir</td><td>2026-02 发币；V5 已上线，但仍有已披露的严重 bug</td><td>AZTEC</td><td class="r">约 $0.5 亿</td><td class="r">约 $1.76 亿</td></tr>
+    <tr><td>Fhenix</td><td>Zama 的直接竞争对手，EVM 上的 FHE 协处理器</td><td>FHE 协处理器；当前解密依赖 TEE</td><td>主网计划 2026-10-21 上线</td><td>未公布</td><td class="r">—</td><td class="r">—</td></tr>
+  </table>
+
+  <div class="grid-32">
+    <div>
+      <h3>1.3 估值分布：流通市值与完全稀释估值</h3>
+      <div class="chart" id="ch-val"></div>
+      <p class="small">图：已发币项目的流通市值与 FDV（百万美元）· 来源：CoinGecko，2026-10-05 · RAIL 的 FDV 按 100M 最大供应计算</p>
+    </div>
+    <div>
+      <h3>1.4 一句话定位</h3>
+      <div class="card" style="margin-bottom:10px"><div class="hd">RAILGUN<span class="tag green">有真实收入</span></div><div class="bd">像“链上现金”，偏个人隐私；收入增长停滞，合规敏感。</div></div>
+      <div class="card" style="margin-bottom:10px"><div class="hd">Zama<span class="tag blue">资金与生态最强</span></div><div class="bd">像“加密银行账户”，偏机构机密金融；FDV 偏高，解锁压力大。</div></div>
+      <div class="card" style="margin-bottom:10px"><div class="hd">Aztec<span class="tag red">安全待验证</span></div><div class="bd">最完整的可编程隐私 L2；连续出现严重 bug。</div></div>
+      <div class="card"><div class="hd">Fhenix<span class="tag orange">主网前</span></div><div class="bd">起步较晚的 Zama 挑战者；当前信任模型比宣传更弱。</div></div>
+    </div>
+  </div>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、RAILGUN（RAIL）：唯一有稳定收入的项目，但收入停在原地</h2>
+  <p class="lead">RAILGUN 直接部署在现有 EVM 链上，用户不需要迁移到新链。资产转入隐私余额后，可以私密转账、兑换，或通过 RelayAdapt 在一笔交易里调用 DeFi。它的收入来自资金进出隐私池时收取的手续费，是这四个项目里唯一可以用“收入倍数”估值的。</p>
+  <div class="stats">
+    <div class="stat"><b>$2.78</b><span>RAIL 价格</span></div>
+    <div class="stat"><b>$1.67 亿</b><span>流通市值（60M 枚）</span></div>
+    <div class="stat"><b>$1.16 亿</b><span>隐私池 TVL</span></div>
+    <div class="stat green"><b>$430 万</b><span>年化手续费（30 天 $38.7 万 × 年化）</span></div>
+    <div class="stat orange"><b>39x</b><span>市值 / 年化收入</span></div>
+  </div>
+
+  <h3>2.1 资金是怎么流动的</h3>
+  <div class="grid4">
+    <div class="box"><b>1. 转入隐私池</b><p>用户把 ERC-20 或 ETH 从公开 <code>0x</code> 地址转入私密 <code>0zk</code> 余额，支付手续费，并经过 1 小时 PPOI 等待期</p></div>
+    <div class="box"><b>2. 私密使用</b><p>在隐私池内转账、兑换；Broadcaster 代发交易并支付 gas，节点通过 Waku P2P 网络通信</p></div>
+    <div class="box"><b>3. 调用 DeFi</b><p>RelayAdapt 在一笔原子交易里完成“转出、调用 DeFi、再转回”，外部只看到合约在操作</p></div>
+    <div class="box" style="background:var(--fill2)"><b>4. 费用分配</b><p>转入和转出手续费进入 DAO 国库，国库每两周把约 4.2% 的资产分配给 RAIL 质押者</p></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>2.2 技术实现</h3>
+      <table>
+        <tr><th>模块</th><th>做什么</th></tr>
+        <tr><td>加密 UTXO</td><td>资产以加密“票据”的形式存在，记录在 Merkle 树中，使用 Poseidon 哈希</td></tr>
+        <tr><td>零知识证明</td><td>Groth16 + BN254，共 54 个电路；可信设置有 55 个第一阶段贡献者、304 个第二阶段参与者</td></tr>
+        <tr><td>Nullifier</td><td>每次花费票据都会产生 nullifier，防止双花</td></tr>
+        <tr><td>密钥体系</td><td>花费密钥和查看密钥分离，可以只把查看权限给审计方</td></tr>
+        <tr><td>PPOI</td><td>用递归 ZK 证明资金不来自被禁止的来源；默认参考 Chainalysis OFAC 名单</td></tr>
+        <tr><td>治理</td><td>DAO 控制升级，升级有 7 天延迟</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>2.3 经济数据</h3>
+      <table>
+        <tr><th>指标</th><th class="r">数值</th></tr>
+        <tr><td>当前供应 / 最大供应</td><td class="r">60M / 100M RAIL</td></tr>
+        <tr><td>FDV（按最大供应）</td><td class="r">约 $2.78 亿</td></tr>
+        <tr><td>30 天手续费</td><td class="r">约 $38.7 万</td></tr>
+        <tr class="bad"><td>季度收入</td><td class="r">近两年维持在约 $100 万</td></tr>
+        <tr><td>国库</td><td class="r">$941 万（其中 $611 万是 RAIL）</td></tr>
+        <tr><td>质押量</td><td class="r">约 41.6M RAIL</td></tr>
+        <tr class="bad"><td>2026-07 增发</td><td class="r">2.5M RAIL</td></tr>
+        <tr><td>Base 部署（Proposal #27）</td><td class="r">推进中</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn"><b class="t">“没有大抛压”这个判断需要修正</b>RAIL 有三类持续卖压：一是 DAO 增发 RAIL 用于质押奖励（2026 年 7 月增发 2.5M 枚）；二是质押者收到的奖励里有相当一部分是 RAIL，领取后可能卖出；三是 DCG、LD Capital 等早期机构持仓较集中，而链上流动性较薄，大额进出对价格影响明显。另外，2026 年隐私叙事明显升温，RAILGUN 的季度收入却没有跟着上升，这是看多逻辑里最需要验证的一环。</div>
+
+  <div class="grid2">
+    <div>
+      <h3>2.4 优势</h3>
+      <table>
+        <tr class="good"><td>已运行多年，有真实使用和真实收入</td></tr>
+        <tr class="good"><td>支持隐私 DeFi，而不只是简单混币</td></tr>
+        <tr class="good"><td>已部署在多个主流 EVM 链，Base 部署在推进</td></tr>
+        <tr class="good"><td>估值明显低于 Zama</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>2.5 风险</h3>
+      <table>
+        <tr class="bad"><td>收入两年停在约每季度 $100 万</td></tr>
+        <tr class="bad"><td>DAO 增发、奖励 RAIL 和机构持仓带来的卖压</td></tr>
+        <tr class="bad"><td>匿名性协议更容易被交易所、钱包和监管限制</td></tr>
+        <tr><td>流动性较薄，价格波动大</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、Zama（ZAMA）：技术和资金最强，估值也最贵</h2>
+  <p class="lead">Zama 提供 FHE（全同态加密）机密计算：数据在加密状态下也能被计算，链上合约因此可以处理加密余额、加密订单、加密投票。它不是一条新链，而是服务 Ethereum 和其他链的跨链机密计算层。市场给它的接近 10 亿美元 FDV，主要定价的是“机构机密金融的基础设施”这个叙事。</p>
+  <div class="stats">
+    <div class="stat"><b>$0.085</b><span>ZAMA 价格</span></div>
+    <div class="stat"><b>$2.15 亿</b><span>流通市值</span></div>
+    <div class="stat blue"><b>约 $9.5 亿</b><span>FDV（$9.25–9.76 亿）</span></div>
+    <div class="stat orange"><b>约 23%</b><span>流通比例（无最大供应）</span></div>
+    <div class="stat"><b>&gt; $1.5 亿</b><span>公司融资（估值 &gt; $10 亿）</span></div>
+  </div>
+
+  <h3>3.1 一次机密计算是怎么完成的</h3>
+  <div class="grid4">
+    <div class="box"><b>1. 加密输入</b><p>用户在本地加密数据，并附上 ZKPoK，证明自己知道明文，防止恶意构造密文</p></div>
+    <div class="box"><b>2. 符号执行</b><p>主链合约只保存密文指针，记录“要对哪些密文做什么运算”</p></div>
+    <div class="box"><b>3. 协处理器计算</b><p>5 个 FHE 协处理器在链下对密文执行运算，结果仍是密文</p></div>
+    <div class="box" style="background:var(--fill2)"><b>4. 门限解密</b><p>ACL 允许的人请求解密时，13 个 KMS 节点用 MPC 门限解密，运行在 AWS Nitro Enclaves 中；Gateway 运行在专用 Arbitrum rollup 上协调请求</p></div>
+  </div>
+  <p class="small">ERC-7984 机密代币标准（与 OpenZeppelin 共同推动）隐藏余额和金额，但发送方和接收方地址仍可见</p>
+
+  <div class="grid2">
+    <div>
+      <h3>3.2 代币分配</h3>
+      <div class="chart" id="ch-zama-alloc"></div>
+      <p class="small">团队、VC、天使投资人有 1 年锁定期，锁定期结束时先释放 1/10 · 来源：Zama Litepaper</p>
+    </div>
+    <div>
+      <h3>3.3 费用与经济模型</h3>
+      <table>
+        <tr><th>操作</th><th class="r">单次费用</th></tr>
+        <tr><td>加密输入证明（ZKPoK）</td><td class="r">$0.005 - $0.5</td></tr>
+        <tr><td>解密</td><td class="r">$0.001 - $0.1</td></tr>
+        <tr><td>跨链桥接</td><td class="r">$0.01 - $1</td></tr>
+      </table>
+      <table>
+        <tr><th>指标</th><th class="r">数值</th></tr>
+        <tr><td>代币模型</td><td class="r">使用费用销毁 + 增发奖励</td></tr>
+        <tr class="bad"><td>通胀</td><td class="r">约 5% / 年</td></tr>
+        <tr><td>机密资产规模</td><td class="r">超过 $9,000 万</td></tr>
+        <tr><td>Morpho 金库</td><td class="r">16 - 21 个</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn"><b class="t">关键时间点：2027-02-02 首次大额解锁</b>团队、VC、天使投资人的 1 年锁定期结束，预计解锁约 5.5 亿 ZAMA，按当前价格约 $4,700 万，相当于当前流通市值的约 22%。之后还会持续释放。在机密资产规模和费用收入明显增长之前，这是 ZAMA 价格最主要的供给压力。</div>
+
+  <div class="grid3">
+    <div class="card"><div class="hd">优势<span class="tag green">领先</span></div><div class="bd">融资、团队规模和技术积累在 FHE 赛道最强；已有主网、代币、节点网络和 DeFi 集成；ERC-7984 有机会成为机密代币标准。</div></div>
+    <div class="card"><div class="hd">风险<span class="tag red">估值</span></div><div class="bd">FDV 接近 10 亿美元，市场已提前计入不少预期；当前链上费用规模远不足以支撑这个估值；无最大供应，长期依赖销毁抵消约 5% 通胀。</div></div>
+    <div class="card"><div class="hd">待验证<span class="tag orange">采用</span></div><div class="bd">FHE 计算成本仍高；稳定币发行方、银行或 RWA 平台是否真正大规模采用，决定了费用能否追上估值。</div></div>
+  </div>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、Aztec（AZTEC）：空间最大的路线，安全成熟度最低</h2>
+  <p class="lead">Aztec 是以太坊上的隐私 L2。它不兼容 EVM，而是用自己的 Noir 语言和执行环境，让同一个应用同时拥有私有状态和公开状态。2017 年开始开发、2026 年才发币，是因为它从“隐私转账”转向了难度高得多的“可编程隐私 L2”。</p>
+  <div class="stats">
+    <div class="stat"><b>$0.017</b><span>AZTEC 价格</span></div>
+    <div class="stat"><b>约 $0.5 亿</b><span>流通市值</span></div>
+    <div class="stat"><b>约 $1.76 亿</b><span>FDV</span></div>
+    <div class="stat red"><b>约 $4 亿</b><span>公开销售平均成交 FDV</span></div>
+    <div class="stat orange"><b>2027-02</b><span>团队和投资人开始解锁</span></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>4.1 技术实现</h3>
+      <table>
+        <tr><th>模块</th><th>做什么</th></tr>
+        <tr><td>客户端证明</td><td>用户在本地生成 ZK 证明，私密数据不需要发给服务器</td></tr>
+        <tr><td>PLONK + Barretenberg</td><td>证明系统和证明后端</td></tr>
+        <tr><td>Noir</td><td>编写隐私应用和电路的语言</td></tr>
+        <tr><td>去中心化排序和证明</td><td>网络由排序者和证明者共同运行</td></tr>
+        <tr><td>私有 + 公开状态</td><td>可做隐私转账，也可做需要公开状态的 DeFi、投票、身份应用</td></tr>
+      </table>
+      <h3>4.2 为什么拖到 2026 年才发币</h3>
+      <ul class="muted" style="font-size:13px">
+        <li>早期产品 zk.money 和 Aztec Connect 已在 2023 年 3 月关闭。</li>
+        <li>团队转向完整的可编程隐私 L2，难度远高于隐私转账。</li>
+        <li>去中心化排序、去中心化证明、客户端证明和 Noir 工具链都需要长时间开发和审计。</li>
+        <li>2026-02-12 通过治理投票触发 TGE；公开销售募集约 19,476 ETH。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>4.3 估值回撤</h3>
+      <div class="chart" id="ch-aztec"></div>
+      <p class="small">图：AZTEC 公开销售 FDV 与当前 FDV、流通市值（百万美元）</p>
+      <h3>4.4 安全事件和当前进展</h3>
+      <table>
+        <tr><th>时间</th><th>事件</th></tr>
+        <tr class="bad"><td>2026-03-17</td><td>披露 V4 严重 bug</td></tr>
+        <tr><td>2026-07-21</td><td>V5 激活</td></tr>
+        <tr class="bad"><td>2026-07-27</td><td>AI 辅助审计发现 V5 证明系统严重 bug</td></tr>
+        <tr class="bad"><td>2026-08-07</td><td>公开披露 V5 bug，修复计划放到 V6</td></tr>
+        <tr class="good"><td>2026-09-21</td><td>私有智能合约执行上线</td></tr>
+        <tr><td>2026-09-29</td><td>zk.money 重新上线：单笔上限 $2,500，每日上限 $50,000，Oxide TEE 共同签名</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout warn"><b class="t">资金上限和 TEE 共同签名说明了团队自己的判断</b>zk.money 重新上线时加了单笔和每日上限，还额外使用 TEE 共同签名，说明团队也认为证明系统还需要保护性措施。在 V6 修复 V5 漏洞、并且这些上限逐步放开之前，Aztec 的估值很难回到公开销售水平。约 2027 年 2 月开始的团队和投资人解锁，以及公开销售参与者的浮亏，也会带来持续抛压。</div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、Fhenix（未发币）：Zama 的挑战者，信任模型比宣传更弱</h2>
+  <p class="lead">Fhenix 和 Zama 做的是同一件事：给 EVM 链提供 FHE 协处理器。开发者只需导入 <code>import "@fhenixprotocol/cofhe-contracts/FHE.sol";</code> 就能使用加密数据类型。它的差异化在 Dual-Mode 代币标准和与 Arbitrum 的紧密合作；短板是起步晚、资金少，以及当前解密依赖单台 TEE。</p>
+  <div class="stats">
+    <div class="stat"><b>约 $2,200 万</b><span>累计融资（Zama 超过 $1.5 亿）</span></div>
+    <div class="stat orange"><b>10-21</b><span>Ethereum + Arbitrum 主网</span></div>
+    <div class="stat"><b>5 个</b><span>首批应用（约 60 个候选）</span></div>
+    <div class="stat"><b>800 万+</b><span>测试网单日加解密操作</span></div>
+    <div class="stat red"><b>1 台 TEE</b><span>当前解密环节</span></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>5.1 团队、融资与路线</h3>
+      <table>
+        <tr><th>时间 / 角色</th><th>内容</th></tr>
+        <tr><td>联合创始人</td><td>Guy Zyskind，Enigma 和 Secret Network 创始人</td></tr>
+        <tr><td>CEO</td><td>Guy Itzhaki，曾在 Intel 负责 FHE 业务拓展</td></tr>
+        <tr><td>研究负责人</td><td>Ravital Solomon，Sunscreen 创始人</td></tr>
+        <tr><td>2023-09</td><td>种子轮约 $750 万，Multicoin 领投；最初计划做 FHE L2，早期使用过 Zama 的 fhEVM 技术</td></tr>
+        <tr><td>2024</td><td>Helium 测试网；6 月 A 轮 $1,500 万，Hack VC 领投；与 EigenLayer 合作研究协处理器</td></tr>
+        <tr><td>2025</td><td>转向 CoFHE 协处理器路线</td></tr>
+        <tr><td>2026-07</td><td>收购 Sunscreen，补强 FHE 编译器和研究</td></tr>
+        <tr class="hl"><td>2026-10-21</td><td>计划在 Ethereum 和 Arbitrum 上线主网</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>5.2 CoFHE 组件</h3>
+      <table>
+        <tr><th>组件</th><th>作用</th></tr>
+        <tr><td><code>FHE.sol</code> + TaskManager</td><td>链上发起加密计算请求、接收结果、管理解密权限</td></tr>
+        <tr><td>ZK Verifier</td><td>验证用户提交的加密输入</td></tr>
+        <tr><td>FHE 协处理器</td><td>链下执行加密计算</td></tr>
+        <tr><td>CommitmentRegistry</td><td>记录计算结果的承诺，防止密文被替换</td></tr>
+        <tr class="bad"><td>Teecryptor</td><td>当前负责解密，运行在 Intel TDX TEE 中</td></tr>
+        <tr><td>Threshold Network</td><td>计划用 MPC 门限解密取代 Teecryptor，尚未完成</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>5.3 当前解密的信任链</h3>
+  <div class="grid4">
+    <div class="box"><b>① 拆分私钥</b><p>FHE 网络私钥在 TEE 仪式中生成，拆成 6 份，由独立托管方保存</p></div>
+    <div class="box"><b>② 远程证明</b><p>Teecryptor 启动时证明自己运行的是经过审核的代码镜像</p></div>
+    <div class="box"><b>③ 恢复私钥</b><p>托管方验证通过后发送私钥碎片，任意 3 份即可在 TEE 内存中恢复完整私钥</p></div>
+    <div class="box" style="background:var(--fill2)"><b>④ 签名上链</b><p>解密结果用 ECDSA 签名，链上通过 <code>FHE.publishDecryptResult</code> 校验</p></div>
+  </div>
+  <div class="callout warn"><b class="t">和官网宣传不一致</b>官网强调“不依赖可信硬件，只靠数学”，但文档显示当前安全性依赖 Intel TDX、TEE 内代码没有漏洞，以及 6 个托管方中不会有 3 个合谋。官方计划用门限网络替代 Teecryptor，但门限网络最初也会由一个可信分发方初始化。另外，协处理器使用常规云基础设施，核心组件由 Fhenix 自己运行，尚未公布去中心化节点网络。</div>
+
+  <div class="grid2">
+    <div>
+      <h3>5.4 Dual-Mode 代币标准</h3>
+      <ul class="muted" style="font-size:13px">
+        <li>同一个 ERC-20 地址同时支持公开余额和加密余额。</li>
+        <li>用户可以在一笔交易中切换公开和私密模式。</li>
+        <li>不需要包装代币，减少流动性被拆分；Zama 的 ERC-7984 通常需要把 USDC 包装成 cUSDC。</li>
+        <li>隐藏余额和金额，但发送方、接收方和交易时间仍然可见。</li>
+      </ul>
+      <h3>5.5 代币和空投</h3>
+      <ul class="muted" style="font-size:13px">
+        <li>官方尚未公布代币、TGE、积分或空投；测试网任务不代表一定有空投。</li>
+        <li>如果未来发币，FDV 更可能参考 Aztec 或 Arcium 的量级；是否接近 Zama，取决于主网使用和生态采用（粗略推测）。</li>
+        <li>主网前后容易出现钓鱼网站、假空投和假代币，只认 <a href="https://www.fhenix.io/">fhenix.io</a>。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>5.6 Fhenix vs Zama</h3>
+      <table>
+        <tr><th>维度</th><th>Fhenix</th><th>Zama</th></tr>
+        <tr><td>主网</td><td>计划 2026-10-21</td><td>已运行一年多</td></tr>
+        <tr class="bad"><td>当前解密</td><td>单台 TEE 内恢复完整私钥</td><td>13 个 KMS 节点 MPC 门限解密 + AWS Nitro Enclaves</td></tr>
+        <tr><td>节点网络</td><td>尚未公布</td><td>已有运营方网络</td></tr>
+        <tr><td>代币</td><td>未公布</td><td>ZAMA，FDV 约 $9.5 亿</td></tr>
+        <tr class="bad"><td>融资</td><td>约 $2,200 万</td><td>超过 $1.5 亿</td></tr>
+        <tr class="good"><td>机密代币标准</td><td>Dual-Mode，无需包装</td><td>ERC-7984，通常需要包装</td></tr>
+        <tr><td>生态</td><td>首批 5 个应用即将上线</td><td>机密资产超过 $9,000 万，Morpho 金库等集成</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、横向对比与估值</h2>
+  <h3>6.1 四个项目放在一起看</h3>
+  <table>
+    <tr><th>维度</th><th>RAILGUN</th><th>Zama</th><th>Aztec</th><th>Fhenix</th></tr>
+    <tr><td>技术路线</td><td>ZK 隐私资金池</td><td>FHE 协处理器</td><td>ZK 隐私 L2</td><td>FHE 协处理器</td></tr>
+    <tr><td>是否需要迁移新链</td><td>不需要</td><td>不需要</td><td>需要使用 Aztec L2</td><td>不需要</td></tr>
+    <tr><td>EVM 兼容性</td><td>直接部署在 EVM 链</td><td>服务 EVM 链</td><td>不兼容，使用 Noir</td><td>服务 EVM 链</td></tr>
+    <tr><td>主要隐私</td><td>匿名性</td><td>机密性</td><td>可编程隐私</td><td>机密性</td></tr>
+    <tr><td>目标用户</td><td>个人、交易员、DAO</td><td>企业、机构、资产发行方</td><td>隐私应用开发者和用户</td><td>资产发行方和 EVM 应用</td></tr>
+    <tr><td>解密 / 信任假设</td><td>密码学（Groth16 可信设置）</td><td>MPC 门限 + TEE</td><td>密码学；zk.money 暂用 TEE 共同签名</td><td>单台 TEE + 3-of-6 托管</td></tr>
+    <tr class="hl"><td>收入情况</td><td>已有真实手续费收入</td><td>有使用费用，规模待验证</td><td>早期</td><td>主网前</td></tr>
+    <tr><td>主要催化剂</td><td>Base 部署、收入回升</td><td>机构采用、机密资产增长</td><td>V6、私有合约生态</td><td>10-21 主网、潜在发币</td></tr>
+    <tr class="bad"><td>最大风险</td><td>收入停滞、合规、增发</td><td>高 FDV、解锁</td><td>安全漏洞、解锁</td><td>TEE 信任模型、竞争</td></tr>
+  </table>
+
+  <h3>6.2 为什么 ZAMA 的 FDV 是 RAIL 的 3 倍多</h3>
+  <p class="muted">ZAMA 约 $9.5 亿 FDV，RAIL 按最大供应约 $2.78 亿，AZTEC 约 $1.76 亿。差距主要不是来自当前收入（只有 RAIL 有可观测的稳定收入），而是来自客户类型、融资锚点、代币结构和合规折价。</p>
+  <div class="reasons" id="reasons"></div>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、RAIL 估值模拟器</h2>
+  <p class="lead">RAIL 是唯一能用收入倍数估值的项目，所以这里把“收入增长就能上涨”这个看法量化。拖动滑块调整年化手续费、市场给的收入倍数和流通供应，结果实时更新。默认值对应当前状态：年化手续费约 $430 万、约 39 倍、流通 60M 枚。手续费反推的资金进出规模按 0.25% 费率估算。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)" id="simstats"></div>
+      <table id="simtable"></table>
+      <h4>年化手续费 → 隐含 RAIL 价格（流通供应取左侧当前值）</h4>
+      <div class="chart" id="ch-sim1"></div>
+      <p class="small">横轴为年化手续费（百万美元），纵轴为隐含价格（美元）· 本报告模型估算，不是价格预测</p>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">怎么读这个模拟器</b>如果收入不增长，RAIL 的上涨只能靠市场给更高的倍数，而 39 倍已经不低。真正可持续的上涨需要年化手续费明显突破 $400–500 万的平台期，比如 Base 部署带来新用户，或隐私需求让资金进出规模翻倍。同时要考虑增发：流通供应从 60M 走向 100M，同样的市值对应的单价会下降约 40%。</div>
+
+  <!-- ============ 八 ============ -->
+  <h2 id="s8">八、投资观察排序与关注信号</h2>
+  <p class="lead">以下是基于当前信息的风险调整后观察排序，不是价格预测。四个项目处在不同阶段：RAIL 要证明收入能增长，ZAMA 要证明采用能追上估值，AZTEC 要证明系统安全，Fhenix 要证明主网有人用。</p>
+  <div class="grid4">
+    <div class="card"><div class="hd">1. RAILGUN<span class="tag green">性价比</span></div><div class="bd">估值相对低，有真实收入；但需要看到收入重新增长，否则难以支撑估值重估。</div></div>
+    <div class="card"><div class="hd">2. Zama<span class="tag blue">基本面</span></div><div class="bd">基本面和生态最强，适合跟踪机构采用；但 FDV 已经较高，并面临 2027 年解锁。</div></div>
+    <div class="card"><div class="hd">3. Aztec<span class="tag orange">等待验证</span></div><div class="bd">技术空间大，价格低于公开销售估值；适合等 V6 和资金上限放开后再评估。</div></div>
+    <div class="card"><div class="hd">4. Fhenix<span class="tag">未发币</span></div><div class="bd">暂时不能直接投资，更适合关注主网表现和潜在空投。</div></div>
+  </div>
+
+  <h3>8.1 不同偏好下的选择</h3>
+  <table>
+    <tr><th>偏好</th><th>更值得关注</th><th>核心理由</th></tr>
+    <tr><td>看重真实收入和较低估值</td><td>RAILGUN</td><td>唯一有稳定手续费收入的项目</td></tr>
+    <tr><td>看重机构采用和技术领先</td><td>Zama</td><td>资金、团队和生态集成最强</td></tr>
+    <tr><td>看重可编程隐私和长期技术空间</td><td>Aztec</td><td>应用范围最广，估值已大幅回撤</td></tr>
+    <tr><td>看重未发币项目和潜在空投</td><td>Fhenix</td><td>主网临近，代币尚未公布</td></tr>
+  </table>
+
+  <div class="grid2">
+    <div>
+      <h3>8.2 未来 6 - 12 个月关键时间点</h3>
+      <table>
+        <tr><th>时间</th><th>项目</th><th>事件</th></tr>
+        <tr class="hl"><td>2026-10-21</td><td>Fhenix</td><td>主网计划上线（Ethereum + Arbitrum）</td></tr>
+        <tr><td>待定</td><td>RAILGUN</td><td>Base 部署提案 Proposal #27 结果</td></tr>
+        <tr><td>待定</td><td>Aztec</td><td>V6 修复 V5 证明系统问题</td></tr>
+        <tr class="bad"><td>约 2027-02</td><td>Aztec</td><td>团队和投资人开始解锁，之后 2 年线性释放</td></tr>
+        <tr class="bad"><td>2027-02-02</td><td>Zama</td><td>团队、VC、天使首次解锁，约 5.5 亿 ZAMA（约 $4,700 万）</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>8.3 项目阶段</h3>
+      <div class="steps"><div>测试网</div><div>主网上线</div><div>发币</div><div class="on">真实采用</div><div>收入覆盖估值</div></div>
+      <table>
+        <tr><th>项目</th><th>当前所处阶段</th></tr>
+        <tr><td>Fhenix</td><td>测试网 → 主网上线（10-21）</td></tr>
+        <tr><td>Aztec</td><td>已发币，安全性仍在修复，采用刚起步</td></tr>
+        <tr><td>Zama</td><td>已发币，处在“真实采用”阶段，费用尚未覆盖估值</td></tr>
+        <tr class="good"><td>RAILGUN</td><td>已有收入，但收入增长停滞，估值约 39 倍收入</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>8.4 应该关注的信号</h3>
+  <table>
+    <tr><th>项目</th><th>关注的信号</th><th>利空</th><th>利好</th></tr>
+    <tr><td>RAILGUN</td><td>季度手续费、隐私池净流入</td><td>继续停在约每季度 $100 万</td><td>突破平台期，Base 部署带来新增资金</td></tr>
+    <tr><td>RAILGUN</td><td>DAO 增发与质押奖励</td><td>增发规模继续扩大</td><td>奖励更多来自手续费而非新增 RAIL</td></tr>
+    <tr><td>Zama</td><td>机密资产规模、加解密次数</td><td>增长停滞，费用远低于估值</td><td>稳定币或 RWA 发行方大规模采用</td></tr>
+    <tr><td>Zama</td><td>2027-02-02 解锁前后</td><td>交易所大额流入</td><td>解锁被市场平稳消化</td></tr>
+    <tr><td>Aztec</td><td>V6 与 zk.money 上限</td><td>再出现严重漏洞</td><td>V6 修复漏洞，上限逐步放开</td></tr>
+    <tr><td>Fhenix</td><td>主网与首批应用</td><td>延期，或上线后没有真实用户</td><td>应用活跃，Dual-Mode 被资产发行方采用</td></tr>
+    <tr><td>Fhenix</td><td>解密去中心化</td><td>长期停留在单台 TEE</td><td>门限网络替代 Teecryptor，公布节点和代币方案</td></tr>
+  </table>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://railgun.org/">RAILGUN 官网</a> · <a href="https://l2beat.com/">L2BEAT</a> · <a href="https://defillama.com/">DefiLlama</a> · <a href="https://www.coingecko.com/">CoinGecko</a></li>
+    <li><a href="https://www.zama.ai/">Zama 官网</a> · <a href="https://docs.zama.ai/">Zama 文档与 Litepaper</a> · <a href="https://aztec.network/">Aztec 官网</a></li>
+    <li><a href="https://www.fhenix.io/">Fhenix 官网</a> · <a href="https://www.fhenix.io/blog/cofhe-architecture">CoFHE 架构</a> · <a href="https://cofhe-docs.fhenix.zone/deep-dive/cofhe-components/teecryptor.md">Teecryptor 文档</a> · <a href="https://cofhe-docs.fhenix.zone/deep-dive/cofhe-components/key-management.md">密钥管理文档</a></li>
+    <li><a href="https://www.fhenix.io/blog/why-dual-mode-tokens-are-inevitable">Fhenix Dual-Mode 代币</a> · <a href="https://www.fhenix.io/blog/fhenix-snaps-up-sunscreen-in-a-bid-to-bring-real-privacy-to-ethereum">Fhenix 收购 Sunscreen</a> · <a href="https://chainwire.org/2024/06/05/fhenix-raises-15m-and-launches-testnet-of-confidentiality-focused-l2/">Fhenix A 轮融资</a> · <a href="https://multicoin.capital/2023/09/26/the-dawn-of-on-chain-fhe/">Multicoin 种子轮文章</a></li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。价格和市值为 2026-10-05 前后的近似值；估值模拟器和 Fhenix 发币估值为本报告估算，可能与实际情况存在较大差异。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7", "--c8"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = 640, H = opt.height || 260, L = 48, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, (opt.prefix || "") + fmt(v) + (opt.suffix || ""));
+    }
+    const every = Math.ceil(cats.length / 12);
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      el("polyline", { points: s.data.map((v, i) => `${x(i)},${y(v)}`).join(" "), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": s.dash || "" }, svg);
+      s.data.forEach((v, i) => {
+        const c = el("circle", { cx: x(i), cy: y(v), r: 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${(opt.prefix || "")}${fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    if (opt.marker) {
+      const { i, v, label } = opt.marker;
+      el("circle", { cx: x(i), cy: y(v), r: 6, fill: "none", stroke: css("--orange"), "stroke-width": 2 }, svg);
+      el("text", { x: x(i) + 9, y: y(v) - 8, style: `fill:${css("--orange")};font-weight:600` }, svg, label);
+    }
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const horiz = !!opt.horizontal;
+    const n = cats.length, m = series.length;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = 640, L = horiz ? (opt.labelWidth || 150) : 48, R = 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = Math.min(48, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], x0 = L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const col = m === 1 ? color(opt.colorEach ? i : (v < 0 ? 1 : 0), opt.tones ? opt.tones[i] : undefined) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: Math.min(y(v), y(0)), width: bw - 2, height: Math.abs(y(v) - y(0)), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x0 + bw / 2 - 1, y: (v >= 0 ? y(v) - 4 : y(v) + 12), "text-anchor": "middle" }, svg, fmt(v));
+        });
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = m === 1 ? color(opt.colorEach ? i : 0, opt.tones ? opt.tones[i] : undefined) : color(si, s.tone);
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.abs(x(v) - x(0)), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  function donut(id, data) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const total = data.reduce((a, d) => a + d.value, 0);
+    const H = Math.max(220, 30 + data.length * 26);
+    const svg = el("svg", { viewBox: `0 0 640 ${H}` }, host);
+    const cx = 110, cy = H / 2, r = 90, ri = 54;
+    let a0 = -Math.PI / 2;
+    data.forEach((d, i) => {
+      const a1 = a0 + (d.value / total) * Math.PI * 2, large = a1 - a0 > Math.PI ? 1 : 0;
+      const p = (rad, a) => `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`;
+      const path = el("path", { d: `M${p(r, a0)} A${r},${r} 0 ${large} 1 ${p(r, a1)} L${p(ri, a1)} A${ri},${ri} 0 ${large} 0 ${p(ri, a0)} Z`, fill: color(i), stroke: css("--bg"), "stroke-width": 1.5 }, svg);
+      el("title", {}, path, `${d.label}：${d.value}%`);
+      el("rect", { x: 250, y: 18 + i * 26, width: 12, height: 12, rx: 2, fill: color(i) }, svg);
+      el("text", { x: 270, y: 29 + i * 26, style: "font-size:13px" }, svg, `${d.label}  ${d.value}%${d.note ? "  " + d.note : ""}`);
+      a0 = a1;
+    });
+  }
+
+  /* ---------- 静态图表 ---------- */
+  barChart("ch-val", ["RAIL", "ZAMA", "AZTEC"], [
+    { name: "流通市值（百万美元）", data: [167, 215, 50], tone: "--c1" },
+    { name: "FDV（百万美元）", data: [278, 950, 176], tone: "--c4" },
+  ], { height: 250 });
+  donut("ch-zama-alloc", [
+    { label: "团队", value: 20, note: "1 年锁定" },
+    { label: "VC", value: 20, note: "1 年锁定" },
+    { label: "国库", value: 20 },
+    { label: "公开销售", value: 12 },
+    { label: "天使投资人", value: 10, note: "1 年锁定" },
+    { label: "增长", value: 10 },
+    { label: "TGE 活动", value: 6 },
+    { label: "流动性", value: 2 },
+  ]);
+  barChart("ch-aztec", ["公开销售 FDV", "当前 FDV", "当前流通市值"], [{ name: "百万美元", data: [400, 176, 50] }],
+    { height: 210, colorEach: true, tones: ["--c6", "--c2", "--c1"] });
+
+  const REASONS = [
+    ["客户类型", "red", "1. 机构机密金融 vs 个人匿名转账", "Zama 面向企业、稳定币和 RWA 发行方，市场按“机构基础设施”的潜在规模定价；RAILGUN 主要服务个人和交易员，市场按“现有手续费”定价。前者给的是期权价值，后者给的是现金流价值。"],
+    ["融资锚点", "red", "2. 私募估值锚：Zama 超过 $10 亿", "Zama 累计融资超过 $1.5 亿，最后一轮估值超过 $10 亿。机构入场价构成了二级市场的心理锚，FDV 很难长期大幅低于私募估值。RAILGUN 没有类似的高估值融资背书。"],
+    ["代币结构", "orange", "3. 低流通、高 FDV 的结构", "ZAMA 只有约 23% 流通，流通市值约 $2.15 亿，和 RAIL 的 $1.67 亿差距并不大。FDV 差距主要来自约 77% 尚未流通的代币，这部分正是 2027 年起的解锁压力。"],
+    ["合规折价", "orange", "4. 匿名性协议的合规折价", "RAILGUN 隐藏交易双方，即使有 PPOI，也更容易被交易所、钱包和监管限制；Zama 隐藏金额但地址可见，更容易被机构接受，也更容易上主流交易所。"],
+    ["技术通用性", "", "5. 通用机密计算 vs 隐私资金池", "FHE 可以对任意加密数据做计算，理论上能支撑机密 DEX、拍卖、投票、借贷等任意应用；RAILGUN 主要是资金池加 DeFi 路由，应用边界更清晰，也更有限。"],
+    ["增长预期", "", "6. RAILGUN 的收入没有跟着叙事上涨", "2026 年隐私叙事升温，RAILGUN 季度收入仍维持在约 $100 万。市场因此不愿意给它更高的倍数；Zama 还没有可比的收入数据，反而保留了更多想象空间。"],
+    ["安全折价", "", "7. Aztec 的低估值来自安全事件", "AZTEC FDV 约 $1.76 亿，比公开销售时的约 $4 亿低 56%。V4、V5 连续出现严重 bug，zk.money 仍有资金上限，市场在给安全风险打折。"],
+    ["流动性", "", "8. 交易所覆盖与流动性深度", "上主流交易所越多、做市越深，越能承载更高估值。RAIL 链上流动性较薄，大额买卖对价格影响明显，限制了大资金参与。"],
+  ];
+  document.getElementById("reasons").innerHTML = REASONS.map((r, i) =>
+    `<div class="reason${i < 2 ? " top" : ""}"><span class="tag ${r[1]}">${r[0]}</span><b>${r[2]}</b><p>${r[3]}</p></div>`).join("");
+
+  /* ---------- RAIL 估值模拟器 ---------- */
+  const NOW = { price: 2.78, zamaFdv: 950, aztecFdv: 176 };
+  const DEF = { fees: 4.3, multiple: 38.8, supply: 60, feeRate: 0.25 };
+  const PRESETS = [
+    ["当前", {}],
+    ["收入停滞 + 估值压缩到 20 倍", { multiple: 20 }],
+    ["收入翻倍（$860 万）", { fees: 8.6 }],
+    ["Base 部署 + 隐私需求爆发：$1,200 万、30 倍", { fees: 12, multiple: 30 }],
+    ["牛市高估值：$860 万、60 倍", { fees: 8.6, multiple: 60 }],
+    ["全部增发到 100M 枚", { supply: 100 }],
+  ];
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); return a >= 100 ? `${s}$${(a / 100).toFixed(2)} 亿` : `${s}$${Math.round(a * 100).toLocaleString("en-US")} 万`; };
+  const CTRL = [
+    ["收入"],
+    ["fees", "年化手续费", 1, 30, 0.1, (v) => usd(v)],
+    ["feeRate", "转入 / 转出费率", 0.1, 0.5, 0.05, (v) => v.toFixed(2) + "%"],
+    ["估值"],
+    ["multiple", "市值 / 年化收入倍数", 5, 100, 0.1, (v) => v.toFixed(1) + "x"],
+    ["supply", "流通供应", 60, 100, 1, (v) => v + "M RAIL"],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => {
+      if (c.length === 1) return `<h4>${c[0]}</h4>`;
+      return `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`;
+    }).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]], S); });
+    const mc = S.fees * S.multiple;
+    const price = mc / S.supply;
+    const chg = (price / NOW.price - 1) * 100;
+    const fdv100 = price * 100;
+    const volume = S.fees / (S.feeRate / 100);
+    const quarterly = S.fees / 4;
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(mc), "隐含市值"],
+      [chg >= 0 ? "green" : "red", "$" + price.toFixed(2), `隐含价格（当前 $${NOW.price}）`],
+      [chg >= 0 ? "green" : "red", (chg >= 0 ? "+" : "") + chg.toFixed(0) + "%", "相对当前价格"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["对应季度收入", usd(quarterly) + (quarterly > 1.2 ? "（突破约 $100 万平台期）" : "（仍在平台期附近）")],
+      ["反推年资金进出规模", usd(volume)],
+      ["按 100M 最大供应的 FDV", usd(fdv100)],
+      ["隐含 FDV / ZAMA FDV", ((fdv100 / NOW.zamaFdv) * 100).toFixed(0) + "%"],
+      ["隐含 FDV / AZTEC FDV", (fdv100 / NOW.aztecFdv).toFixed(2) + "x"],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+    const g = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+    const px = (f, k) => Math.round((f * k / S.supply) * 100) / 100;
+    lineChart("ch-sim1", g.map((f) => "$" + f + "M"), [
+      { name: "20 倍", data: g.map((f) => px(f, 20)), tone: "--c2" },
+      { name: "约 39 倍（当前）", data: g.map((f) => px(f, DEF.multiple)), tone: "--c1" },
+      { name: "60 倍", data: g.map((f) => px(f, 60)), tone: "--c3" },
+    ], { height: 240, prefix: "$", marker: S.fees >= 2 && S.fees <= 20 && S.multiple <= 60 ? { i: (S.fees - 2) / 2, v: px(S.fees, S.multiple), label: "你的假设" } : null });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>

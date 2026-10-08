@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lido 协议深度报告（2026-10-07）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  .reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reason { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .reason.top { background: var(--fill); }
+  .reason b { display: block; margin: 6px 0 4px; }
+  .reason p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .bar100 { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 8px 0; }
+  .steps div { background: var(--fill); border-radius: 6px; padding: 8px 6px; text-align: center; font-size: 12px; }
+  .steps div.on { background: var(--fill2); font-weight: 600; outline: 1px solid var(--orange); }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid-32, .sim, .reasons { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .reason, .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、协议是做什么的</a>
+  <a href="#s2">二、经营与营收</a>
+  <a href="#s3">三、LDO 为何长期低迷</a>
+  <a href="#s4">四、金库与亏损如何填补</a>
+  <a href="#s5">五、回购曲线与结论</a>
+  <a href="#s6">六、情景模拟器</a>
+  <a href="#s7">七、EIP-8363 专题</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">深度研究</span>数据截至 2026-10-07 · 来源：lido.fi、Lido DAO 财报（GOOSE-2025 / H1 2026）、DefiLlama、CoinGecko、Lido 研究论坛、The Block、CoinDesk</p>
+  <h1>Lido 协议深度报告：最大的以太坊质押协议，为什么撑不起 LDO 的价格</h1>
+  <p class="muted">一句话结论：Lido 是一门规模巨大但利润极薄的“收费站”生意——它收的是质押收益的 10%，而不是本金的费用。256 亿美元 TVL 每年只给 DAO 带来约 3,500–4,000 万美元净收入，且几乎被运营开支全部吃掉；LDO 又是一个没有现金流分配权的治理代币。这三点叠加，决定了 TVL 规模与币价之间几乎没有传导。</p>
+  <div class="stats">
+    <div class="stat"><b>$256 亿</b><span>质押 TVL（978 万 ETH）</span></div>
+    <div class="stat orange"><b>21.2%</b><span>全网质押份额（峰值 32%）</span></div>
+    <div class="stat"><b>$3,570 万</b><span>近 12 个月 DAO 收入</span></div>
+    <div class="stat red"><b>$0.435</b><span>LDO 价格（ATH $7.30，-94%）</span></div>
+    <div class="stat"><b>$4.35 亿</b><span>LDO 完全稀释估值</span></div>
+  </div>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、协议是做什么的</h2>
+  <h3>1.1 核心业务：以太坊流动性质押</h3>
+  <p class="lead">以太坊 PoS 要求验证者质押 32 ETH、自己运行节点，且质押期间资金被锁定。Lido 把这件事“打包”成一个产品：用户存入任意数量的 ETH，立即拿到 1:1 的 stETH；stETH 每天按质押收益自动增加余额（rebase），同时可以在 DeFi 里自由交易、抵押、借贷。</p>
+  <div class="grid4">
+    <div class="box"><b>1. 存入</b><p>用户把 ETH 存入 Lido 合约，获得等额 stETH（或余额不变的包装版 wstETH）</p></div>
+    <div class="box"><b>2. 分配</b><p>Staking Router 把 ETH 分给 600+ 家节点运营商，由它们运行验证者</p></div>
+    <div class="box"><b>3. 收益</b><p>共识层 + 执行层（MEV/小费）收益每日由预言机上报，stETH 余额随之增长</p></div>
+    <div class="box"><b>4. 退出</b><p>通过官方提款队列 1:1 赎回 ETH，或在 Curve / DEX / CEX 二级市场直接卖出</p></div>
+  </div>
+
+  <div class="grid-32">
+    <div>
+      <h3>收费模式：只收“收益”的 10%</h3>
+      <p class="muted">Lido 对质押奖励抽取 10% 的协议费，90% 归 stETH 持有者。这 10% 再在节点运营商和 DAO 金库之间分配。2025 年底改革后，DAO 实际拿到的份额从 4.96% 升到 6.15%。H1 2026 每 100 ETH 质押奖励的去向：</p>
+      <div class="bar100">
+        <div style="width:90%;background:var(--gray)"></div>
+        <div style="width:4.38%;background:var(--c7)"></div>
+        <div style="width:5.63%;background:var(--c1)"></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--gray)"></i>stETH 持有者 90.0%</span><span><i style="background:var(--c7)"></i>节点运营商 + 推荐返佣 4.38%</span><span><i style="background:var(--c1)"></i>DAO 净收入 5.63%</span></div>
+      <p class="small">来源：Lido DAO H1 2026 报告（总奖励 123,510 ETH / 持有者 111,146 / 扣除项 5,408 / DAO 净 6,956）</p>
+    </div>
+    <div>
+      <h3>节点运营商体系（Staking Router 模块）</h3>
+      <table>
+        <tr><th>模块</th><th>定位</th><th>规模</th></tr>
+        <tr><td>Curated Module v2</td><td>白名单专业运营商</td><td>约 90% 质押量</td></tr>
+        <tr><td>Simple DVT</td><td>Obol/SSV 分布式验证，7 人集群</td><td>222 家（含 124 名个人）</td></tr>
+        <tr><td>Community Staking (CSM v3)</td><td>无许可，需押 ETH 保证金</td><td>约 75 万 ETH / 430 运营商</td></tr>
+        <tr><td>stVaults（Lido v3）</td><td>机构定制隔离金库</td><td>1.15 万 ETH（7 月底）</td></tr>
+      </table>
+      <p class="small">验证者表现 98.76%，高于全网 98.35%</p>
+    </div>
+  </div>
+
+  <h3>1.2 产品矩阵与治理</h3>
+  <table>
+    <tr><th>产品 / 机制</th><th>做什么</th><th>现状（2026）</th></tr>
+    <tr><td>stETH / wstETH</td><td>核心流动性质押代币，100+ 集成，DeFi 中最主要的 ETH 抵押品之一</td><td>978 万 ETH；累计向用户发放 32.4 亿美元奖励</td></tr>
+    <tr><td>stVaults（Lido v3）</td><td>让机构、ETF、托管商自选运营商与配置，并基于金库铸造 stETH</td><td>远低于目标；受 70 天以上入场排队拖累</td></tr>
+    <tr><td>Lido Earn</td><td>EarnETH / EarnUSD 收益金库，把资金配置到蓝筹 DeFi</td><td>TVL 2.13 亿 + 5,310 万美元；ARR 仅 54 万美元</td></tr>
+    <tr><td>Wisp</td><td>DAO 拥有的隐私 AI Agent 产品（订阅制）</td><td>候补名单 3,000+，尚无收入</td></tr>
+    <tr><td>双重治理 Dual Governance</td><td>stETH 持有者可锁仓否决 / 延迟 LDO 投票，极端情况下“愤怒退出”</td><td>已上线；约束 LDO 持有者的单方面权力</td></tr>
+    <tr><td>ValMart</td><td>按表现、成本、去中心化给运营商分配质押的市场机制</td><td>预计 2027 年初上线，有望进一步提高 DAO 分成</td></tr>
+  </table>
+  <p class="small">Lido 曾扩展至 Solana、Polygon 等链，后陆续关停，现已全面聚焦以太坊</p>
+
+  <h3>1.3 市场地位：LST 绝对龙头，全网份额持续被稀释</h3>
+  <div class="grid2">
+    <div>
+      <div class="chart" id="ch-share"></div>
+      <p class="small">图：全网质押 ETH 份额 Top 7（%）· 来源：Lido H1 2026 报告 · 截至 2026-06-30</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>指标</th><th>数值</th></tr>
+        <tr><td>LST 赛道份额</td><td>56.7%（第二名 Binance wBETH 21.6%）</td></tr>
+        <tr class="bad"><td>全网质押份额</td><td>32%（2023 峰值）→ 23.93%（2026 初）→ 21.18%（6 月）</td></tr>
+        <tr class="bad"><td>H1 2026 全网新增质押</td><td>680 万 ETH，Lido 只拿到 5.7%</td></tr>
+        <tr><td>机构类（ETF/DAT/托管）份额</td><td>25.9% → 35.3%</td></tr>
+        <tr><td>Bitmine（ETH 财库公司）</td><td>半年内从 1.4% 涨到 11.5%</td></tr>
+      </table>
+      <div class="callout"><b class="t">关于“TVL 仅次于 Aave”</b>按 DefiLlama 当前默认口径（不含借出资金），Lido TVL 约 256 亿美元，已高于 Aave 的约 194 亿美元，排名第一。不过这个排名高低并不影响后文结论：TVL 大，不等于能赚钱。</div>
+    </div>
+  </div>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、经营与营收</h2>
+  <p class="lead">经营上的核心矛盾：Lido 的 ETH 本位收入其实相当稳定，但它是一家“以 ETH 收钱、以美元花钱”的组织。ETH 价格、质押 APR、市场份额三者同时下行时，美元收入被三重挤压，而开支是刚性的。</p>
+
+  <h3>2.1 年度损益（官方财报口径，百万美元）</h3>
+  <table>
+    <tr><th>项目</th><th class="r">2024</th><th class="r">2025</th><th class="r">H1 2026</th><th class="r">2026E（ETH $1,900）</th><th class="r">2026E（ETH $2,850）</th></tr>
+    <tr><td>全网质押奖励（Lido 验证者产出）</td><td class="r">1,034.5</td><td class="r">846.7</td><td class="r">275.0</td><td class="r">—</td><td class="r">—</td></tr>
+    <tr><td>协议毛收入（10% 费用）</td><td class="r">103.5</td><td class="r">84.7</td><td class="r">27.5</td><td class="r">—</td><td class="r">—</td></tr>
+    <tr><td>减：节点运营商 + 推荐返佣</td><td class="r">(55.0)</td><td class="r">(47.2)</td><td class="r">(11.8)</td><td class="r">—</td><td class="r">—</td></tr>
+    <tr><td>质押净收入</td><td class="r">48.5</td><td class="r">37.4</td><td class="r">15.7</td><td class="r">—</td><td class="r">—</td></tr>
+    <tr class="hl"><td>DAO 总净收入（含 Earn、金库收益）</td><td class="r">52.4</td><td class="r">40.5</td><td class="r">15.9</td><td class="r">30.6</td><td class="r">37.7</td></tr>
+    <tr><td>基金会总开支</td><td class="r">(52.1)</td><td class="r">(45.5)</td><td class="r">(14.3)</td><td class="r">(37.7)</td><td class="r">(37.7)</td></tr>
+    <tr><td>一次性支出（Kelp 事件）</td><td class="r">—</td><td class="r">—</td><td class="r">(6.1)</td><td class="r">(6.1)</td><td class="r">(6.1)</td></tr>
+    <tr class="hl bad"><td>经营结果</td><td class="r">+0.3</td><td class="r">-5.0</td><td class="r">-4.5</td><td class="r">约 -13</td><td class="r">约 -6</td></tr>
+  </table>
+  <p class="small">来源：GOOSE-2025 年终报告、H1 2026 报告。2026E 为 Lido 官方情景预测。2024/2025 开支含 TRP 代币激励与流动性奖励。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>收入 vs 开支：几乎打平的生意</h3>
+      <div class="chart" id="ch-revexp"></div>
+      <p class="small">图：DAO 年度净收入与开支（百万美元）· 来源：Lido 官方财报及预测</p>
+    </div>
+    <div>
+      <h3>季度：质押奖励规模 vs DAO 净利润</h3>
+      <div class="chart" id="ch-quarter"></div>
+      <p class="small">图：季度质押奖励与 DAO Earnings（百万美元）· 来源：DefiLlama 利润表 · 2023Q1–2026Q3</p>
+    </div>
+  </div>
+
+  <h3>2.2 收入的三重挤压</h3>
+  <div class="grid3">
+    <div class="card"><div class="hd">ETH 价格<span class="tag red">-47%</span></div><div class="bd">H1 2026 ETH 从 $2,969 跌到 $1,569。Lido 的 ETH 本位净收入基本稳定（Q1 3,516 ETH、Q2 3,440 ETH），但美元收入随之腰斩。收入对 ETH 价格几乎是 1:1 的线性敞口。</div></div>
+    <div class="card"><div class="hd">质押 APR<span class="tag red">~5% → 2.2%</span></div><div class="bd">全网质押量从 3,630 万升到 4,310 万 ETH（约占供应 35%）。以太坊发行曲线决定质押越多、单位收益越低；stETH 当前 APR 仅约 2.2%，2022–2023 年时在 4–5% 左右。</div></div>
+    <div class="card"><div class="hd">市场份额<span class="tag red">32% → 21%</span></div><div class="bd">新增资金主要流向 ETF、ETH 财库公司（DAT）和交易所托管质押。机构可以直接找 Coinbase、Figment 质押，Lido 拿不到任何费用。</div></div>
+  </div>
+  <div class="callout info"><b class="t">一个有利变化：DAO 分成在提高</b>2025 年底的费用结构改革和 SDVT 集群缩减，使 DAO 实际分成从 4.96% 提到 6.15%（+24%），协议名义费率仍为 10%。ValMart 上线后，运营商将按成本竞争，分成有望继续提高。这是 Lido 少数能自主控制的利润杠杆。</div>
+
+  <div class="grid2">
+    <div>
+      <h3>2.3 金库状况</h3>
+      <table>
+        <tr><th>时间</th><th class="r">金库（不含 LDO）</th><th>说明</th></tr>
+        <tr><td>2025-12-31</td><td class="r">$1.575 亿</td><td>ETH ≈ $2,969</td></tr>
+        <tr><td>2026-06-30</td><td class="r">$8,830 万</td><td>88% 的下降来自 ETH 跌价</td></tr>
+        <tr><td>2026-08-25</td><td class="r">约 $1.213 亿</td><td>ETH 回到 $2,441</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px">金库主体是约 4.13 万 stETH（DAO 金库 3.45 万 + 储备金 0.68 万），另持有约 1.17 亿枚 LDO（未计入上表）。stETH 的数量在增长，美元价值却随 ETH 剧烈波动。</p>
+    </div>
+    <div>
+      <h3>2.4 分业务利润（H1 2026）</h3>
+      <div class="chart" id="ch-product"></div>
+      <p class="small">图：H1 2026 各产品线利润（百万美元）· Earn 亏损主要来自 Kelp 事件的 606 万美元一次性支出</p>
+    </div>
+  </div>
+  <div class="callout warn"><b class="t">Kelp 事件（2026-04）对 Lido 的影响</b>Kelp DAO 的 LayerZero 跨链桥被朝鲜 Lazarus 攻击，损失约 2.92 亿美元 rsETH。Lido 核心协议、stETH、wstETH 都未受影响，但 EarnETH 金库通过 Aave 上的 rsETH 杠杆仓位有约 9,000 ETH 的风险敞口，冻结 27 天。DAO 动用首损保护 143.98 ETH，并向 DeFi United 捐出 2,500 stETH，最终用户零损失。代价是 606 万美元一次性支出，以及 4 月份净流出 39.7 万 ETH。</div>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、LDO 为何长期低迷</h2>
+  <p class="lead">核心判断：LDO 低迷不是因为 Lido 这个产品不成功（它是以太坊上最成功、最安全的质押协议之一），而是因为“协议成功”与“代币价值”之间几乎没有传导链条：收入薄、利润近零、代币无分配权、筹码早已解锁。</p>
+  <div class="grid2">
+    <div>
+      <h3>估值对比：Lido vs Aave</h3>
+      <table>
+        <tr><th>指标</th><th class="r">Lido</th><th class="r">Aave</th></tr>
+        <tr><td>TVL（DefiLlama）</td><td class="r">$256 亿</td><td class="r">$194 亿</td></tr>
+        <tr><td>近 12 个月协议收入</td><td class="r">$3,570 万</td><td class="r">$9,470 万</td></tr>
+        <tr class="bad"><td>收入 / TVL</td><td class="r">0.14%</td><td class="r">0.49%</td></tr>
+        <tr><td>流通市值</td><td class="r">$3.61 亿</td><td class="r">$27.95 亿</td></tr>
+        <tr class="bad"><td>市值 / TVL</td><td class="r">0.014</td><td class="r">0.144</td></tr>
+        <tr><td>FDV / 收入</td><td class="r">约 12x</td><td class="r">约 31x</td></tr>
+        <tr class="bad"><td>运营后净利润</td><td class="r">约为零或负</td><td class="r">为正</td></tr>
+        <tr><td>代币回购</td><td class="r">NEST 未触发；一次性买入 1,480 万枚</td><td class="r">累计约 4,200 万美元（后缩减并暂停）</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama、CoinGecko，2026-10-07；Aave 回购数据来自 Aave 治理论坛</p>
+    </div>
+    <div>
+      <h3>LDO 初始代币分配（总量 10 亿，已全部解锁）</h3>
+      <div class="chart" id="ch-alloc"></div>
+      <p class="small">来源：Lido 官方代币分配；2021 年从金库再向 Paradigm 等出售 10%。流通量约 8.3 亿（CoinGecko），DAO 口径流通在外 8.79 亿</p>
+    </div>
+  </div>
+
+  <h3>3.1 十个原因，按重要性排序</h3>
+  <div class="reasons" id="reasons"></div>
+
+  <h3>3.2 价格锚点</h3>
+  <table>
+    <tr><th>时间</th><th>LDO 价格</th><th>事件</th></tr>
+    <tr><td>2021-05</td><td>约 $0.75（0.000216 ETH）</td><td>Paradigm 等以 21,600 ETH 买入 1 亿枚</td></tr>
+    <tr class="good"><td>2021-08</td><td>$7.30</td><td>历史最高</td></tr>
+    <tr class="bad"><td>2026-03-07</td><td>$0.27</td><td>历史最低；DAO 提议最多用 1 万 stETH 回购</td></tr>
+    <tr><td>2026 H1–8 月</td><td>均价约 $0.30</td><td>已用 2,320 stETH 换回 1,480 万枚 LDO</td></tr>
+    <tr class="hl"><td>2026-10-07</td><td>$0.435（约 0.000166 ETH）</td><td>当前，仍低于 2021 年机构入场价</td></tr>
+  </table>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、金库与亏损如何填补</h2>
+  <p class="lead">简短回答：亏损由 DAO 金库的存量储备来填。Lido 没有待解锁的代币，但 DAO 金库本身就是一个很大的“资金池”：约 4.1 万枚 stETH、一部分稳定币，以及约 1.17 亿枚 LDO（约占总量 11.7%）。2026 年上半年的缺口主要靠消耗稳定币储备来填补。DAO 刻意不在低价卖出 ETH，所以 stETH 的持有数量反而在增加。</p>
+  <h3>4.1 钱是怎么流动的</h3>
+  <div class="grid4">
+    <div class="box"><b>① 协议费入库</b><p>每天预言机上报收益时，协议把 DAO 的那份费用以新铸 stETH 的形式直接打进 DAO 金库（Aragon Agent 合约）</p></div>
+    <div class="box"><b>② 年度拨款（EGG）</b><p>LDO 持有者每年在 Snapshot 上投票批准基金会预算；2026 年基线 4,100 万美元，含可选部分约 6,000 万美元</p></div>
+    <div class="box"><b>③ 基金会执行</b><p>Lido Labs、Ecosystem、Alliance 三家 BORG 基金会领取拨款，支付工资、审计、研发、市场等费用</p></div>
+    <div class="box" style="background:var(--fill2)"><b>④ 缺口由存量填补</b><p>当年收入不足以覆盖拨款时，差额直接从金库的历史积累中支出，主要是稳定币，必要时动用 stETH</p></div>
+  </div>
+  <p class="small">DAO 金库的支出归 LDO 治理决定，不受双重治理约束。另有约 6,750 stETH 的储备金（原保险基金），用于罚没等风险，不用于日常运营</p>
+
+  <div class="grid-32">
+    <div>
+      <h3>4.2 证据：H1 2026 资产变化</h3>
+      <table>
+        <tr><th>资产</th><th class="r">2025-12-31</th><th class="r">2026-06-30</th><th class="r">变化</th><th>解读</th></tr>
+        <tr><td>DAO 金库 stETH（枚）</td><td class="r">33,561</td><td class="r">34,531</td><td class="r">+970</td><td>协议费持续以 stETH 入库，未卖出</td></tr>
+        <tr><td>储备金 stETH（枚）</td><td class="r">6,672</td><td class="r">6,754</td><td class="r">+82</td><td>自身质押收益滚存</td></tr>
+        <tr class="bad"><td>基金会 stETH（枚）</td><td class="r">1,520</td><td class="r">126</td><td class="r">-1,394</td><td>基金会手里的 stETH 基本花光</td></tr>
+        <tr class="bad"><td>DAO 稳定币</td><td class="r">$1,388 万</td><td class="r">$638 万</td><td class="r">-$750 万</td><td>主要缺口来源</td></tr>
+        <tr class="bad"><td>DAO 生息稳定币</td><td class="r">$802 万</td><td class="r">$120 万</td><td class="r">-$682 万</td><td>主要缺口来源（部分转入 Earn LP）</td></tr>
+        <tr><td>DAO 的 LP 头寸</td><td class="r">$0</td><td class="r">$419 万</td><td class="r">+$419 万</td><td>为 EarnETH / EarnUSD 提供流动性</td></tr>
+        <tr><td>基金会生息稳定币</td><td class="r">$651 万</td><td class="r">$760 万</td><td class="r">+$109 万</td><td>拨款转入基金会，等待支出</td></tr>
+        <tr class="good"><td>DAO + 基金会 LDO（枚）</td><td class="r">1.045 亿</td><td class="r">1.169 亿</td><td class="r">+1,240 万</td><td>回购买入 &gt; 薪酬发放</td></tr>
+      </table>
+      <p class="small">来源：Lido DAO H1 2026 报告金库表。DAO 稳定币合计减少约 1,430 万美元，其中约 420 万转入 Earn 的 LP 头寸，其余主要拨给基金会用于日常开支</p>
+    </div>
+    <div>
+      <h3>4.3 金库规模变化</h3>
+      <table>
+        <tr><th>H1 2026 变动</th><th class="r">百万美元</th></tr>
+        <tr><td>期初金库（2025-12-31）</td><td class="r">157.5</td></tr>
+        <tr><td>经营结果（含 Kelp 一次性支出）</td><td class="r">(4.5)</td></tr>
+        <tr class="bad"><td>ETH 跌价影响</td><td class="r">(60.9)</td></tr>
+        <tr><td>金库理财收益</td><td class="r">+1.4</td></tr>
+        <tr><td>应计调整</td><td class="r">(0.7)</td></tr>
+        <tr><td>用 stETH 回购 LDO</td><td class="r">(4.5)</td></tr>
+        <tr class="hl"><td>期末金库（2026-06-30）</td><td class="r">88.3</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px">真正的“亏损”只有 450 万美元，金库缩水的 88% 来自 ETH 跌价。8 月 25 日 ETH 回到 $2,441 时，金库回升到约 1.213 亿美元。</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>金库构成（2026-06-30，不含 LDO）</h3>
+      <div class="chart" id="ch-treasury"></div>
+      <p class="small">单位：百万美元，合计 8,830 万（ETH = $1,569）· 来源：H1 2026 报告</p>
+    </div>
+    <div>
+      <h3>关于“没有未释放代币”：金库里的 LDO 就是事实上的储备</h3>
+      <p class="muted" style="font-size:13px">从归属解锁的角度看，10 亿枚 LDO 确实已经全部解锁。但 DAO 金库持有约 1.12 亿枚，基金会持有约 482 万枚，合计约 1.17 亿枚（总量的 11.7%，按现价约 5,100 万美元）。这部分 LDO 不计入官方金库数字，也被 CoinGecko 排除在流通量之外。</p>
+      <table>
+        <tr><th>用途</th><th>历史 / 现状</th></tr>
+        <tr><td>贡献者薪酬（TRP / LTI）</td><td>持续以 LDO 支付，H1 流出约 238 万枚</td></tr>
+        <tr><td>流动性激励</td><td>2021–2023 年大量发放；DefiLlama 统计 2022 年约 1.39 亿美元等值</td></tr>
+        <tr><td>出售换取资金</td><td>2021 年卖给 Paradigm 等 1 亿枚，换得 21,600 ETH，是今天 stETH 储备的重要来源</td></tr>
+        <tr><td>2026 年现状</td><td>反向操作：用 stETH 买回 LDO，流通在外数量减少 1.8%</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px">理论上 DAO 可以通过卖出金库 LDO 来补亏，2021 年也确实这样做过。但在当前价位，DAO 选择的是用 stETH 买回 LDO，所以金库 LDO 目前是一个“潜在稀释来源”，而不是实际卖压。</p>
+    </div>
+  </div>
+
+  <h3>4.4 能撑多久</h3>
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat"><b>约 $1.2 亿</b><span>金库（不含 LDO，8 月）</span></div>
+    <div class="stat orange"><b>约 $700 万/年</b><span>2026 年经营缺口（ETH $1,900）</span></div>
+    <div class="stat green"><b>10 年以上</b><span>按此缺口推算的跑道</span></div>
+    <div class="stat red"><b>约 $1,600 万</b><span>稳定币与法币缓冲（DAO + 基金会）</span></div>
+  </div>
+  <div class="callout warn"><b class="t">真正的约束不是会不会破产，而是这三点</b>第一，稳定币和法币缓冲只剩约 1,600 万美元，再亏两年就只能卖 stETH，相当于在 ETH 低位被迫卖出。第二，金库约 75% 是 stETH，ETH 下跌时收入和储备会同步缩水，形成双重挤压。第三，只要每年还在亏损，NEST 的累计账本就是负数，回购就不会启动。社区也批评过，在亏损时用 stETH 回购 LDO 是在消耗跑道。</div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、回购曲线与结论</h2>
+  <h3>5.1 ETH 价格与 NEST 年回购金额的曲线</h3>
+  <p class="muted">NEST 的规则（LIP-36）：DAO 质押收入按日累计，超过年化 4,000 万美元基准的部分，拿出 50% 作为回购预算，每天最多 5 万美元、每年最多 1,000 万美元。赤字会累计，必须先补平才会恢复回购。假设市场份额和 APR 保持不变，DAO 年收入约为 ETH 价格 × 1.465 万 ETH，于是回购额是一条“先为零、再线性上升、最后封顶”的折线：</p>
+  <div class="chart" id="ch-nest"></div>
+  <p class="small">图：横轴为 ETH 价格（美元），纵轴为稳态下 NEST 年回购金额（百万美元，年上限 1,000 万）· 本报告按 LIP-36 参数估算；不含补平历史赤字的时间，假设 Lido 份额和 APR 不变</p>
+  <table>
+    <tr><th>参数方案</th><th class="r">开始回购的 ETH 价格</th><th class="r">达到 $1,000 万上限的 ETH 价格</th><th class="r">上限占流通市值</th></tr>
+    <tr class="hl"><td>现行：基准 $4,000 万 × 50%</td><td class="r">约 $2,730</td><td class="r">约 $4,096</td><td class="r">约 2.8%/年</td></tr>
+    <tr><td>提案：基准 $3,000 万 × 50%</td><td class="r">约 $2,048</td><td class="r">约 $3,413</td><td class="r">约 2.8%/年</td></tr>
+    <tr><td>提案：基准 $3,000 万 × 75%</td><td class="r">约 $2,048</td><td class="r">约 $2,958</td><td class="r">约 2.8%/年</td></tr>
+  </table>
+  <div class="grid-32">
+    <div>
+      <h4>DAO 年收入 vs 开支 vs 回购基准</h4>
+      <div class="chart" id="ch-revline"></div>
+      <p class="small">图：横轴为 ETH 价格（美元），纵轴为百万美元 · 收入线与基准线的交点就是回购启动点</p>
+    </div>
+    <div>
+      <h4>如何读这条曲线</h4>
+      <p class="muted" style="font-size:13px">当前 ETH 约 $2,615，位于启动点左侧，所以 NEST 账本每天都在累积赤字（9 月底约 -54 万美元）。ETH 站上约 $3,000 后，每月新增盈余约 16 万美元，需要 3–4 个月才能补平现有赤字，之后回购才真正开始。</p>
+      <p class="muted" style="font-size:13px">曲线的斜率约为 ETH 每涨 $100，年回购增加约 73 万美元；到约 $4,100 就会撞上 1,000 万美元的年上限。即便 ETH 大涨，回购力度最多也只相当于流通市值的约 3%/年。</p>
+    </div>
+  </div>
+  <div class="callout">两种提升回购的路径对比：靠 ETH 上涨，需要从 $2,615 涨到约 $2,730 才能起步；把基准下调到预算水平（3,000 万美元），在当前价格下就能产生约 400 万美元/年的回购。所以论坛提案（削减 2027 年预算并把门槛与预算挂钩）是比等待 ETH 上涨更可控的变量。</div>
+
+  <div class="grid2">
+    <div>
+      <h3>潜在正面催化剂</h3>
+      <table>
+        <tr><th>催化剂</th><th>影响机制</th></tr>
+        <tr class="good"><td>ETH 回到 $2,730 以上</td><td>NEST 开始填补赤字，随后自动回购</td></tr>
+        <tr class="good"><td>基金会预算削减到 $3,000 万</td><td>利润转正，回购门槛下移</td></tr>
+        <tr><td>ValMart（2027 年初）</td><td>运营商竞价，DAO 分成继续提高</td></tr>
+        <tr><td>美国 stETH ETF 获批</td><td>打通机构渠道，扭转份额下滑</td></tr>
+        <tr><td>stVaults 规模化（目标 10 万 ETH）</td><td>抢回机构质押份额</td></tr>
+        <tr><td>流通量持续收缩</td><td>已从 8.955 亿降到 8.791 亿（-1.8%）</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>主要风险</h3>
+      <table>
+        <tr><th>风险</th><th>影响机制</th></tr>
+        <tr class="bad"><td>以太坊增发削减重启（截至 2027-04）</td><td>收入基数可能腰斩</td></tr>
+        <tr class="bad"><td>机构 / DAT 份额继续扩张</td><td>Lido 全网份额进一步下滑</td></tr>
+        <tr><td>Earn 等新业务再出风险事件</td><td>一次性损失，信任受损</td></tr>
+        <tr><td>预算无法真正削减</td><td>利润长期为零，回购永远无法触发</td></tr>
+        <tr><td>监管对 LDO 价值分配的限制</td><td>直接分红路径受阻</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>5.2 结论</h3>
+  <div class="grid3">
+    <div class="card"><div class="hd">作为协议</div><div class="bd">一流。最深的流动性、最长的零用户资金损失记录、最分散的运营商集合；Kelp 危机后，资金向“安全收益”回流，进一步强化了 stETH 作为 DeFi 基础抵押品的地位。</div></div>
+    <div class="card"><div class="hd">作为生意</div><div class="bd">规模巨大但利润率极低的基础设施收费站。收入是 ETH × APR × 份额 × 分成四个变量的乘积，其中三个不在 Lido 控制范围内，只有分成和成本是 DAO 能主动调整的。</div></div>
+    <div class="card"><div class="hd">作为代币</div><div class="bd">LDO 本质上是一份“ETH 大涨 + DAO 降本 + 回购机制生效”的看涨期权。在利润转正、回购真正落地之前，TVL 规模本身不会推高币价，单看 TVL/市值比判断“低估”是一个误区。</div></div>
+  </div>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、情景模拟器</h2>
+  <p class="lead">拖动滑块即可调整假设，结果实时更新。默认值对应当前状态：DAO 年收入 = 质押量 × 毛 APR × DAO 分成 × ETH 价格；NEST 回购 = 盈余（收入 − 基准）× 回购比例，受年上限和每日 5 万美元上限约束。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)" id="simstats"></div>
+      <table id="simtable"></table>
+      <h4>ETH 价格 → 年利润与年回购（其他参数取左侧当前值）</h4>
+      <div class="chart" id="ch-sim1"></div>
+      <p class="small">横轴为 ETH 价格（美元），纵轴为百万美元 · 本报告模型估算</p>
+      <h4>LDO 越贵，同样的回购能买回的流通量越少</h4>
+      <div class="chart" id="ch-sim2"></div>
+      <p class="small">横轴为 LDO 价格（美元），纵轴为回购达到年上限时每年回购占流通量的百分比</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>6.2 以太坊增发到底是怎么回事</h3>
+      <p class="muted" style="font-size:13px">以太坊 PoS 没有固定的年增发率，增发量由全网质押量决定：年增发 ≈ 166.3 × √（全网质押 ETH）。质押越多，总增发越多，但每个质押者分到的收益率越低，收益率 ≈ 166.3 ÷ √（全网质押 ETH）。</p>
+      <table>
+        <tr><th>全网质押量</th><th class="r">年增发（ETH）</th><th class="r">占总供应</th><th class="r">共识层收益率</th></tr>
+        <tr><td>3,000 万</td><td class="r">91 万</td><td class="r">约 0.75%</td><td class="r">3.04%</td></tr>
+        <tr><td>3,630 万（2026 年初）</td><td class="r">100 万</td><td class="r">约 0.83%</td><td class="r">2.76%</td></tr>
+        <tr class="hl"><td>4,310 万（2026 年 6 月）</td><td class="r">109 万</td><td class="r">约 0.90%</td><td class="r">2.53%</td></tr>
+        <tr><td>6,000 万（约一半供应）</td><td class="r">129 万</td><td class="r">约 1.07%</td><td class="r">2.15%</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px">“每年 2%”的说法不准确：毛增发约占总供应的 0.9%，扣除 EIP-1559 的 Gas 销毁后，净通胀约 0.7–0.8%。2–3% 是质押者拿到的收益率，因为只有约 35% 的 ETH 在质押，增发被这部分人分走。</p>
+    </div>
+    <div>
+      <h3>6.3 份额稀释对 ETH 收入的真实影响</h3>
+      <p class="muted" style="font-size:13px">因为总增发只按 √（全网质押量）增长，份额下降一部分是“无害的”。全网质押量增长 19% 时，Lido 的份额可以下降约 8%（相对值），ETH 收入保持不变。</p>
+      <table>
+        <tr><th>H1 2026（理论测算）</th><th class="r">1 月初</th><th class="r">6 月底</th><th class="r">变化</th></tr>
+        <tr><td>全网质押量</td><td class="r">3,630 万</td><td class="r">4,310 万</td><td class="r">+18.7%</td></tr>
+        <tr><td>Lido 质押量</td><td class="r">874 万</td><td class="r">913 万</td><td class="r">+4.5%</td></tr>
+        <tr class="bad"><td>Lido 份额</td><td class="r">23.93%</td><td class="r">21.18%</td><td class="r">-11.5%</td></tr>
+        <tr><td>共识层收益率</td><td class="r">2.76%</td><td class="r">2.53%</td><td class="r">-8.2%</td></tr>
+        <tr class="bad"><td>Lido 验证者年奖励（ETH）</td><td class="r">24.1 万</td><td class="r">23.1 万</td><td class="r">-4.1%</td></tr>
+        <tr class="good"><td>DAO 分成</td><td class="r">4.96%</td><td class="r">6.15%</td><td class="r">+24%</td></tr>
+        <tr class="good"><td>DAO 年收入（ETH，理论值）</td><td class="r">1.20 万</td><td class="r">1.42 万</td><td class="r">+19%</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px">份额下降 11.5%，实际只让 Lido 的 ETH 奖励减少约 4%，又被分成提高完全抵消。份额稀释的真正代价是机会成本：如果份额保持在 23.93%，多出的 118 万 ETH 每年约对应 1,840 ETH 的 DAO 收入（约 480 万美元，相当于当前收入的 12%）。目前 Lido 质押量已回升到约 978 万 ETH，创年内新高。</p>
+      <p class="small">理论测算按共识层收益率公式，未计执行层收益；财报显示 Q1、Q2 实际 DAO 收入分别为 3,516 ETH 和 3,440 ETH</p>
+    </div>
+  </div>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、EIP-8363 专题</h2>
+  <p class="lead">先说结论：EIP-8363 已于 10 月 1 日从 Hegotá 升级中撤回，目前不存在“等投票”这一步。最乐观（对提案方而言）的路径是 2027 年 4 月达成共识，进入 Hegotá 之后的下一次硬分叉，再经过 18 个月逐步生效，完全生效最早也要 2029–2030 年。它是 LDO 的一个长期尾部风险，并非迫在眉睫的现金流冲击。但“降低增发”这个方向得到了以太坊基金会核心研究员的支持，这个风险不会消失。</p>
+  <div class="grid2">
+    <div>
+      <h3>7.1 进展时间线</h3>
+      <table>
+        <tr><th>时间</th><th>事件</th></tr>
+        <tr><td>2024-10</td><td>Vitalik 撰文：质押率过高有被捕获的风险，主张在质押接近上限时大幅降低增发</td></tr>
+        <tr><td>2026-07-14</td><td>EIP-8363 草案发布，作者含以太坊基金会研究员 Justin Drake</td></tr>
+        <tr class="bad"><td>2026-08-04</td><td>在 Hegotá 提案截止前 48 小时提交；LDO 当天 -15%，ETHFI -12%，ETH 几乎不动</td></tr>
+        <tr><td>2026-08-06</td><td>核心开发者会议上，Lido 代表要求撤出 Hegotá；验证者协会链上信号投票约 99.8% 反对</td></tr>
+        <tr class="good"><td>2026-09-07</td><td>以太坊基金会协议团队一致拒绝将其纳入 Hegotá</td></tr>
+        <tr class="good"><td>2026-09-16</td><td>Nimbus 客户端评为 D 级（仅高于直接拒绝）；Lodestar 认为“缺乏经济分析，曲线随意”</td></tr>
+        <tr class="good"><td>2026-10-01</td><td>作者撤回，承诺另起一个专门讨论增发政策的流程，Lido 参与主导</td></tr>
+        <tr><td>2026-11</td><td>Devcon 增发论坛（新流程第一站）</td></tr>
+        <tr><td>2027-01 ～ 03</td><td>哥伦比亚大学加密经济学研讨会及多轮工作坊</td></tr>
+        <tr class="bad"><td>2027-04-12～15</td><td>EthCC（戛纳）：作者目标是让某个增发方案进入 CFI 或 SFI 阶段</td></tr>
+        <tr><td>2027 Q2</td><td>Hegotá 主网（已确定不含增发改动）</td></tr>
+        <tr class="bad"><td>2028 年以后</td><td>最早可能纳入增发改动的硬分叉，之后还有 18 个月过渡期</td></tr>
+      </table>
+      <p class="small">来源：The Block、CoinDesk、Base58 Labs、Lodestar 博客、Lido 研究论坛、ethereum.org</p>
+    </div>
+    <div>
+      <h3>7.2 以太坊没有代币投票：升级是怎么决定的</h3>
+      <p class="muted" style="font-size:13px">以太坊协议升级靠的是“粗略共识”：核心开发者会议（ACD）、各客户端团队、以太坊基金会研究员和社区反复讨论，最后由客户端团队决定是否实现并发布。ETH 持有者和质押者的投票只是参考信号，没有约束力。一个 EIP 进入主网要依次经过：</p>
+      <div class="steps"><div>草案</div><div class="on">PFI 提议纳入</div><div>CFI 考虑纳入</div><div>SFI 确定纳入</div><div>客户端发布与激活</div></div>
+      <p class="small">EIP-8363 只走到了第二步“提议纳入 Hegotá”，就在第三步被拒绝并撤回</p>
+      <h4>各方立场</h4>
+      <table>
+        <tr><th>参与方</th><th>立场</th></tr>
+        <tr><td>作者（含以太坊基金会研究员 Justin Drake）</td><td>坚持动机正确，改走专门流程</td></tr>
+        <tr><td>Vitalik（2024 年观点）</td><td>原则上支持在质押过高时降低增发；指出收益率低于约 0.85% 时，个人质押者将无法覆盖成本</td></tr>
+        <tr><td>以太坊基金会协议团队</td><td>拒绝纳入 Hegotá（不等于反对增发改革）</td></tr>
+        <tr><td>客户端团队（Nimbus、Lodestar）</td><td>反对当前版本：程序仓促、缺乏经济分析</td></tr>
+        <tr><td>Lido、Aave、SharpLink、ether.fi</td><td>反对当前版本，愿意参与新流程</td></tr>
+        <tr><td>个人质押者</td><td>强烈反对：固定成本下利润被压缩，可能被迫退出</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>7.3 这么低的收益率，还会有人质押吗？</h3>
+  <p class="muted">会，但质押量会下降，直到收益率回升到市场愿意接受的水平。EIP-8363 的销毁比例 =（全网质押 ÷ 6,025 万）^1.5，随质押量增加而上升，所以质押者退出越多，剩下的人收益率越高。“收益率减半”是假设没人退出时的瞬时效果，均衡状态下降幅会小一些。</p>
+  <div class="grid2">
+    <div>
+      <div class="chart" id="ch-yield"></div>
+      <p class="small">图：横轴为全网质押量（百万 ETH，当前约 43.1M），纵轴为质押总收益率（共识层 + 执行层，%）· 本报告按协议公式测算，执行层奖励假设固定为每年 10.8 万 ETH</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-pie"></div>
+      <p class="small">图：横轴为全网质押量（百万 ETH），纵轴为整个质押行业每年分到的奖励总量（百万 ETH）· EIP-8363 下奖励总量缩小约 40–55%</p>
+    </div>
+  </div>
+  <table id="yieldtable"></table>
+  <div class="grid2">
+    <table>
+      <tr><th>哪些人会留下</th><th>原因</th></tr>
+      <tr class="good"><td>长期持有者、ETH 财库公司（Bitmine 质押 500 万+ ETH）</td><td>不质押的机会成本是 0，1–2% 的收益依然好过没有</td></tr>
+      <tr class="good"><td>质押 ETF</td><td>质押收益是产品卖点，托管基础设施已经搭好</td></tr>
+      <tr class="good"><td>在 DeFi 中使用 stETH 的人</td><td>stETH 是最主要的 ETH 抵押品，流动性价值不依赖收益高低</td></tr>
+    </table>
+    <table>
+      <tr><th>哪些人会离开</th><th>原因</th></tr>
+      <tr class="bad"><td>个人质押者</td><td>固定成本约每月 60 美元，32 ETH 需要约 0.85% 的收益才能覆盖</td></tr>
+      <tr class="bad"><td>杠杆循环质押</td><td>依赖 stETH 收益与 ETH 借款利率之间的利差，利差缩小后不再划算</td></tr>
+      <tr><td>小型 LST、再质押协议</td><td>规模不够摊薄成本；ether.fi CEO 甚至认为这会让资金向 Lido 集中</td></tr>
+    </table>
+  </div>
+  <div class="callout info"><b class="t">一个容易被忽略的点：真实收益率的降幅更小</b>增发减少后，所有 ETH 持有者被稀释的程度也降低了。扣除增发稀释后，质押相对于持有 ETH 的超额收益：现行规则下约 1.9%，EIP-8363 均衡（3,500 万 ETH）下约 1.4%，降幅约 24%，比名义收益率约 33% 的降幅（2.78% → 1.88%）小。这也是支持者认为“降低增发对 ETH 是利好”的理由。</div>
+
+  <h3>7.4 如果真的通过，对 Lido 有多大影响</h3>
+  <div class="grid-32">
+    <div>
+      <div class="chart" id="ch-eipscen"></div>
+      <p class="small">图：EIP-8363 各情景下的 DAO 年收入（百万美元），对比 2026 年开支 3,770 万 · 本报告估算，ETH 价格保持 $2,615</p>
+    </div>
+    <div>
+      <p class="muted" style="font-size:13px">如果只看前三个情景，DAO 年收入会从 3,850 万降到 1,700–2,100 万美元，每年亏损 1,700–2,000 万，NEST 回购永远不会触发，金库大约能撑 6–7 年。在这种情况下，市场很可能把 LDO 的估值往金库净值（约 1.2 亿美元，约为当前流通市值的 1/3）方向压。</p>
+      <p class="muted" style="font-size:13px">但 Lido 也有两个对冲手段：一是行业洗牌后份额向 Lido 集中（ether.fi CEO 为此公开下注 100 万美元）；二是提高费率，因为所有 LST 都面临同样的压力，Coinbase 的抽成本来就是 25%。如果两者同时发生，收入可以基本恢复。</p>
+    </div>
+  </div>
+
+  <h3>7.5 当前预期与应该关注的信号</h3>
+  <div class="grid3">
+    <div class="card"><div class="hd">2027 年内生效<span class="tag green">约为 0</span></div><div class="bd">Hegotá 已明确不含增发改动，且 Vitalik 认为 Hegotá 可能是最后一次“常规”硬分叉，之后的升级会涉及共识层的大规模重构。</div></div>
+    <div class="card"><div class="hd">2028–2030 年出现某种增发改革<span class="tag orange">中等</span></div><div class="bd">质押率仍在上升（约 35%），支持者的论据在增强。但各方反对的是当前这个具体曲线，最终版本大概率会更温和，比如饱和点更高、过渡期更长，或与其他机制组合。</div></div>
+    <div class="card"><div class="hd">原版 EIP-8363 原样通过<span class="tag red">低</span></div><div class="bd">客户端团队、以太坊基金会协议团队、主要 DeFi 协议和机构都已表态反对当前版本，验证者信号投票约 99.8% 反对。</div></div>
+  </div>
+  <table>
+    <tr><th>关注的信号</th><th>时间</th><th>利空 LDO</th><th>利好 LDO</th></tr>
+    <tr><td>Devcon 增发论坛的讨论方向</td><td>2026-11</td><td>形成“必须降增发”的共识</td><td>转向研究质押上限或双层质押等替代方案</td></tr>
+    <tr><td>EthCC 是否有方案进入 CFI</td><td>2027-04</td><td>某个方案进入 CFI 或 SFI</td><td>继续停留在讨论阶段</td></tr>
+    <tr><td>新方案的饱和点和曲线</td><td>2027</td><td>饱和点 ≤ 50% 供应，快速生效</td><td>饱和点更高，过渡期更长</td></tr>
+    <tr><td>全网质押率</td><td>持续</td><td>快速升向 40% 以上</td><td>稳定在 35% 附近</td></tr>
+    <tr><td>Lido 的应对方案</td><td>持续</td><td>没有费率或成本调整的预案</td><td>提出费率弹性和降本计划</td></tr>
+  </table>
+  <p class="small">以上概率为本报告的定性判断，不是市场定价；目前没有找到针对 EIP-8363 的预测市场数据。另有 EIP-8375（强制销毁执行层奖励）也在讨论中，值得同时关注。</p>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://lido.fi/">Lido 官网</a> · <a href="https://lido.fi/ldo-hub/reports/h1-2026">Lido DAO H1 2026 报告</a> · <a href="https://research.lido.fi/t/goose-2025-eggs-2025-final-report/11304">GOOSE-2025 年终报告</a></li>
+    <li><a href="https://github.com/lidofinance/lido-improvement-proposals/blob/develop/LIPS/lip-36.md">LIP-36（NEST 自动回购）</a> · <a href="https://research.lido.fi/t/nest-tying-the-buyback-threshold-to-the-approved-budget/11982">NEST 门槛讨论</a> · <a href="https://research.lido.fi/t/kelp-incident-review-earneth-exposure-response-and-risk-framework-changes/11579">Kelp 事件复盘</a></li>
+    <li><a href="https://defillama.com/protocol/lido">DefiLlama Lido</a> · <a href="https://defillama.com/protocol/aave">DefiLlama Aave</a> · <a href="https://www.coingecko.com/en/coins/lido-dao">CoinGecko LDO</a></li>
+    <li><a href="https://www.theblock.co/news/ecosystems/2026-10-01-ethereum-staking-reward-burn-proposal-eip-8363-pulled-hegota-upgrade-417419">The Block：EIP-8363 撤回</a> · <a href="https://base58labs.com/research/the-venue-is-the-mechanism-eip-8363s-withdrawal-and-the-new-process-for-ethereums-issuance-policy">Base58 Labs 分析</a></li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。部分数据（季度 Earnings、情景测算）为第三方口径或本报告估算，可能与官方数据存在差异。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = 640, H = opt.height || 260, L = 48, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+    }
+    const every = Math.ceil(cats.length / 12);
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      el("polyline", { points: s.data.map((v, i) => `${x(i)},${y(v)}`).join(" "), fill: "none", stroke: col, "stroke-width": 2 }, svg);
+      s.data.forEach((v, i) => {
+        const c = el("circle", { cx: x(i), cy: y(v), r: 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const horiz = !!opt.horizontal;
+    const n = cats.length, m = series.length;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = 640, L = horiz ? (opt.labelWidth || 150) : 48, R = 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = Math.min(40, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], x0 = L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const col = m === 1 ? color(v < 0 ? 1 : 0) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: Math.min(y(v), y(0)), width: bw - 2, height: Math.abs(y(v) - y(0)), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x0 + bw / 2 - 1, y: (v >= 0 ? y(v) - 4 : y(v) + 12), "text-anchor": "middle" }, svg, fmt(v));
+        });
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = m === 1 ? color(opt.colorEach ? i : 0) : color(si, s.tone);
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.abs(x(v) - x(0)), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  function donut(id, data) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const total = data.reduce((a, d) => a + d.value, 0);
+    const svg = el("svg", { viewBox: "0 0 640 220" }, host);
+    const cx = 110, cy = 110, r = 90, ri = 54;
+    let a0 = -Math.PI / 2;
+    data.forEach((d, i) => {
+      const a1 = a0 + (d.value / total) * Math.PI * 2, large = a1 - a0 > Math.PI ? 1 : 0;
+      const p = (rad, a) => `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`;
+      const path = el("path", { d: `M${p(r, a0)} A${r},${r} 0 ${large} 1 ${p(r, a1)} L${p(ri, a1)} A${ri},${ri} 0 ${large} 0 ${p(ri, a0)} Z`, fill: color(i), stroke: css("--bg"), "stroke-width": 1.5 }, svg);
+      el("title", {}, path, `${d.label}：${d.value}（${((d.value / total) * 100).toFixed(1)}%）`);
+      el("rect", { x: 250, y: 30 + i * 30, width: 12, height: 12, rx: 2, fill: color(i) }, svg);
+      el("text", { x: 270, y: 41 + i * 30, style: "font-size:13px" }, svg, `${d.label}  ${d.value}（${((d.value / total) * 100).toFixed(1)}%）`);
+      a0 = a1;
+    });
+  }
+
+  /* ---------- 静态图表 ---------- */
+  barChart("ch-share", ["Lido", "Bitmine", "Coinbase", "Binance", "Ether.fi", "Figment", "Kraken"],
+    [{ name: "占全网质押 ETH 份额", data: [21.2, 11.5, 10.9, 7.9, 4.1, 3.7, 3.4] }], { horizontal: true, suffix: "%", labelWidth: 80 });
+  barChart("ch-revexp", ["2024", "2025", "2026E @$1,900", "2026E @$2,850"],
+    [{ name: "DAO 总净收入", data: [52.4, 40.5, 30.6, 37.7], tone: "--c1" }, { name: "基金会开支（不含一次性）", data: [52.1, 45.5, 37.7, 37.7], tone: "--c2" }]);
+  lineChart("ch-quarter", ["23Q1", "23Q2", "23Q3", "23Q4", "24Q1", "24Q2", "24Q3", "24Q4", "25Q1", "25Q2", "25Q3", "25Q4", "26Q1", "26Q2", "26Q3"],
+    [{ name: "Lido 验证者总质押奖励（百万美元）", data: [117.0, 161.2, 155.2, 184.3, 269.0, 279.4, 234.3, 251.4, 211.5, 157.3, 256.1, 221.4, 150.1, 125.2, 127.9], tone: "--c6" },
+     { name: "DAO 收益（扣除代币激励，百万美元）", data: [-17.6, -10.8, 5.4, 7.5, 8.7, 11.0, 8.8, 10.1, 7.3, 7.7, 12.0, 8.1, 8.4, 7.7, 7.7], tone: "--c1" }]);
+  barChart("ch-product", ["质押", "Lido Earn", "新业务（Wisp 等）"], [{ name: "产品线利润（百万美元）", data: [6.73, -7.12, -0.91] }], { height: 220 });
+  donut("ch-alloc", [{ label: "DAO 金库", value: 36.32 }, { label: "投资人", value: 22.18 }, { label: "初始开发者", value: 20 }, { label: "创始人与员工", value: 15 }, { label: "验证者与签名者", value: 6.5 }]);
+  donut("ch-treasury", [{ label: "DAO 金库 stETH", value: 54.16 }, { label: "储备金 stETH", value: 10.6 }, { label: "基金会 / 委员会资产", value: 11.54 }, { label: "DAO 稳定币（含生息）", value: 7.58 }, { label: "DAO 的 LP 头寸", value: 4.19 }]);
+
+  const REASONS = [
+    ["根本原因", "red", "1. TVL 不等于收入：费用收在“收益”上，而不是“本金”上", "256 亿美元 TVL × 约 2.7% 毛收益 × DAO 分成约 6% ≈ 每年 0.15% 的 TVL。Lido 的收入 / TVL 约为 0.14%，Aave 约为 0.49%，是 Lido 的 3.5 倍。“TVL 第一”在 Lido 身上主要是一个规模指标，而不是盈利指标。"],
+    ["根本原因", "red", "2. 收入几乎被开支全部吃掉，没有可分配利润", "2024 年收入 5,240 万美元、开支 5,210 万；2025 年收入 4,050 万、开支 4,550 万；2026 年官方预测在 ETH $1,900 时收入 3,060 万、开支 3,770 万。DAO 实际上是一家盈亏平衡、甚至亏损的公司，用 P/E 估值根本无从谈起。"],
+    ["价值捕获", "orange", "3. LDO 是没有现金流权的治理代币", "100% 协议费进入 DAO 金库，不分红、不销毁。2026 年 8 月上线的自动回购 NEST，只有 DAO 质押收入超过年化 4,000 万美元基准时才会动用盈余的 50% 回购（上限 5 万美元/天、1,000 万美元/年）。上线至今一枚 LDO 都没买，9 月底累计赤字约 54 万美元。"],
+    ["价值捕获", "orange", "4. 双重治理进一步压低了 LDO 的“控制权溢价”", "stETH 持有者可以锁仓否决、延迟 LDO 投票，极端情况下集体退出。这对用户安全是好事，但也意味着如果 LDO 持有者想通过提高费率或分红来“抽租”，stETH 持有者有正式的刹车机制。"],
+    ["周期", "", "5. 收入的三重 Beta：LDO ≈ 加了杠杆的 ETH", "收入同时受 ETH 价格、质押 APR、市场份额三个变量影响，而开支以美元计价且刚性。2026 年 3 月 LDO 跌到 $0.27 的历史低点，LDO/ETH 比值相比过去两年的中位数折价约 70%。"],
+    ["供给", "", "6. 筹码结构：约 64% 分给内部人，2022 年起已全部解锁", "投资人 22.18%、初始开发者 20%、创始人与员工 15%、验证者 6.5%，合计约 64%。2021 年 Paradigm 等机构以约 $0.75 买入 1 亿枚，3AC、Alameda 等已破产机构也曾是投资方。贡献者薪酬（TRP/LTI）至今仍以 LDO 支付，构成持续的卖压。"],
+    ["竞争", "", "7. 增长天花板：社会共识的上限 + 机构渠道的绕行", "以太坊社区长期担心单一实体超过 1/3 质押份额，因此 Lido 的规模增长天然面临舆论压力。新一轮增量资金（ETF、DAT、交易所托管）又基本不经过 Lido。美国 stETH ETF（VanEck）仍在审核中。"],
+    ["叙事", "", "8. 协议层政策风险：以太坊增发削减", "EIP-8363 提议随质押率提高逐步销毁验证者奖励，全面生效后共识层收益会从约 2.6% 降到 1.2%。该提案已于 10 月 1 日撤回，但新的增发讨论流程会持续到 2027 年 4 月（详见第七部分）。"],
+    ["交易结构", "", "9. 市场微观结构：链上流动性稀薄，衍生品主导定价", "2026 年 3 月 LDO 链上 ±2% 深度只有约 9 万美元，DAO 回购只能通过 CEX 和做市商执行。目前永续合约成交量是现货的 5.5 倍，持仓量占市值 37%，资金费率为负。"],
+    ["执行", "", "10. 战略分散：新业务尚未证明自己", "Lido Earn 的 ARR 仅 54 万美元，只完成目标的约 5%；Wisp（隐私 AI 产品）和两个低风险 DeFi 新产品都还在投入期。在主业利润微薄的情况下押注第二曲线，市场倾向于给出折价。"],
+  ];
+  document.getElementById("reasons").innerHTML = REASONS.map((r, i) =>
+    `<div class="reason${i < 2 ? " top" : ""}"><span class="tag ${r[1]}">${r[0]}</span><b>${r[2]}</b><p>${r[3]}</p></div>`).join("");
+
+  /* ---------- NEST 曲线 ---------- */
+  const K = 14650;
+  const rev = (p) => (p * K) / 1e6;
+  const nest = (p, base, share, cap = 10) => Math.max(0, Math.min(cap, (rev(p) - base) * share));
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const EG = [1500, 1750, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000, 4250, 4500, 5000];
+  const EGc = EG.map((p) => "$" + p.toLocaleString("en-US"));
+  lineChart("ch-nest", EGc, [
+    { name: "现行参数：基准 $4,000 万，盈余的 50%", data: EG.map((p) => r1(nest(p, 40, 0.5))), tone: "--c1" },
+    { name: "论坛提案：基准 $3,000 万，盈余的 50%", data: EG.map((p) => r1(nest(p, 30, 0.5))), tone: "--c3" },
+    { name: "论坛提案：基准 $3,000 万，盈余的 75%", data: EG.map((p) => r1(nest(p, 30, 0.75))), tone: "--c4" },
+  ], { height: 280 });
+  lineChart("ch-revline", EGc, [
+    { name: "DAO 年净收入", data: EG.map((p) => r1(rev(p))), tone: "--c1" },
+    { name: "NEST 现行基准 $4,000 万", data: EG.map(() => 40), tone: "--c2" },
+    { name: "基金会 2026 预计开支 $3,770 万", data: EG.map(() => 37.7), tone: "--c6" },
+  ], { height: 230 });
+
+  /* ---------- EIP-8363 ---------- */
+  const EL = 0.108;
+  const cl = (n) => (166.3 / Math.sqrt(n * 1e6)) * 100;
+  const bf = (n) => Math.min(1, Math.pow(n / 60.25, 1.5));
+  const ty = (n, eip) => cl(n) * (eip ? 1 - bf(n) : 1) + (EL / n) * 100;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const SG = [20, 25, 30, 35, 40, 43.1, 45, 50, 55, 60];
+  const SGc = SG.map((n) => n + "M");
+  lineChart("ch-yield", SGc, [
+    { name: "现行规则：质押总收益率", data: SG.map((n) => r2(ty(n, false))), tone: "--c1" },
+    { name: "EIP-8363：质押总收益率", data: SG.map((n) => r2(ty(n, true))), tone: "--c2" },
+  ], { suffix: "%", height: 250 });
+  lineChart("ch-pie", SGc, [
+    { name: "现行规则：全网年质押奖励（百万 ETH）", data: SG.map((n) => r2((n * ty(n, false)) / 100)), tone: "--c1" },
+    { name: "EIP-8363：全网年质押奖励（百万 ETH）", data: SG.map((n) => r2((n * ty(n, true)) / 100)), tone: "--c2" },
+  ], { height: 250 });
+  document.getElementById("yieldtable").innerHTML =
+    `<tr><th>全网质押量</th><th class="r">质押率</th><th class="r">现行收益率</th><th class="r">EIP-8363 收益率</th><th class="r">收益率降幅</th></tr>` +
+    [30, 35, 40, 43.1].map((n) => {
+      const a = ty(n, false), b = ty(n, true);
+      return `<tr class="${n === 43.1 ? "bad" : n === 35 ? "hl" : ""}"><td>${n}M ETH${n === 43.1 ? "（当前）" : n === 35 ? "（可能的均衡点）" : ""}</td><td class="r">${((n / 121) * 100).toFixed(0)}%</td><td class="r">${a.toFixed(2)}%</td><td class="r">${b.toFixed(2)}%</td><td class="r">-${((1 - b / a) * 100).toFixed(0)}%</td></tr>`;
+    }).join("");
+  const pr = (n) => (n * ty(n, true)) / (43.1 * ty(43.1, false));
+  const base = 38.5;
+  const scen = [
+    ["维持现状", base],
+    ["立即全面生效，无人退出", base * pr(43.1)],
+    ["均衡 3,500 万 ETH，份额不变", base * pr(35)],
+    ["均衡 + Lido 份额升至 30%", base * pr(35) * (30 / 22.7)],
+    ["均衡 + 份额 30% + DAO 分成升至 9%", base * pr(35) * (30 / 22.7) * (9 / 6.15)],
+  ];
+  barChart("ch-eipscen", scen.map((s) => s[0]), [{ name: "DAO 年收入（百万美元）", data: scen.map((s) => r1(s[1])) }], { horizontal: true, labelWidth: 220, colorEach: true });
+
+  /* ---------- 模拟器 ---------- */
+  const DEF = { eth: 2615, ldo: 0.435, staked: 9.78, network: 43.1, apr: 2.45, take: 6.15, burn: false, expense: 37.7, baseline: 40, share: 50, cap: 10 };
+  const PRESETS = [
+    ["当前", {}],
+    ["熊市：ETH $1,800", { eth: 1800, ldo: 0.3 }],
+    ["牛市：ETH $4,500，开支涨到 $5,000 万", { eth: 4500, expense: 50 }],
+    ["牛市 + 降本：预算 $3,000 万，门槛挂钩预算，盈余的 75%", { eth: 4500, expense: 30, baseline: 30, share: 75 }],
+    ["份额回升：质押量 1,100 万 ETH", { staked: 11 }],
+    ["增发削减：EIP-8363 生效", { burn: true }],
+  ];
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); return a >= 100 ? `${s}$${(a / 100).toFixed(2)} 亿` : `${s}$${Math.round(a * 100).toLocaleString("en-US")} 万`; };
+  const CTRL = [
+    ["市场"],
+    ["eth", "ETH 价格", 1000, 8000, 50, (v) => "$" + v.toLocaleString("en-US")],
+    ["ldo", "LDO 价格", 0.1, 3, 0.005, (v) => "$" + v.toFixed(3)],
+    ["协议"],
+    ["staked", "Lido 质押量", 6, 14, 0.05, (v) => v.toFixed(2) + "M ETH"],
+    ["network", "全网质押量", 30, 60, 0.5, (v, s) => `${v.toFixed(1)}M ETH（Lido 占 ${((s.staked / v) * 100).toFixed(1)}%）`],
+    ["apr", "毛质押 APR（费前）", 1, 4, 0.05, (v) => v.toFixed(2) + "%"],
+    ["take", "DAO 实际分成", 4, 9, 0.05, (v) => v.toFixed(2) + "%"],
+    ["burn"],
+    ["DAO 财务与回购参数"],
+    ["expense", "基金会年开支", 20, 70, 0.5, (v) => usd(v)],
+    ["baseline", "NEST 回购基准", 20, 60, 1, (v) => usd(v)],
+    ["share", "盈余中用于回购的比例", 25, 100, 5, (v) => v + "%"],
+    ["cap", "年回购上限", 5, 30, 1, (v) => usd(v) + (v > 18.25 ? "（受日上限约束为 1,825 万）" : "")],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => {
+      if (c.length === 1 && c[0] === "burn") return `<div class="row"><label class="lbl"><span>计入 EIP-8363 增发销毁</span><input type="checkbox" id="in-burn" ${S.burn ? "checked" : ""}></label></div>`;
+      if (c.length === 1) return `<h4>${c[0]}</h4>`;
+      return `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`;
+    }).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+    document.getElementById("in-burn").addEventListener("change", (e) => { S.burn = e.target.checked; update(); });
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]], S); });
+    const bfr = S.burn ? bf(S.network) : 0;
+    const aprEff = S.apr * (1 - 0.9 * bfr);
+    const revEth = S.staked * 1e6 * (aprEff / 100) * (S.take / 100);
+    const revM = (revEth * S.eth) / 1e6, profit = revM - S.expense;
+    const capM = Math.min(S.cap, 18.25);
+    const buyAt = (p) => Math.max(0, Math.min(capM, (S.share / 100) * ((revEth * p) / 1e6 - S.baseline)));
+    const buy = buyAt(S.eth);
+    const circ = 829.57 * S.ldo, fdv = 1000 * S.ldo, bought = buy / S.ldo;
+    const tre = (41285 * S.eth) / 1e6 + 16, ev = fdv - tre;
+    const evp = profit > 0 && ev > 0 ? ev / profit : null;
+    const start = (S.baseline * 1e6) / revEth, capEth = ((S.baseline + capM / (S.share / 100)) * 1e6) / revEth;
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(revM), `DAO 年收入（${Math.round(revEth).toLocaleString("en-US")} ETH）`],
+      [profit >= 0 ? "green" : "red", usd(profit), "年利润（收入 − 开支）"],
+      [buy > 0 ? "green" : "orange", usd(buy), "NEST 年回购"],
+      ["", ((bought / 829.57) * 100).toFixed(2) + "%", `每年回购流通量（${bought.toFixed(1)}M LDO）`],
+      ["", usd(circ), `LDO 流通市值（FDV ${usd(fdv)}）`],
+      [evp && evp < 15 ? "green" : "", evp ? evp.toFixed(1) + "x" : "—", "企业价值 / 利润"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["有效毛 APR", aprEff.toFixed(2) + "%" + (S.burn ? `（销毁比例 ${(bfr * 100).toFixed(0)}%）` : "")],
+      ["理论共识层 APR（按全网质押量）", cl(S.network).toFixed(2) + "%"],
+      ["回购启动的 ETH 价格", "$" + Math.round(start).toLocaleString("en-US")],
+      ["回购达到上限的 ETH 价格", "$" + Math.round(capEth).toLocaleString("en-US")],
+      ["回购收益率（回购 / 流通市值）", ((buy / circ) * 100).toFixed(2) + "%"],
+      ["金库（stETH + 稳定币，不含 LDO）", usd(tre)],
+      ["金库 LDO 市值（1.17 亿枚）", usd(116.86 * S.ldo)],
+      ["企业价值（FDV − 金库）", usd(ev)],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+    const g1 = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000];
+    lineChart("ch-sim1", g1.map((p) => "$" + p.toLocaleString("en-US")), [
+      { name: "年利润（百万美元）", data: g1.map((p) => r1((revEth * p) / 1e6 - S.expense)), tone: "--c1" },
+      { name: "NEST 年回购（百万美元）", data: g1.map((p) => r1(buyAt(p))), tone: "--c3" },
+    ], { height: 220 });
+    const g2 = [0.2, 0.3, 0.435, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0];
+    lineChart("ch-sim2", g2.map((p) => "$" + p), [
+      { name: `回购达到年上限 ${usd(capM)} 时，每年回购流通量`, data: g2.map((p) => Math.round((capM / p / 829.57) * 10000) / 100), tone: "--c4" },
+    ], { suffix: "%", height: 200 });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>
