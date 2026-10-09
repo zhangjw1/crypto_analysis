@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendle Finance 分析报告</title>
+<style>
+  :root {
+    --ink: #1c2430;
+    --muted: #5d6978;
+    --line: #ddd6c8;
+    --paper: #f6f1e7;
+    --card: #fffdf8;
+    --navy: #1d3550;
+    --teal: #1f6a62;
+    --copper: #8d5a2b;
+    --red: #8a3d3d;
+    --green: #1e6b45;
+    --pale: #f3eee4;
+    --shadow: 0 16px 40px rgba(29, 53, 80, .06);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at top right, rgba(141, 90, 43, .08), transparent 28rem),
+      var(--paper);
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    line-height: 1.75;
+    font-size: 16.5px;
+  }
+  a { color: var(--teal); text-underline-offset: 3px; }
+  .wrap { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+  header.mast {
+    background: var(--navy);
+    color: #f8f4ec;
+    padding: 54px 0 42px;
+    border-bottom: 6px solid var(--copper);
+  }
+  .kicker {
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #d7c3a4;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", SimSun, serif;
+    font-size: clamp(34px, 5vw, 54px);
+    line-height: 1.18;
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+  .deck { max-width: 760px; color: #e6dfd2; font-size: 18px; margin: 0; }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,.16);
+    margin-top: 32px;
+    border: 1px solid rgba(255,255,255,.16);
+  }
+  .meta div { background: rgba(12, 25, 40, .28); padding: 14px 16px; }
+  .meta span { display: block; color: #c9bfb0; font-size: 12px; }
+  .meta strong { display: block; margin-top: 3px; font-size: 16px; }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(246, 241, 231, .94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.toc .wrap {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 12px 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  nav.toc a { color: var(--navy); text-decoration: none; }
+  nav.toc a:hover { color: var(--copper); }
+  main { padding: 34px 0 70px; }
+  section { margin: 0 0 42px; }
+  h2 {
+    font-family: "Songti SC", "Noto Serif SC", SimSun, serif;
+    font-size: 30px;
+    line-height: 1.3;
+    margin: 0 0 14px;
+    color: var(--navy);
+  }
+  h3 { font-size: 20px; margin: 26px 0 8px; color: var(--teal); }
+  p { margin: 0 0 14px; }
+  .verdict {
+    background: var(--card);
+    border-left: 5px solid var(--copper);
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin: -28px 0 34px;
+  }
+  .verdict strong { color: var(--navy); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card, .note, table, figure {
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .card { padding: 18px 18px 8px; }
+  .card b { display: block; color: var(--copper); font-size: 13px; letter-spacing: .04em; }
+  .note {
+    padding: 16px 18px;
+    background: #fbf7f0;
+    margin: 16px 0;
+  }
+  .note.warn { border-left: 4px solid var(--red); }
+  .note.good { border-left: 4px solid var(--green); }
+  ul { margin: 8px 0 16px; padding-left: 22px; }
+  li { margin: 5px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14.5px; }
+  th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th:first-child, td:first-child { text-align: left; }
+  th { background: var(--navy); color: white; font-weight: 600; }
+  tr:nth-child(even) td { background: #faf7f1; }
+  caption, .cap { color: var(--muted); font-size: 13px; text-align: left; margin: 6px 0 16px; }
+  figure { margin: 18px 0; padding: 18px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  .kpi {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0 8px;
+  }
+  .kpi article {
+    background: var(--navy);
+    color: white;
+    padding: 16px;
+  }
+  .kpi span { display: block; color: #d7c3a4; font-size: 12px; }
+  .kpi strong { display: block; font-size: 24px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .small { color: var(--muted); font-size: 13.5px; }
+  footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    padding: 28px 0 48px;
+    font-size: 14px;
+  }
+  code { font-family: Consolas, "Courier New", monospace; font-size: .92em; }
+  @media (max-width: 800px) {
+    .meta, .grid, .kpi { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 34px; }
+    body { font-size: 15.5px; }
+  }
+  @media (max-width: 560px) {
+    .meta, .grid, .kpi { grid-template-columns: 1fr; }
+    .wrap { width: min(100% - 22px, 1080px); }
+    table { display: block; overflow-x: auto; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    body { background: white; }
+    header.mast { background: white; color: black; border-bottom: 2px solid black; }
+    .deck, .meta span { color: #333; }
+    .card, .note, table, figure, .verdict { box-shadow: none; }
+    a { color: black; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <p class="kicker">Crypto Research Memo · 2026-10-09</p>
+    <h1>Pendle Finance：机制、百倍行情与代币价值捕获</h1>
+    <p class="deck">Pendle 是加密市场里少见的、已经证明产品契合度的利率基础设施。它过去的百倍涨幅不能外推，当前价格也已经计入“类别龙头”溢价。</p>
+    <div class="meta">
+      <div><span>当前价格</span><strong>2.09 美元</strong></div>
+      <div><span>流通市值</span><strong>3.62 亿美元</strong></div>
+      <div><span>核心 TVL</span><strong>12.2 亿美元</strong></div>
+      <div><span>距价格高点 / TVL 峰值</span><strong>-72% / -91%</strong></div>
+    </div>
+  </div>
+</header>
+<nav class="toc">
+  <div class="wrap">
+    <a href="#answers">三个结论</a>
+    <a href="#mechanism">项目机制</a>
+    <a href="#hundred">百倍原因</a>
+    <a href="#operations">经营数据</a>
+    <a href="#token">代币捕获</a>
+    <a href="#valuation">估值</a>
+    <a href="#risks">前景与风险</a>
+    <a href="#sources">资料与口径</a>
+  </div>
+</nav>
+<main class="wrap">
+  <section class="verdict" id="answers">
+    <p><strong>结论先行：</strong>项目有真实前景，但不是“因为曾经涨了百倍，所以还会再来一次”。Pendle 把链上收益做成了可定价、可拆分、可对冲的金融资产，这个位置很难被简单分叉取代。问题在于费用和 TVL 已进入明显下行周期，而 3.62 亿美元市值并未把协议当成失败项目定价。</p>
+  </section>
+
+  <section>
+    <div class="grid">
+      <article class="card">
+        <b>01 做什么</b>
+        <p>它不生产收益，而是交易收益。V2 把生息资产拆成固定本金 PT 和浮动收益 YT；Boros 用保证金交易资金费率。</p>
+      </article>
+      <article class="card">
+        <b>02 为什么涨了百倍</b>
+        <p>2022 年 11 月低点 0.0338 美元到 2024 年 4 月高点 7.50 美元，约 222 倍。来自极低估值、积分与再质押需求、产品重构和流动性改善。</p>
+      </article>
+      <article class="card">
+        <b>03 代币捕获什么</b>
+        <p>V2 收入的 80% 用于回购并分给 sPENDLE。管道是通的，但近期现金流不够粗，回购已难以覆盖潜在增发。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="mechanism">
+    <h2>一、项目机制</h2>
+    <p>官网将 Pendle 定义为“全球最大的加密收益交易平台”。它位于收益生产协议和交易协议之间：Lido、Ethena、Aave 等负责产生收益，Pendle 负责给这些收益率加上期限、价格和对手方。</p>
+    <h3>V2：现货收益</h3>
+    <p>一笔交易有三层。生息资产先包装成标准化的 SY；SY 再拆成 PT 与 YT，也可以反向合并；交易池实际存放 PT 和 SY，YT 通过两者的价格关系进行闪电交换，因此一套流动性同时服务两类交易。</p>
+    <ul>
+      <li><strong>PT</strong>类似零息债券。折价买入、到期按会计资产赎回，价差就是固定收益率。PT 放弃底层的浮动收益和积分。</li>
+      <li><strong>YT</strong>代表到期前的全部浮动收益和积分。它只占底层资产价格的一小部分，所以天然带有收益杠杆，但也随时间衰减，到期归零。</li>
+      <li><strong>LP</strong>同时获得 PT 固定收益、底层收益、交易费和 PENDLE 激励。收益率 AMM 会随到期日收紧曲线，持有到期时的经济结果接近直接持有底层资产。</li>
+    </ul>
+    <p>交易费不按名义本金一刀切，而是按剩余收益收取：交易费 =（费率档位 / 365）× 距离到期天数。因此 TVL 高并不自动等于手续费高，临近到期且低换手的资金贡献很少。</p>
+    <h3>Boros：保证金化的资金费率</h3>
+    <p>ETH 质押或资金费率长期围绕均值小幅波动。没有杠杆时，利率变化很难形成有意义的盈亏。Boros 用 Yield Unit 表示一单位底层资产的资金费率现金流：做多是支付固定利率、接收浮动费率；做空相反。它适合表达费率方向、对冲永续仓位，或锁定跨交易所费率差。</p>
+    <div class="note warn"><strong>规模还很小。</strong>Boros 当前抵押品约 749 万美元，峰值仅 1,235 万美元；上线以来费用约 80 万美元，只占 Pendle 历史总费用的 1.2%。交易量证明有人试用，费用证明它还不是利润中心。</div>
+    <h3>与众不同的地方</h3>
+    <ul>
+      <li>同时制造固定收益买方、收益投机买方和流动性提供者，而不是只提供一个存款入口。</li>
+      <li>AMM 按隐含收益率区间集中流动性，而不是按代币价格区间。</li>
+      <li>PT 已被 Morpho、Silo、Euler 等市场接受为抵押品，使 Pendle 成为其他协议的组件，而不只是一个独立网站。</li>
+    </ul>
+    <p>真正的竞争不一定是 Spectra 这类相似架构，也可能是钱包、交易所理财和借贷市场直接把“固定利率”包装给用户，从而绕开 PENDLE 代币。</p>
+  </section>
+
+  <section id="hundred">
+    <h2>二、百倍上涨从哪里来</h2>
+    <table>
+      <thead><tr><th>节点</th><th>日期</th><th>价格</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td>美元最低价</td><td>2022-11-14</td><td>0.0338 美元</td><td>熊市流动性底部</td></tr>
+        <tr><td>历史最高价</td><td>2024-04-11</td><td>7.50 美元</td><td>较低点约 222 倍</td></tr>
+        <tr><td>本报告快照</td><td>2026-10-09</td><td>2.09 美元</td><td>较高点回撤 72%，仍比低点高约 62 倍</td></tr>
+      </tbody>
+    </table>
+    <p class="cap">价格来自 CoinGecko。222 倍是最低价至最高价，不是任意连续 24 个月收盘价，更不能直接等同于股东价值增长。</p>
+    <p>这不是利润连续复利的结果。2023 年协议费用只有约 19 万美元，价格却已脱离底部；费用真正放量发生在 2024 和 2025 年。五个因素叠加造成了极端倍数：</p>
+    <ul>
+      <li><strong>起点极低。</strong>2022 年日均 TVL 约 1,050 万美元，价格进入以美分为单位的区间。</li>
+      <li><strong>产品经历过失败后的重构。</strong>2021 年的复杂产品没有获得持续关注，2022 年才形成现在的 V2。团队和投资者代币到 2024 年 9 月已全部归属。</li>
+      <li><strong>叙事恰好需要这个结构。</strong>LST 需要固定利率，LRT 和 Ethena 积分需要加杠杆的 YT。TVL 于 2024 年 2 月首次越过 10 亿美元，4 月越过 50 亿美元。</li>
+      <li><strong>费用开始出现。</strong>市场第一次可以用实际费用而非纯故事给代币定价。</li>
+      <li><strong>流通与注意力弹性。</strong>高点距离历史归属结束还有数月，低流通和高换手放大了价格，也放大了后来的回撤。</li>
+    </ul>
+    <div class="note"><strong>应降权的说法：</strong>“传统利率衍生品名义规模超过 400 万亿美元”只说明利率市场很大，不说明这些名义本金会变成 Pendle 的收入。TVL 也不是 Pendle 的收入资产，协议只抽取其中很小一部分收益和交易费。</div>
+  </section>
+
+  <section id="operations">
+    <h2>三、经营数据</h2>
+    <p>增长是真实的，持续性尚未证明。Pendle 的需求依附于底层收益、积分活动和稳定币扩张；这些活动退潮时，它的 TVL 和费用会下降得更快。</p>
+    <div class="kpi">
+      <article><span>2025 日均 TVL</span><strong>56.7 亿</strong></article>
+      <article><span>TVL 峰值</span><strong>133.9 亿</strong></article>
+      <article><span>2025 协议费用</span><strong>3,955 万</strong></article>
+      <article><span>近 30 日费用</span><strong>43.3 万</strong></article>
+    </div>
+    <p class="small">金额单位为美元。TVL 峰值出现在 2025 年 9 月 19 日；近 30 日费用不能年化后当成稳定利润。</p>
+
+    <figure>
+      <svg viewBox="0 0 760 320" role="img" aria-label="Pendle 日均 TVL 柱状图">
+        <text x="0" y="24" font-size="18" font-family="Microsoft YaHei" fill="#1d3550">日均核心 TVL（十亿美元）</text>
+        <line x1="36" y1="250" x2="730" y2="250" stroke="#ddd6c8"/>
+        <g font-family="Microsoft YaHei" font-size="13" fill="#1c2430">
+          <rect x="70" y="244" width="110" height="6" fill="#1d3550"/><text x="92" y="274">2023</text><text x="98" y="236">0.11</text>
+          <rect x="230" y="109" width="110" height="141" fill="#1d3550"/><text x="252" y="274">2024</text><text x="262" y="100">3.21</text>
+          <rect x="390" y="52" width="110" height="198" fill="#8d5a2b"/><text x="412" y="274">2025</text><text x="422" y="44">5.67</text>
+          <rect x="550" y="172" width="110" height="78" fill="#1d3550"/><text x="562" y="274">2026 YTD</text><text x="582" y="164">1.78</text>
+        </g>
+      </svg>
+      <figcaption class="cap">2026 年只统计至 10 月 9 日。当年峰值分别为 2.7 亿、67.2 亿、133.9 亿和 38.9 亿美元。来源：DefiLlama。</figcaption>
+    </figure>
+
+    <table>
+      <thead><tr><th>年份</th><th>日均 TVL</th><th>年内峰值</th><th>年末或当前</th></tr></thead>
+      <tbody>
+        <tr><td>2023</td><td>1.14 亿</td><td>2.73 亿</td><td>2.34 亿</td></tr>
+        <tr><td>2024</td><td>32.1 亿</td><td>67.2 亿</td><td>44.2 亿</td></tr>
+        <tr><td>2025</td><td>56.7 亿</td><td>133.9 亿</td><td>37.4 亿</td></tr>
+        <tr><td>2026 YTD</td><td>17.8 亿</td><td>38.9 亿</td><td>12.2 亿</td></tr>
+      </tbody>
+    </table>
+    <p>当前资金仍高度集中：以太坊占 62%，Arbitrum 占 15%，Monad 占 12%，X Layer 占 5%，Plasma 占 4%。Plasma、Hyperliquid 和 Sonic 都出现过数亿至十亿美元级峰值，但留存很弱。多链扩展带来过 TVL，没有自动带来持久网络。</p>
+
+    <figure>
+      <svg viewBox="0 0 760 320" role="img" aria-label="Pendle 年度协议费用柱状图">
+        <text x="0" y="24" font-size="18" font-family="Microsoft YaHei" fill="#1d3550">协议费用（百万美元）</text>
+        <line x1="36" y1="250" x2="730" y2="250" stroke="#ddd6c8"/>
+        <g font-family="Microsoft YaHei" font-size="13" fill="#1c2430">
+          <rect x="70" y="248" width="110" height="2" fill="#1d3550"/><text x="92" y="274">2023</text><text x="102" y="240">0.19</text>
+          <rect x="230" y="153" width="110" height="97" fill="#1d3550"/><text x="252" y="274">2024</text><text x="260" y="144">19.1</text>
+          <rect x="390" y="50" width="110" height="200" fill="#8d5a2b"/><text x="412" y="274">2025</text><text x="420" y="42">39.6</text>
+          <rect x="550" y="205" width="110" height="45" fill="#1d3550"/><text x="562" y="274">2026 YTD</text><text x="582" y="196">8.9</text>
+        </g>
+      </svg>
+      <figcaption class="cap">2023 年序列自 7 月开始；2026 年为截至 10 月 9 日的累计值，不可直接与完整年度比较。</figcaption>
+    </figure>
+
+    <table>
+      <thead><tr><th>期间</th><th>协议费用</th><th>协议收入</th><th>观察</th></tr></thead>
+      <tbody>
+        <tr><td>2024</td><td>1,910 万</td><td>1,771 万</td><td>完成从叙事到费用的跨越</td></tr>
+        <tr><td>2025</td><td>3,955 万</td><td>3,837 万</td><td>历史最高年份</td></tr>
+        <tr><td>2026 年前九个月</td><td>877 万</td><td>约 864 万</td><td>同比下降约 71%</td></tr>
+        <tr><td>近 12 个月</td><td>1,702 万</td><td>1,667 万</td><td>仍包含 2025 年尾部高收入</td></tr>
+        <tr><td>近 30 日年化</td><td>527 万</td><td>518 万</td><td>当前需求的严格口径</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>费用极端集中。最大单日为 2025 年 1 月 8 日的 608 万美元，最大 10 个费用日占历史累计费用约 26%。</li>
+      <li>费用率低。近 12 个月费用相对当前 TVL 约 1.4%，近 30 日跑速只有约 0.43%。这是高资金占用、低抽成的市场。</li>
+      <li>项目方 2025 年回顾称全年交易量 478 亿美元、新增用户 155,553 人，资产分布中稳定币占 85%。稳定币转型提高了需求质量，但尚未补上积分退潮留下的费用缺口。</li>
+    </ul>
+  </section>
+
+  <section id="token">
+    <h2>四、代币与价值捕获</h2>
+    <table>
+      <thead><tr><th>指标</th><th>数值</th><th>解释</th></tr></thead>
+      <tbody>
+        <tr><td>流通供给</td><td>1.738 亿枚</td><td>CoinGecko 口径，占总供给 61.7%</td></tr>
+        <tr><td>总供给</td><td>2.815 亿枚</td><td>没有最大供给上限</td></tr>
+        <tr><td>流通市值 / FDV</td><td>3.62 亿 / 5.87 亿</td><td>FDV 还不包含未来通胀</td></tr>
+        <tr><td>历史归属</td><td>2024 年 9 月完成</td><td>团队和投资者代币已全部归属</td></tr>
+        <tr><td>终端通胀</td><td>文件基准每年 2%</td><td>2026 年 4 月后切换；本报告未直接读取排放合约</td></tr>
+      </tbody>
+    </table>
+    <h3>费用如何进入代币</h3>
+    <ul>
+      <li>YT 产生的收益和积分收取 5%；到期后未赎回头寸继续产生的收益也会进入费用钱包。</li>
+      <li>交易费先拿出 20% 给 LP。剩余交易费加全部 YT 费用中，80% 回购 PENDLE，10% 进金库，10% 用于运营。</li>
+      <li>回购每两周归集，按一小时 TWAP 执行，再分配给活跃 sPENDLE 持有人。积分类费用按原代币发放，不强制换成 PENDLE。</li>
+      <li>2026 年 1 月 20 日上线的 sPENDLE 以 1:1 质押，14 天免费退出，或支付 5% 即时退出。有提案时不投票会失去当期奖励。</li>
+    </ul>
+    <div class="note good"><strong>这是实质性改进，但不是股权。</strong>sPENDLE 降低了参与门槛，也让质押凭证可以进入其他 DeFi。奖励发放的是 PENDLE 本身，收到后可以卖出，所以回购是阶段性买盘和持有人收益，不是永久性销毁。</div>
+    <h3>捕获能力的数量边界</h3>
+    <p>DefiLlama 的以太坊 staking 价值为 1.988 亿美元。若主要是质押的 PENDLE，大约相当于总供给的 34%。这是估算，不是地址余额审计。</p>
+    <table>
+      <thead><tr><th>测算</th><th>80% 回购</th><th>相对 1.99 亿美元质押价值</th></tr></thead>
+      <tbody>
+        <tr><td>近 12 个月</td><td>1,334 万美元</td><td>约 6.7%</td></tr>
+        <tr><td>近 30 日年化</td><td>415 万美元</td><td>约 2.1%</td></tr>
+        <tr><td>2% 增发压力测试</td><td>增发价值约 1,177 万美元</td><td>近期回购无法覆盖</td></tr>
+      </tbody>
+    </table>
+    <p>按过去 12 个月，回购大体还能抵消全额 2% 增发；按最近 30 日，代币经济已从“费用覆盖稀释”变成“稀释超过费用”。新的激励模型可能不会发满 2%，但在读取排放合约前不能把这种可能性当成事实。</p>
+    <p>Boros 费用目前不应自动计入同一回购池。官方页面写明的是 V2 收益费和交易费；创始人也表示，在 Boros 找到产品契合点之前，不宜提前承诺其价值累积方式。</p>
+  </section>
+
+  <section id="valuation">
+    <h2>五、当前估值已经不便宜</h2>
+    <table>
+      <thead><tr><th>口径</th><th>年化收入或费用</th><th>流通市值倍数</th></tr></thead>
+      <tbody>
+        <tr><td>近 12 个月费用</td><td>1,702 万美元</td><td>21.3 倍</td></tr>
+        <tr><td>近 12 个月收入</td><td>1,667 万美元</td><td>21.7 倍</td></tr>
+        <tr><td>近 30 日年化收入</td><td>518 万美元</td><td>69.9 倍</td></tr>
+        <tr><td>静态 FDV / 近 12 个月收入</td><td>1,667 万美元</td><td>35.2 倍</td></tr>
+      </tbody>
+    </table>
+    <p>价格较高点下跌 72%，容易造成“已经很便宜”的错觉。若未来年费用恢复到 2,000 万至 2,500 万美元，并给予 15 至 20 倍费用，对应市值大约是 3 亿至 5 亿美元。现价已经位于这个恢复情景之内。</p>
+    <p>再涨 10 倍意味着约 36 亿美元流通市值。即便市场给 30 倍费用，也需要每年约 1.2 亿美元的可持续费用，较近 30 日跑速增长 20 倍以上。Boros 和 RWA 在数学上不是不可能，但今天没有任何经营数据支持把这当作基准情形。</p>
+  </section>
+
+  <section id="risks">
+    <h2>六、前景、情景与风险</h2>
+    <p><strong>项目前景：正面。代币的高增长预期：否定。</strong>Pendle 是加密利率层最可信的候选者之一，合理基准是一个有真实费用、强周期属性的利基龙头，不是已经锁定巨大市场的成长垄断者。</p>
+    <table>
+      <thead><tr><th>情景</th><th>需要看到的证据</th><th>代币含义</th></tr></thead>
+      <tbody>
+        <tr><td>基准</td><td>TVL 稳定在 10 亿至 30 亿美元，年费用恢复到 1,500 万至 3,000 万美元</td><td>有持有价值，但难以重复历史倍数</td></tr>
+        <tr><td>乐观</td><td>Boros 费用连续跃升，或 RWA、比特币收益形成可留存市场，并且收入明确归代币</td><td>可以支持重估</td></tr>
+        <tr><td>悲观</td><td>TVL 跌破 10 亿美元，月费用长期低于 50 万美元</td><td>回购无法覆盖稀释，代币更依赖叙事</td></tr>
+      </tbody>
+    </table>
+    <h3>值得跟踪的四个信号</h3>
+    <ul>
+      <li>稳定币固定收益市场的留存，而不是新链上线当天的 TVL。</li>
+      <li>Boros 从交易量转向费用、抵押品和重复用户，并公布明确的 PENDLE 分配比例。</li>
+      <li>PT 在外部借贷市场中的真实使用规模。</li>
+      <li>实际周排放是否低于 2% 上限，以及回购合约是否持续执行。</li>
+    </ul>
+    <h3>主要风险</h3>
+    <ul>
+      <li><strong>需求风险：</strong>积分和激励存款曾是增长核心，稳定币转型尚未产生同等费用。</li>
+      <li><strong>底层资产风险：</strong>官方明确声明，第三方协议损失不由 Pendle 负责。TVL 越大，嵌入的外部信用风险越大。</li>
+      <li><strong>合约与预言机风险：</strong>核心协议有多家审计，DefiLlama 黑客库没有 Pendle 核心被盗记录；审计不能消除风险，Boros 又增加了保证金和清算层面。</li>
+      <li><strong>治理风险：</strong>费率、回购比例和新产品收入分配都是政策，不是不可修改的链上股息。</li>
+      <li><strong>稀释风险：</strong>历史投资者悬崖已过，但没有供给上限。生态库存、激励排放和 sPENDLE 退出队列仍可能集中进入市场。</li>
+    </ul>
+  </section>
+
+  <section id="sources">
+    <h2>七、资料、口径与局限</h2>
+    <ul>
+      <li>机制和代币规则优先采用 Pendle 官方文档；创始人访谈只用于说明战略意图。</li>
+      <li>TVL、费用、收入和交易量采用 2026 年 10 月 9 日下载的 DefiLlama 日频数据。</li>
+      <li>价格、供给和市值采用 CoinGecko，并用 CoinPaprika 核对价格高点。</li>
+      <li>项目方 2025 年回顾通过 BlockBeats 2025 年 12 月 5 日的官方数据转述引用，并与 DefiLlama 交叉验证。</li>
+      <li>未直接审计回购合约余额、五个非流通地址和当前排放合约，相关数字均表述为规则或估算。</li>
+    </ul>
+    <p>主要来源：<a href="https://www.pendle.finance/">Pendle 官网</a>、<a href="https://docs.pendle.finance/pendle-v2/Introduction">V2 文档</a>、<a href="https://docs.pendle.finance/pendle-v2/ProtocolMechanics/Mechanisms/Fees">费用规则</a>、<a href="https://docs.pendle.finance/pendle-v2/ProtocolMechanics/Mechanisms/sPENDLE">sPENDLE</a>、<a href="https://docs.pendle.finance/boros-docs/Introduction">Boros 文档</a>、<a href="https://defillama.com/protocol/pendle">DefiLlama</a>、<a href="https://www.coingecko.com/en/coins/pendle">CoinGecko</a>。</p>
+    <p class="small">免责声明：本文件是基于公开资料的研究备忘录，不是购买、出售或持有任何代币的建议，也不构成对未来价格、收益率或协议安全性的承诺。加密资产可能损失全部本金。</p>
+  </section>
+</main>
+<footer>
+  <div class="wrap">Pendle Finance 独立研究备忘录 · 数据截止 2026-10-09 · 可离线打开的单文件 HTML</div>
+</footer>
+</body>
+</html>

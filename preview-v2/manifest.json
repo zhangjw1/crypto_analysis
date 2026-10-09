@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "libreoffice",
+  "source": "saved",
+  "inputPath": "Pendle_Finance_分析报告_20261009.docx",
+  "sourceSha256": "4d35d2012cd2ded44fe0586d2f91bcdf583b5c0b0254235cd7c9a4ad5bc3999f",
+  "dpi": 120,
+  "pageCount": 12,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "page-0001.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 152921
+    },
+    {
+      "index": 2,
+      "page": 2,
+      "path": "page-0002.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 150267
+    },
+    {
+      "index": 3,
+      "page": 3,
+      "path": "page-0003.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 132329
+    },
+    {
+      "index": 4,
+      "page": 4,
+      "path": "page-0004.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 135720
+    },
+    {
+      "index": 5,
+      "page": 5,
+      "path": "page-0005.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 149266
+    },
+    {
+      "index": 6,
+      "page": 6,
+      "path": "page-0006.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 113848
+    },
+    {
+      "index": 7,
+      "page": 7,
+      "path": "page-0007.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 126285
+    },
+    {
+      "index": 8,
+      "page": 8,
+      "path": "page-0008.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 146634
+    },
+    {
+      "index": 9,
+      "page": 9,
+      "path": "page-0009.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 125424
+    },
+    {
+      "index": 10,
+      "page": 10,
+      "path": "page-0010.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 124689
+    },
+    {
+      "index": 11,
+      "page": 11,
+      "path": "page-0011.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 127625
+    },
+    {
+      "index": 12,
+      "page": 12,
+      "path": "page-0012.png",
+      "width": 993,
+      "height": 1404,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 21857
+    }
+  ],
+  "missingFonts": [
+    "Courier"
+  ]
+}

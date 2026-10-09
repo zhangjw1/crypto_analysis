@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyperliquid（HYPE）协议深度报告（2026-10-09）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box > b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .card.good .hd { color: var(--green); } .card.bad .hd { color: var(--red); } .card.warn .hd { color: var(--orange); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  .callout.good { border-color: var(--green); } .callout.good b.t { color: var(--green); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--fill2); padding: 0 4px; border-radius: 3px; }
+  .formula { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--fill2); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+  .bar100 { display: flex; height: 30px; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+  .bar100 span { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; padding: 0 2px; }
+  .step { display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; margin-right: 6px; }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .diagram { margin: 12px 0 4px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram .n { fill: var(--fill); stroke: var(--line); stroke-width: 1.2; }
+  .diagram .n.hl { stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .n.gr { stroke: var(--green); stroke-width: 1.5; }
+  .diagram .n.or { stroke: var(--orange); stroke-width: 1.5; }
+  .diagram .t { fill: var(--fg); font-size: 15px; font-weight: 600; }
+  .diagram .s { fill: var(--fg2); font-size: 12px; }
+  .diagram .l { fill: var(--fg2); font-size: 12px; }
+  .diagram .l.acc { fill: var(--accent); font-weight: 600; }
+  .diagram .a { stroke: var(--fg2); stroke-width: 1.4; fill: none; }
+  .diagram .a.d { stroke-dasharray: 5 4; }
+  .diagram .mk { fill: var(--fg2); }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid-32, .sim { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、四个问题的答案</a>
+  <a href="#s2">二、项目与机制</a>
+  <a href="#s3">三、为什么不是 dYdX</a>
+  <a href="#s4">四、什么撑起了币价</a>
+  <a href="#s5">五、二十倍行情复盘</a>
+  <a href="#s6">六、经营数据</a>
+  <a href="#s7">七、代币与解锁</a>
+  <a href="#s8">八、估值与供需模拟器</a>
+  <a href="#s9">九、前景判断与跟踪</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">深度研究</span>数据截至 2026-10-09 · 来源：hyperliquid.xyz 与官方文档、Hyperliquid 链上 API（价格 K 线、代币供应、援助基金余额、验证者质押、HLP 金库、永续未平仓量）、DefiLlama（费用、收入、TVL、同业对比）、The Block、CoinDesk、Cointelegraph、CryptoSlate、Forbes、Tokenomist、0xArchive、Hyperliquid Research Collective、SEC 文件（Hyperliquid Strategies 10-K）</p>
+  <h1>Hyperliquid（HYPE）协议深度报告：一家把全部利润拿来回购的“链上币安”，以及它的估值里已经提前计入了什么</h1>
+  <p class="muted">一句话结论：Hyperliquid 不是第一个永续合约 DEX，但它是第一个同时做对三件事的：<b>在自建链上做出接近中心化交易所的交易体验</b>、<b>把订单簿完全放上链</b>、<b>不拿风投资金，把 31% 代币空投给用户、把几乎全部手续费用于回购 HYPE</b>。结果是：它近 12 个月产生约 $9.3 亿手续费、$7.1 亿协议收入，在全加密行业排第 3（仅次于 Tether 和 Circle），是第 2 名 DeFi 应用 pump.fun 的 2.2 倍、Aave 的 7 倍。HYPE 的高价首先是<b>收入撑起来的</b>：按同一口径，它的“市值 / 年收入”约 26 倍，和 Aave 相当，并不离谱。但有两点必须看清：<b>第一，2026 年这一段翻倍行情几乎全部来自估值倍数扩张</b>（ETF、上市公司囤币、美股永续、Coinbase/Circle 合作），同期协议收入反而同比下降约 18%；<b>第二，目前只有约 30% 的代币在流通</b>，团队手里约 2.38 亿枚（按现价约 $200 亿）在 2027–2028 年集中归属，另有约 4.1 亿枚“未来排放”没有公布时间表。团队累计只领取了约 920 万枚（份额的约 4%），但领出后基本都卖掉了，2026-10 还一次性通过场外交易卖出 375 万枚，近半年平均每月约 93 万枚，已经和每月回购量（约 86 万枚）持平。领取节奏完全由团队决定，这是现阶段最大的不确定性。</p>
+  <div class="stats">
+    <div class="stat"><b>$85.6</b><span>HYPE 价格（2026-09-23 历史最高 $97.99；2024-11 上线低点 $3.81，约 22 倍）</span></div>
+    <div class="stat blue"><b>$259 亿</b><span>流通市值（官方口径 3.02 亿枚）；完全稀释估值约 $814 亿</span></div>
+    <div class="stat green"><b>$9.28 亿</b><span>近 12 个月手续费（近 30 天年化 $11.1 亿）</span></div>
+    <div class="stat green"><b>$7.07 亿</b><span>近 12 个月回购（援助基金累计 4,793 万枚，约 $41 亿）</span></div>
+    <div class="stat"><b>$119 亿</b><span>永续未平仓量；24 小时成交约 $90 亿</span></div>
+  </div>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、四个问题的答案（先看结论）</h2>
+  <div class="grid2">
+    <div class="card"><div class="hd">问题 1：dYdX 早就有了，为什么是 Hyperliquid 做成了？</div><div class="bd">永续 DEX 已经迭代了三代。dYdX（2020–2023 主导）用“链下撮合 + 链上结算”，代币有约 28% 分给风投、价值捕获弱，2023 年迁移到 Cosmos 自建链后体验和流动性双双下滑；GMX 用“资金池 + 预言机报价”，资金池要充当所有交易者的对手方，做不大。Hyperliquid 自建了一条专门为交易优化的链（HyperBFT 共识），<b>订单簿、撮合、保证金、清算全部在链上</b>，下单不付 gas、亚秒级确认，体验接近币安；再用社区金库 HLP 做市、积分计划拉新、上新币极快，形成“流动性 → 滑点低 → 更多交易者”的飞轮。近 12 个月它的手续费是 dYdX 的约 170 倍。详见第三部分。</div></div>
+    <div class="card"><div class="hd">问题 2：为什么 HYPE 的价格在 DeFi 里断档领先？</div><div class="bd">因为它的收入在 DeFi 里断档领先，而且几乎 100% 归代币。手续费在 L1 执行层被自动换成 HYPE，送进一个没有私钥的地址（援助基金），2025-12 经验证者投票正式视同销毁。按 DefiLlama/CoinGecko 同口径，HYPE 市值 $190 亿、近一年收入 $7.2 亿，约 26 倍，Aave 约 27 倍、Uniswap 约 72 倍。在回购之外，还有三股买盘：纳斯达克上市公司 Hyperliquid Strategies 持有约 3,700 万枚，三只美国现货 ETF 管理约 $4.5–5 亿，全网 44% 的 HYPE 处于质押中。详见第四部分。</div></div>
+    <div class="card"><div class="hd">问题 3：从空投“无人问津”到二十多倍，中间发生了什么？</div><div class="bd">空投时并非“没人要”，而是<b>没有风投、没有做市商、没有大交易所上币</b>，所以上线定价极低：开盘约 $3.8，完全稀释估值不到 $40 亿。之后走了五段：①上线三周涨到 $35（拿到空投的人几乎不卖）；②2025 年初 JELLY 事件、巨鲸爆仓等引发中心化质疑，跌到 $9.3；③2025 年中手续费创新高、单月 $1.45 亿，涨到 $59；④Aster、Lighter 用积分抢量，叠加团队解锁开始，跌到 $20；⑤2026 年白银等大宗商品和美股永续（HIP-3）爆发，美国 ETF 上市、Coinbase/Circle 合作、币安上币，涨到 $98。详见第五部分。</div></div>
+    <div class="card"><div class="hd">问题 4：这个价格能持续吗？解锁有多大风险？</div><div class="bd">按近 30 天年化收入约 $9 亿，现价对应流通市值约 29 倍；但如果团队份额全部释放，2028 年流通量约 5.4 亿枚，同样价格就是约 51 倍。<b>现价已经计入了“收入继续增长 + 团队不砸盘”两件事</b>。解锁方面，团队归属上限是每月约 992 万枚（约 $8.5 亿）。2026 年 2–8 月团队每月只领 14–53 万枚，但 10 月一次领出 375 万枚并通过场外交易卖给机构，近半年平均每月约 93 万枚，<b>已经吃掉了全部回购</b>（每月约 86 万枚）。链上记录显示团队领出后基本都卖掉了，没有重新质押。风险在于：①团队领取节奏完全由团队决定，按线性假设已归属但未领取的约有 1 亿枚，随时可以领出；②约 4.1 亿枚“未来排放”没有时间表；③收入与加密交易量强相关，熊市可能腰斩。详见第七、八、九部分。</div></div>
+  </div>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、项目与机制</h2>
+  <h3>2.1 一句话定位：自建 L1 上的全链上订单簿交易所</h3>
+  <p class="lead">Hyperliquid 是一条专门为交易设计的 Layer 1 区块链，链本身就是一个交易所。它的核心产品是永续合约（没有到期日、靠资金费率锚定现货价格的期货），同时有现货、第三方部署的永续市场（HIP-3）、预测市场（HIP-4）和兼容以太坊的智能合约层（HyperEVM）。社区称它“链上币安”：用户体验接近中心化交易所，但资产托管、订单和成交全部在链上公开可查。</p>
+  <div class="grid3">
+    <div class="box"><b>HyperBFT（共识层）</b><p>团队自研的拜占庭容错共识，出块约 0.07–0.2 秒，按质押 HYPE 加权投票。当前 35 个验证者、27 个活跃，全网质押约 4.4 亿枚 HYPE。</p></div>
+    <div class="box"><b>HyperCore（交易引擎）</b><p>订单簿、撮合、保证金、清算、资金费率、现货都是链的原生状态，不是智能合约。每一次挂单、撤单、成交都是一笔签名交易，<b>下单不收 gas</b>。</p></div>
+    <div class="box"><b>HyperEVM（合约层）</b><p>2025-02 上线，与 HyperCore 共享同一共识和状态，DeFi 协议可以直接读写订单簿和余额。当前链上 DeFi TVL 约 $10.5 亿（峰值 $27.7 亿）。</p></div>
+  </div>
+
+  <h3>2.2 资金与手续费全流程</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 440" role="img" aria-label="Hyperliquid 资金与手续费流程图">
+      <defs><marker id="mkA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <rect class="n" x="20" y="20" width="200" height="90" rx="8"/>
+      <text class="t" x="120" y="50" text-anchor="middle">交易者</text>
+      <text class="s" x="120" y="72" text-anchor="middle">USDC 存入（跨链桥）</text>
+      <text class="s" x="120" y="92" text-anchor="middle">永续 / 现货 / 美股 / 预测</text>
+      <rect class="n hl" x="300" y="10" width="300" height="110" rx="8"/>
+      <text class="t" x="450" y="40" text-anchor="middle">HyperCore 链上订单簿</text>
+      <text class="s" x="450" y="62" text-anchor="middle">撮合 · 保证金 · 清算 · 资金费率</text>
+      <text class="s" x="450" y="82" text-anchor="middle">预言机 = 验证者提交的交易所加权中位价</text>
+      <text class="s" x="450" y="102" text-anchor="middle">挂单 / 撤单免 gas，约 0.1 秒确认</text>
+      <rect class="n" x="680" y="20" width="300" height="90" rx="8"/>
+      <text class="t" x="830" y="50" text-anchor="middle">HIP-3 部署者（如 Trade.xyz）</text>
+      <text class="s" x="830" y="72" text-anchor="middle">质押 50 万 HYPE 才能开市场</text>
+      <text class="s" x="830" y="92" text-anchor="middle">美股、原油、白银、Pre-IPO 永续</text>
+      <rect class="n gr" x="20" y="190" width="200" height="90" rx="8"/>
+      <text class="t" x="120" y="220" text-anchor="middle">HLP 社区金库</text>
+      <text class="s" x="120" y="242" text-anchor="middle">做市 + 承接清算</text>
+      <text class="s" x="120" y="262" text-anchor="middle">规模约 $1.8 亿</text>
+      <rect class="n" x="350" y="190" width="200" height="90" rx="8"/>
+      <text class="t" x="450" y="220" text-anchor="middle">交易手续费</text>
+      <text class="s" x="450" y="242" text-anchor="middle">基础费率 吃单 0.045%</text>
+      <text class="s" x="450" y="262" text-anchor="middle">挂单 0.015%，可阶梯降低</text>
+      <rect class="n or" x="680" y="190" width="300" height="90" rx="8"/>
+      <text class="t" x="830" y="220" text-anchor="middle">援助基金（0xfefe…fefe）</text>
+      <text class="s" x="830" y="242" text-anchor="middle">L1 执行层自动市价买入 HYPE</text>
+      <text class="s" x="830" y="262" text-anchor="middle">无私钥，2025-12 投票认定为销毁</text>
+      <rect class="n" x="300" y="350" width="300" height="74" rx="8"/>
+      <text class="t" x="450" y="378" text-anchor="middle">验证者 / 质押者</text>
+      <text class="s" x="450" y="400" text-anchor="middle">质押 HYPE 维护共识，年化约 2.2%（来自未来排放）</text>
+      <rect class="n" x="680" y="350" width="300" height="74" rx="8"/>
+      <text class="t" x="830" y="378" text-anchor="middle">HyperEVM DeFi</text>
+      <text class="s" x="830" y="400" text-anchor="middle">借贷、LST、稳定币，直接读写订单簿</text>
+      <path class="a" d="M220,65 L296,65" marker-end="url(#mkA)"/>
+      <path class="a" d="M676,65 L604,65" marker-end="url(#mkA)"/>
+      <path class="a" d="M120,186 L120,150 L340,150 L340,124" marker-end="url(#mkA)"/>
+      <text class="l" x="130" y="144">挂单报价 / 接管被清算仓位</text>
+      <path class="a" d="M450,120 L450,186" marker-end="url(#mkA)"/>
+      <path class="a" d="M550,235 L676,235" marker-end="url(#mkA)"/>
+      <text class="l acc" x="560" y="226">协议份额绝大部分</text>
+      <path class="a d" d="M350,250 L224,250" marker-end="url(#mkA)"/>
+      <text class="l" x="236" y="300">少量份额</text>
+      <path class="a d" d="M550,205 L640,205 L640,150 L760,150 L760,114" marker-end="url(#mkA)"/>
+      <text class="l" x="770" y="138">HIP-3 市场最多 50% 归部署者</text>
+      <path class="a d" d="M830,280 L830,346" marker-end="url(#mkA)"/>
+      <path class="a d" d="M450,346 L450,284" marker-end="url(#mkA)"/>
+    </svg>
+  </div>
+  <p class="small">图：Hyperliquid 的资金与手续费流向。来源：Hyperliquid 官方文档 Fees 页、Hyperliquid Wiki。手续费分配比例在不同时期、不同来源中写作 93/7、97/3、99/1（援助基金 / HLP），按 DefiLlama 2026-10-08 单日数据，HLP 部分只占费用的约 0.6%。</p>
+
+  <h3>2.3 关键机制逐项说明</h3>
+  <table>
+    <tr><th style="width:150px">机制</th><th>怎么运作</th><th>为什么重要</th></tr>
+    <tr><td>全链上订单簿</td><td>每一笔挂单、撤单、成交都写入链状态，任何节点都能重放完整订单簿</td><td>dYdX v4 把短期订单放在验证者内存里，只把成交上链；Hyperliquid 的订单队列本身可验证，大户和机构更信任</td></tr>
+    <tr><td>保证金与杠杆</td><td>全仓 / 逐仓，主流币最高 40 倍；2025-03 巨鲸事件后下调了部分币种杠杆上限</td><td>与中心化交易所习惯一致，迁移成本低</td></tr>
+    <tr><td>预言机与资金费率</td><td>验证者提交币安、OKX、Bybit 等交易所的加权中位价；资金费率每小时结算</td><td>和中心化交易所价格紧密锚定，套利者愿意来</td></tr>
+    <tr class="hl"><td>HLP 金库</td><td>任何人都能存 USDC，金库运行做市和清算策略，收益全部归存款人（无管理费）</td><td>冷启动时由社区资金替代专业做市商，深度从第一天就够用。累计盈利约 $1.39 亿，当前年化约 3.9%</td></tr>
+    <tr><td>自动减仓（ADL）</td><td>极端行情下 HLP 和保险机制不够承接时，按盈利排序强制减掉对手方盈利仓位</td><td>保证系统不穿仓；2025-10-10 全市场暴跌中触发，有争议但系统未出现坏账</td></tr>
+    <tr><td>HIP-1 / HIP-2（现货）</td><td>付费拍卖代币代码即可发行原生现货；HIP-2 为新币自动提供基础流动性</td><td>让 HYPE 本身和生态代币在链上原生交易；配合 Unit 实现 BTC、ETH、SOL 原生现货</td></tr>
+    <tr class="hl"><td>HIP-3（无许可永续）</td><td>2025-10 上线。任何团队质押 50 万 HYPE，即可在 Hyperliquid 上部署自己的永续市场，最多拿走 50% 手续费</td><td>把 Hyperliquid 从“加密永续交易所”变成“任意资产的 24/7 交易层”：白银、原油、美股、SpaceX 预上市。2026 年中一度占全站成交近一半</td></tr>
+    <tr><td>HIP-4（预测 / 结果市场）</td><td>2026-05 上线，每日 BTC/ETH/HYPE/SOL 二元期权；2026-08 底开放无许可部署（同样质押 50 万 HYPE）</td><td>对标 Polymarket、Kalshi，目前规模极小（单日费用约 $600）</td></tr>
+    <tr><td>对齐报价资产（AQA）</td><td>稳定币发行方把储备利息分给协议，即可成为官方报价资产。2026-05 起 Coinbase 担任 USDC 的“财库部署者”、承诺分享 100% 的参考利率，Coinbase 和 Circle 各质押 50 万 HYPE</td><td>链上约 $72 亿稳定币的利息有望成为第二条收入线（具体金额和到账节奏尚未公开，⚠️ 未验证）</td></tr>
+    <tr><td>Builder Codes</td><td>任何前端（钱包、交易机器人）接入 Hyperliquid 下单时可以额外收取一笔费用</td><td>Phantom、MetaMask 等把 Hyperliquid 的流动性嵌进自家产品，相当于免费的分销渠道</td></tr>
+    <tr><td>质押折扣与借贷</td><td>质押 HYPE 可享最多 40% 手续费折扣；2026-09 上线以 HYPE（LTV 65%）、BTC（LTV 50%）抵押借 USDC/USDT</td><td>给 HYPE 增加了“使用需求”，也增加了杠杆反身性（见第九部分）</td></tr>
+  </table>
+
+  <h3>2.4 收入公式</h3>
+  <div class="formula">年回购金额 ≈ 年交易量 × 有效费率（约 4.4 个基点）× 进入援助基金的比例（约 81%）</div>
+  <p class="muted">用近 30 天数据校验：全站永续成交约 $1.9–2.2 万亿 / 30 天（各数据源略有差异），手续费 $9,084 万，对应有效费率约 4.2–4.9 个基点；DefiLlama 记录的协议收入 $7,359 万，占手续费 81%。差额主要是 HIP-3 部署者分成、前端 builder 费用和 HLP 份额。<b>结论：HYPE 的回购能力几乎完全由“全站交易量”这一个变量决定。</b></p>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、dYdX 早就有了，为什么是 Hyperliquid 做成了</h2>
+  <h3>3.1 永续 DEX 的三代演进</h3>
+  <table>
+    <tr><th>代际</th><th>代表</th><th>架构</th><th>优点</th><th>致命短板</th></tr>
+    <tr><td>第一代：混合订单簿</td><td>dYdX v3（2020–2023，StarkEx 二层）</td><td>链下撮合，链上结算</td><td>体验接近中心化交易所，2021 年是最大的永续 DEX</td><td>撮合中心化；代币几乎不捕获价值（手续费归公司）；风投 + 团队份额高，长期解锁</td></tr>
+    <tr><td>第二代：资金池 + 预言机</td><td>GMX（2021–）、Gains、Jupiter Perps</td><td>LP 资金池做所有人的对手方，按预言机价格成交</td><td>零滑点、LP 收益高、实现简单</td><td>LP 要承担交易者盈亏，规模和未平仓量受限；预言机操纵风险；没有真正的价格发现</td></tr>
+    <tr class="hl"><td>第三代：应用链 + 全链上订单簿</td><td>Hyperliquid（2023–）</td><td>自建 L1，订单簿和撮合都是链的原生状态</td><td>高性能 + 完全透明 + 订单簿深度；能承接机构级仓位</td><td>验证者集中度高、链下干预争议（见 9.2）</td></tr>
+    <tr><td>挑战者</td><td>dYdX v4（2023 迁移 Cosmos）</td><td>自建链，但订单簿在验证者内存中，只有成交上链</td><td>去中心化程度更高</td><td>迁移打断用户和流动性；激励结束后交易量萎缩</td></tr>
+    <tr><td>挑战者</td><td>Aster（币安系）、Lighter（零知识证明）、edgeX、Variational</td><td>多为订单簿 + 积分 / 零手续费</td><td>积分空投拉量快，Lighter 散户零手续费</td><td>交易量中刷量和积分驱动占比高，手续费收入远低于成交份额（见 3.4）</td></tr>
+  </table>
+
+  <h3>3.2 dYdX 发生了什么</h3>
+  <div class="grid-32">
+    <div>
+      <p class="muted">dYdX 曾是 2021 年最大的永续 DEX，DYDX 最高约 $27（⚠️ 未逐日核对）。它的问题不在技术，而在三个结构性选择：</p>
+      <ol class="muted">
+        <li><b>代币和生意脱钩</b>：v3 时期手续费归 dYdX Trading 公司，代币持有人拿不到现金流；2023 年 v4 才改为分给质押者。</li>
+        <li><b>风投份额与长期解锁</b>：投资人约 28%、团队约 15%，解锁期间持续形成卖压，代币价格长期下行，社区信心受损。</li>
+        <li><b>迁移成本</b>：2023 年从以太坊二层迁到 Cosmos 自建链，用户要换钱包、换资产，交易奖励退坡后交易量迅速流失。</li>
+      </ol>
+      <p class="muted">结果（DefiLlama）：dYdX 费用 2024 年 $6,870 万，2025 年 $1,620 万，2026 年前 9 个月约 $250 万；DYDX 现价 $0.136，市值约 $1.2 亿，不到 HYPE 的 1%。</p>
+    </div>
+    <div>
+      <h4>近 30 天手续费（百万美元）</h4>
+      <div class="chart" id="ch-perp-fee"></div>
+      <p class="small">来源：DefiLlama，截至 2026-10-08。Aster、Lighter 均为全部产品合计。</p>
+    </div>
+  </div>
+
+  <h3>3.3 Hyperliquid 胜出的七个原因</h3>
+  <table>
+    <tr><th style="width:30px">#</th><th style="width:170px">原因</th><th>具体表现</th></tr>
+    <tr><td>1</td><td>产品体验：做到“中心化交易所水平”</td><td>一次签名后下单无需逐笔确认、无 gas、亚秒级成交；界面和交互照搬主流交易所习惯。2026-09 实测 BTC 盘口 $100 万订单滑点约 0.013%，dYdX 约 0.085%（Cipher Intelligence）</td></tr>
+    <tr><td>2</td><td>流动性飞轮：HLP 代替做市商冷启动</td><td>社区资金做市，第一天就有深度；深度吸引大户，大户又带来成交和手续费，HLP 收益反过来吸引更多存款</td></tr>
+    <tr><td>3</td><td>代币分配：零风投、31% 空投</td><td>团队自筹资金（创始人 Jeff Yan 出身高频交易公司 Hudson River Trading，此前经营做市业务），2024-11 把 3.1 亿枚直接空投给约 9.4 万个地址，另有 38.9% 留作未来社区奖励。没有投资人解锁卖压，社区持有比例极高</td></tr>
+    <tr><td>4</td><td>价值捕获：几乎全部手续费回购</td><td>团队不从手续费拿钱，协议份额自动买入 HYPE。持币人是协议利润的直接受益者，这在 DeFi 里非常罕见</td></tr>
+    <tr><td>5</td><td>上新速度：热门币第一时间上永续</td><td>新币上线、甚至未上线代币（预上市永续）都能最快交易；2026 年进一步扩展到美股、大宗商品、Pre-IPO</td></tr>
+    <tr><td>6</td><td>时机：FTX 之后对中心化交易所的不信任</td><td>2022-11 FTX 破产后，“自托管 + 链上可查”成为刚需；Hyperliquid 2023 年上线，恰好接住了这批需求</td></tr>
+    <tr><td>7</td><td>注意力：全透明的“巨鲸剧场”</td><td>所有仓位链上可见，巨鲸开 $10 亿级杠杆仓位、被爆仓的全过程实时围观，持续带来社交媒体流量（这同时也是被狙击、被操纵的风险来源）</td></tr>
+  </table>
+
+  <h3>3.4 成交份额 ≠ 收入份额：竞争对手的真实体量</h3>
+  <div class="grid2">
+    <div>
+      <p class="muted">2025 年下半年 Aster（币安创始人 CZ 站台）、Lighter、edgeX 用积分和零手续费抢量，Hyperliquid 的成交份额一度被报道跌破 20%。但看手续费，情况完全不同：近 30 天 Hyperliquid 的成交份额约 35%（DefiLlama 全部永续 DEX 口径），手续费却是 Aster 与 Lighter 合计的约 8 倍。</p>
+      <div class="bar100">
+        <span style="width:34.6%;background:var(--c1)">Hyperliquid 34.6%</span>
+        <span style="width:10.9%;background:var(--c7)">Aster 10.9%</span>
+        <span style="width:8.6%;background:var(--c5)">Lighter 8.6%</span>
+        <span style="width:8.1%;background:var(--c4)">Variational</span>
+        <span style="width:6.4%;background:var(--c3)">edgeX</span>
+        <span style="width:31.4%;background:var(--c6)">其他 31.4%</span>
+      </div>
+      <p class="small">图：近 30 天永续 DEX 成交份额（截至 2026-09-27，DefiLlama，经 Cipher Intelligence 汇总）。全部永续 DEX 合计 $6,265 亿。</p>
+    </div>
+    <div class="callout info"><b class="t">为什么收入份额远高于成交份额</b>积分驱动的成交大量是“刷量”（为了拿空投反复对敲），零手续费或负手续费，几乎不产生收入；Hyperliquid 的成交以真实持仓为主，未平仓量（$119 亿）远高于对手（Aster 约 $14 亿）。2025-12 Cantor 的研报也指出，竞争对手的交易量里有大量“循环刷单”。<b>判断护城河时，应该看未平仓量、手续费和盘口深度，而不是名义成交量。</b></div>
+  </div>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、什么撑起了 HYPE 的价格</h2>
+  <h3>4.1 先统一口径：HYPE 市值到底是多少</h3>
+  <table>
+    <tr><th>口径</th><th class="r">流通量</th><th class="r">按 $85.6 计算市值</th><th>说明</th></tr>
+    <tr class="hl"><td>Hyperliquid 官方 API</td><td class="r">3.02 亿枚</td><td class="r">$259 亿</td><td>总量 9.99 亿 − 未来排放 4.11 亿 − 核心贡献者 2.38 亿 − 援助基金 0.48 亿</td></tr>
+    <tr><td>CoinMarketCap</td><td class="r">约 2.54 亿枚</td><td class="r">约 $218 亿</td><td>额外扣除了部分基金会 / 质押相关地址</td></tr>
+    <tr><td>DefiLlama / CoinGecko</td><td class="r">约 2.22 亿枚</td><td class="r">约 $190 亿</td><td>下文横向比较统一用这一口径，确保同业可比</td></tr>
+    <tr><td>完全稀释（扣除已销毁）</td><td class="r">约 9.51 亿枚</td><td class="r">约 $814 亿</td><td>包含团队份额和全部未来排放</td></tr>
+  </table>
+
+  <h3>4.2 横向比较：断档领先的是收入，不是估值倍数</h3>
+  <div class="grid-32">
+    <div>
+      <table>
+        <tr><th>协议</th><th class="r">市值</th><th class="r">近 12 个月收入</th><th class="r">市值 / 收入</th><th class="r">近 30 天年化倍数</th></tr>
+        <tr class="hl"><td>Hyperliquid（HYPE）</td><td class="r">$190 亿</td><td class="r">$7.18 亿</td><td class="r">26.5x</td><td class="r">21x</td></tr>
+        <tr><td>pump.fun（PUMP）</td><td class="r">$26.1 亿</td><td class="r">$3.28 亿</td><td class="r">8.0x</td><td class="r">4.9x</td></tr>
+        <tr><td>Sky（SKY）</td><td class="r">$18.1 亿</td><td class="r">$2.02 亿</td><td class="r">9.0x</td><td class="r">11x</td></tr>
+        <tr><td>Aave（AAVE）</td><td class="r">$26.0 亿</td><td class="r">$9,710 万</td><td class="r">26.8x</td><td class="r">43x</td></tr>
+        <tr><td>Jupiter（JUP）</td><td class="r">$11.9 亿</td><td class="r">$8,290 万</td><td class="r">14.4x</td><td class="r">16x</td></tr>
+        <tr><td>Uniswap（UNI）</td><td class="r">$46.1 亿</td><td class="r">$6,420 万</td><td class="r">71.8x</td><td class="r">32x</td></tr>
+        <tr><td>Lighter（LIT）</td><td class="r">$9.2 亿</td><td class="r">$6,420 万</td><td class="r">14.3x</td><td class="r">16x</td></tr>
+        <tr><td>Lido（LDO）</td><td class="r">$3.5 亿</td><td class="r">$3,550 万</td><td class="r">9.9x</td><td class="r">9x</td></tr>
+        <tr><td>Pendle（PENDLE）</td><td class="r">$3.7 亿</td><td class="r">$1,670 万</td><td class="r">22x</td><td class="r">76x</td></tr>
+        <tr><td>dYdX（DYDX）</td><td class="r">$1.2 亿</td><td class="r">$540 万</td><td class="r">22x</td><td class="r">33x</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama 协议收入（Revenue 口径，2026-10-08）与市值字段（CoinGecko 流通量），按协议家族合计。Aster 未列入：DefiLlama 2025 年曾因疑似刷量下架其永续数据，近 30 天手续费仅 $540 万。Ethena 因收入口径特殊未列入。倍数仅作横向参考。</p>
+    </div>
+    <div>
+      <h4>近 12 个月协议收入（百万美元）</h4>
+      <div class="chart" id="ch-peer-rev"></div>
+      <p class="small">来源：DefiLlama。全加密行业排名：Tether $59.4 亿、Circle $23.8 亿、Hyperliquid 永续 $6.8 亿。</p>
+    </div>
+  </div>
+  <div class="callout good"><b class="t">问题 2 的核心答案</b>HYPE 的市值是第二名 DeFi 代币的 4 倍多，原因是它的收入是第二名的 2.2 倍、Aave 的 7 倍、Uniswap 的 11 倍，并且几乎全部转化为代币回购。在流通市值口径下，它的倍数与 Aave 相当，低于 Uniswap。<b>“贵”主要体现在完全稀释口径</b>：约 $814 亿 ÷ $7.1 亿 ≈ 115 倍，差别来自尚未流通的约 65% 代币（见第七部分）。</div>
+
+  <h3>4.3 四股买盘</h3>
+  <div class="grid4">
+    <div class="box"><b>① 援助基金回购</b><p>近 12 个月 $7.07 亿，日均约 $190 万，没有任何人能暂停。累计持有 4,793 万枚，约占总量 4.8%。2025-12 投票后，HYPE 被正式视同销毁，相当于“回购 + 注销”。</p></div>
+    <div class="box"><b>② 上市公司囤币</b><p>Hyperliquid Strategies（纳斯达克：PURR，前身 Sonnet，Paradigm、Galaxy、Pantera 参投）持有约 3,700 万枚（约 $32 亿）、现金 $2.9 亿，另有约 $14 亿增发额度。2026-09 单月买入 551 万枚、$4.76 亿。</p></div>
+    <div class="box"><b>③ 美国现货 ETF</b><p>21Shares THYP、Bitwise BHYP（2026-05 上市）、Grayscale HYPG，合计资产约 $4.5–5 亿、累计净流入约 $3.4 亿，约占流通市值 2.4%。9 月后流入放缓并出现净流出。</p></div>
+    <div class="box"><b>④ 质押与功能性锁仓</b><p>全网质押约 4.4 亿枚（占总量 44%，解押需 7 天）；每个 HIP-3/HIP-4 部署者需质押 50 万枚；Coinbase 和 Circle 各质押 50 万枚；HYPE 可作为借贷抵押品。</p></div>
+  </div>
+  <p class="small">来源：Hyperliquid 链上 API（援助基金余额、验证者质押，2026-10-09）、Hyperliquid Strategies 10-K 与 TokenPost（2026-10-03）、TokenPost / 24/7 Wall St.（ETF 数据截至 2026-09-28）、cryptoetf.today。</p>
+
+  <div class="callout info"><b class="t">回购的真实力度：稳定托底，但不是定价者</b>日均约 $190 万的回购，只占 HYPE 全球日成交（约 $7–10 亿）的 0.2–0.3%。所以短期价格由交易资金、ETF 和上市公司决定；回购的作用是<b>持续、不受情绪影响的买盘</b>，一年下来能吸收约 1,000–1,300 万枚，约为当前流通量的 4%。它真正的价值在于让 HYPE 可以用“现金流”来估值，从而吸引 ETF、上市公司这类机构买家。</div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、从空投到二十多倍：行情复盘</h2>
+  <h3>5.1 价格走势（月末收盘，对数坐标）</h3>
+  <div class="chart" id="ch-price"></div>
+  <p class="small">图：HYPE 月末收盘价 · 来源：Hyperliquid 官方 API 日 K 线（HYPE/USDC 现货）· 2026-10 为 10-09 价格</p>
+
+  <div class="callout warn"><b class="t">“空投时无人问津”需要修正一下</b>2024-11-29 上线时，HYPE 在链上用户中并不冷门：9.4 万个地址领到空投，首日就从约 $3.8 涨到 $6.25 收盘。它看起来“没人要”，是因为<b>没有风投、没有做市商合约、没有币安和 Coinbase 上币</b>（币安直到 2026-09-24 才上线 HYPE 现货），主流交易所和研究机构都没有为它站台，所以开盘定价极低（完全稀释估值不到 $40 亿，同期 dYdX 约 $11 亿）。按空投 3.1 亿枚、9.4 万个地址计算，平均每个地址约 3,300 枚：上线时价值约 $1.26 万，现在约 $28 万（分布高度不均，中位数远低于平均数，⚠️ 未核实中位数）。</div>
+
+  <h3>5.2 五个阶段</h3>
+  <table>
+    <tr><th style="width:150px">阶段</th><th class="r">价格区间</th><th>主要驱动</th><th>当时的月手续费</th></tr>
+    <tr class="good"><td>① 上线狂飙<br>2024-11 → 2024-12</td><td class="r">$3.8 → $35</td><td>空投接收者几乎不卖；援助基金每天回购；错过空投的资金只能在 Hyperliquid 自己的现货盘口买入，流动性高度集中</td><td>约 $5,200 万（2025-01；DefiLlama 2024-12 数据不完整）</td></tr>
+    <tr class="bad"><td>② 中心化质疑<br>2025-01 → 2025-04</td><td class="r">$35 → $9.3</td><td>2024-12 朝鲜黑客地址交易传闻；2025-03-12 50 倍 ETH 巨鲸主动爆仓让 HLP 亏损约 $400 万；03-26 JELLY 被操纵，验证者紧急下架并按有利价格结算，“链上交易所靠人工干预”引发批评；04 月关税冲击</td><td>$4,100–5,200 万（基本平稳）</td></tr>
+    <tr class="good"><td>③ 收入新高<br>2025-05 → 2025-09</td><td class="r">$9.3 → $59</td><td>手续费连创新高，2025-08 单月 $1.45 亿；成交份额高峰期约 70%；美股上市公司开始宣布囤币（Hyperion DeFi、Sonnet 合并案 $8.88 亿）；USDH 发行权竞标</td><td>$6,300 万 → $1.45 亿</td></tr>
+    <tr class="bad"><td>④ 竞争与解锁<br>2025-10 → 2026-01</td><td class="r">$59 → $20.5</td><td>10-10 全市场约 $190 亿清算，触发 ADL；Aster、Lighter 积分战，成交份额被报道跌破 20%；11-29 团队首次领取 175 万枚，“每月 1,000 万枚解锁”的担忧发酵；12 月单周流出 $4.3 亿</td><td>$1.25 亿 → $6,900 万</td></tr>
+    <tr class="good"><td>⑤ 资产扩张 + 机构化<br>2026-01 → 2026-09</td><td class="r">$20.5 → $98</td><td>12-24 援助基金视同销毁（总量减少约 3,750 万枚）；2026-01 白银突破 $100，HIP-3 白银永续单日成交超 $10 亿，HYPE 一周涨 60%；05 月美国 ETF 上市、Coinbase/Circle 的 AQAv2、HIP-4、SpaceX 等预上市永续，CFTC 批准首个美国永续合约，洲际交易所 CEO 称 Hyperliquid“比纳斯达克还大”；09 月上线借贷、币安上币、Hyperliquid Strategies 单月买入 $4.76 亿</td><td>$5,500 万 – $9,100 万</td></tr>
+  </table>
+
+  <h3>5.3 关键发现：2026 年的翻倍主要是“估值倍数扩张”</h3>
+  <div class="chart" id="ch-fee-price"></div>
+  <p class="small">图：月度手续费（百万美元，左轴）与 HYPE 月末收盘价（美元，右轴）· 来源：DefiLlama、Hyperliquid API</p>
+  <div class="grid2">
+    <table>
+      <tr><th>对比</th><th class="r">2025 年 1–9 月</th><th class="r">2026 年 1–9 月</th><th class="r">变化</th></tr>
+      <tr><td>手续费</td><td class="r">$6.77 亿</td><td class="r">$6.44 亿</td><td class="r">−4.9%</td></tr>
+      <tr><td>协议收入（回购）</td><td class="r">$5.92 亿</td><td class="r">$4.88 亿</td><td class="r">−17.6%</td></tr>
+      <tr class="hl"><td>9 月末 HYPE 价格</td><td class="r">$45.2</td><td class="r">$90.9</td><td class="r">+101%</td></tr>
+      <tr><td>价格 ÷ 当月年化收入（相对倍数）</td><td class="r">2025-08：1.0</td><td class="r">2026-09：3.2</td><td class="r">约 3 倍</td></tr>
+    </table>
+    <div class="callout warn"><b class="t">这意味着什么</b>2025 年那一段上涨，价格和收入同步（2025-04 到 08 月，月收入涨了约 2.7 倍，价格从低点涨了约 5 倍）；2026 年这一段，收入基本持平甚至下滑，价格翻倍。市场买的是<b>故事升级</b>：从“加密永续交易所”变成“全资产 24/7 交易层 + 合规机构可买的现金流资产”。故事可能成真（HIP-3 美股、稳定币利息、美国准入），但现价已经提前把相当一部分未来增长计入了。如果未来 12 个月收入不能明显超过 2025 年高峰（单月 $1.0–1.45 亿），估值倍数有回落压力。</div>
+  </div>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、经营数据</h2>
+  <h3>6.1 年度关键指标</h3>
+  <table>
+    <tr><th>指标</th><th class="r">2025 全年</th><th class="r">2026 年 1–9 月</th><th class="r">近 12 个月</th><th class="r">近 30 天年化</th><th>说明</th></tr>
+    <tr><td>手续费</td><td class="r">$9.72 亿</td><td class="r">$6.44 亿</td><td class="r">$9.28 亿</td><td class="r">$11.1 亿</td><td>2025-08 单月 $1.45 亿为历史最高</td></tr>
+    <tr><td>协议收入（进入援助基金）</td><td class="r">$8.18 亿</td><td class="r">$4.88 亿</td><td class="r">$7.07 亿</td><td class="r">$8.95 亿</td><td>DefiLlama 口径收入 = 持币者收入</td></tr>
+    <tr><td>收入 / 手续费</td><td class="r">84%</td><td class="r">76%</td><td class="r">76%</td><td class="r">81%</td><td>HIP-3 部署者分成上线后比例下降</td></tr>
+    <tr><td>跨链桥存款（TVL）期末</td><td class="r">$41.5 亿</td><td class="r">$74.1 亿</td><td class="r">—</td><td class="r">$70.6 亿</td><td>峰值 2026-09-23 $76.3 亿</td></tr>
+    <tr><td>永续未平仓量</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">$119 亿</td><td>BTC $32 亿、ETH $28 亿、HYPE $17 亿</td></tr>
+  </table>
+  <p class="small">来源：DefiLlama（Hyperliquid 费用、收入，数据始于 2024-12 中旬）；Hyperliquid API（未平仓量，2026-10-09）。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>6.2 月度手续费与回购</h3>
+      <div class="chart" id="ch-rev-m"></div>
+      <p class="small">图：月度手续费 vs 协议收入（百万美元）· 来源：DefiLlama</p>
+    </div>
+    <div>
+      <h3>6.3 存款规模（跨链桥 TVL）</h3>
+      <div class="chart" id="ch-tvl"></div>
+      <p class="small">图：Hyperliquid 存款规模（十亿美元，月末）· 来源：DefiLlama。链上稳定币余额约 $71.9 亿。</p>
+    </div>
+  </div>
+
+  <h3>6.4 收入结构：HIP-3 改变了什么</h3>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>来源（2026-10-08 单日）</th><th class="r">手续费</th><th class="r">占比</th></tr>
+        <tr class="hl"><td>永续（含 HIP-3）</td><td class="r">$302 万</td><td class="r">96.9%</td></tr>
+        <tr><td>现货订单簿</td><td class="r">$7.7 万</td><td class="r">2.5%</td></tr>
+        <tr><td>HLP</td><td class="r">$1.9 万</td><td class="r">0.6%</td></tr>
+        <tr><td>结果市场（HIP-4）</td><td class="r">$578</td><td class="r">约 0%</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama 费用分项。</p>
+    </div>
+    <div>
+      <ul class="muted">
+        <li>HIP-3 在全站永续成交中的占比：2026 年初约 2%，2026-07 接近 50%，2026-08 Trade.xyz 单家约占 55%（Talos），2026-09 回落到约 24%（0xArchive，工作日约 26%、周末约 12%）。</li>
+        <li>HIP-3 内部高度集中：Trade.xyz 占 HIP-3 成交 95% 以上；Felix、Ventuals、Dreamcash 三家部署者在 2026-06/07 关闭（HRC）。</li>
+        <li>2026-09 Trade.xyz 成交前十：WTI 原油、纳指 100 代理、标普 500、SK 海力士、布伦特原油、闪迪、白银、美光、SpaceX、黄金。<b>非加密资产已经是 Hyperliquid 的第二增长引擎</b>。</li>
+        <li>代价：HIP-3 手续费要和部署者五五分成，同样的成交量带来的回购少于原生市场，这也是“收入 / 手续费”比例下降的原因。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、代币与解锁</h2>
+  <h3>7.1 初始分配与当前状态</h3>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>类别</th><th class="r">比例</th><th class="r">数量</th><th>规则</th></tr>
+        <tr><td>创世分配（空投）</td><td class="r">31.0%</td><td class="r">3.10 亿</td><td>2024-11-29 全部发放，约 9.4 万个地址</td></tr>
+        <tr class="hl"><td>未来排放与社区奖励</td><td class="r">38.888%</td><td class="r">3.89 亿</td><td>质押奖励从这里出；<b>其余用途和时间表未公布</b></td></tr>
+        <tr class="hl"><td>核心贡献者（团队）</td><td class="r">23.8%</td><td class="r">2.38 亿</td><td>1 年锁定期后归属，官方称“大部分在 2027–2028 年完成，部分延续到 2028 年以后”</td></tr>
+        <tr><td>Hyper 基金会预算</td><td class="r">6.0%</td><td class="r">0.60 亿</td><td>基金会运营、验证者委托</td></tr>
+        <tr><td>社区资助</td><td class="r">0.3%</td><td class="r">0.03 亿</td><td>生态资助</td></tr>
+        <tr><td>HIP-2 流动性</td><td class="r">0.012%</td><td class="r">12 万</td><td>为现货提供初始流动性</td></tr>
+      </table>
+      <p class="small">来源：Hyperliquid 官方公告、Tokenomist。<b>没有任何风投 / 私募份额。</b></p>
+    </div>
+    <div>
+      <h4>当前供应结构（链上 API，2026-10-09）</h4>
+      <div class="bar100">
+        <span style="width:30.2%;background:var(--c1)">流通 30.2%</span>
+        <span style="width:23.8%;background:var(--c7)">团队地址 23.8%</span>
+        <span style="width:4.8%;background:var(--c3)">销毁</span>
+        <span style="width:41.2%;background:var(--c6)">未来排放 41.1%</span>
+      </div>
+      <p class="small">流通 3.02 亿 · 非流通团队相关地址 2.379 亿（与核心贡献者份额吻合，⚠️ 按数量推断）· 援助基金 4,793 万（视同销毁）· 未来排放 4.109 亿（API 字段 <code>futureEmissions</code>）</p>
+      <h4>质押分布</h4>
+      <div class="bar100">
+        <span style="width:47.2%;background:var(--c7)">Hyper 基金会 47.2%</span>
+        <span style="width:8.6%;background:var(--c5)">HSI×Unit</span>
+        <span style="width:44.2%;background:var(--c1)">其他 29 个验证者 44.2%</span>
+      </div>
+      <p class="small">全网质押 4.40 亿枚。基金会运营的 5 个验证者合计 2.08 亿枚；前 10 大验证者占 76%。质押年化约 2.2%。</p>
+    </div>
+  </div>
+
+  <h3>7.2 团队解锁：累计只领了 4%，但领出来基本都卖了</h3>
+  <div class="grid-32">
+    <div>
+      <div class="chart" id="ch-team"></div>
+      <p class="small">图：团队每月领取量 vs 线性上限（百万枚）· 来源：MLM / Qwantify 逐月统计（2025-12 至 2026-07，按分配月份计）、Tokenomist（2026-08，⚠️ 未逐笔核对）、BeInCrypto / Lookonchain（2026-10）· 2026-09 份额未单独发放，10 月一次性发放 375 万枚</p>
+    </div>
+    <div>
+      <ul class="muted">
+        <li><b>释放规则</b>：上线后锁定 1 年（到 2025-11-29），之后逐步归属；官方只说“大部分在 2027–2028 年完成，部分延续到 2028 年以后”，<b>没有公布逐月时间表</b>。</li>
+        <li><b>理论上限</b>：按“2.38 亿枚、24 个月线性归属”计算，每月约 992 万枚，按现价约 $8.5 亿，是月回购的约 11 倍。按这个假设，到 2026-10 已归属约 1.09 亿枚，而实际只领了约 920 万枚，<b>已归属未领取的约 1 亿枚随时可以领出</b>（⚠️ 线性假设，无法验证）。</li>
+        <li><b>实际领取</b>：首次 175 万枚（2025-11-29），2026-01 120 万枚，2–7 月降到 14–53 万枚，8 月约 43 万枚；<b>10 月一次 375 万枚（约 $3.3 亿）</b>，是迄今最大的一次。累计约 920 万枚，占团队份额 3.9%；近半年（2026-05 至 10）合计约 560 万枚，平均每月约 93 万枚。</li>
+        <li><b>领出后的去向</b>：2025-11 首批约 120 万枚重新质押、约 61 万枚转给做市商 Flowdesk；2026-07-08 转出 45.2 万枚、2026-08-08 解押 43.3 万枚，都经 Flowdesk 及 OKX / Bybit / Gate 卖出（EmberCN、Lookonchain）；2026-10 的 375 万枚由联合创始人宣布通过场外交易整笔卖给一家未披露的机构，之后其中 125 万枚回到质押，买方价格和锁定期均未公开。<b>结论：近几个月团队领取后基本全部卖出，只是走做市商或场外交易，避免直接砸盘。</b></li>
+        <li><b>关键不确定性</b>：领取量完全由团队自主决定，没有链上强制约束；10 月说明节奏可以随时放大。剩余约 2.29 亿枚按现价约 $196 亿，相当于当前流通市值的 76%。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>7.3 每月供需账（按现价 $85.6）</h3>
+  <table>
+    <tr><th>项目</th><th class="r">基准情景（按近期实际）</th><th class="r">上限情景（团队按上限领取）</th><th>说明</th></tr>
+    <tr><td>援助基金回购</td><td class="r">−86 万枚（$7,360 万）</td><td class="r">−86 万枚</td><td>近 30 天协议收入</td></tr>
+    <tr><td>团队领取</td><td class="r">+93 万枚</td><td class="r">+992 万枚</td><td>近半年（2026-05 至 10）平均值，含 10 月场外出售的 375 万枚；近几个月领出后基本全部卖出</td></tr>
+    <tr><td>质押奖励</td><td class="r">+80 万枚</td><td class="r">+80 万枚</td><td>4.4 亿 × 2.2% ÷ 12，大部分会复投</td></tr>
+    <tr class="hl"><td>每月净新增供给</td><td class="r">+87 万枚（约 $7,400 万）</td><td class="r">+986 万枚（约 $8.4 亿）</td><td>基准情景下，回购只够抵消团队领取，质押奖励部分没有被覆盖</td></tr>
+    <tr><td>对比：外部买盘</td><td colspan="2" class="r">Hyperliquid Strategies 2026-09 单月 $4.76 亿（剩余可用资金约 $17 亿）；ETF 自 2026-05 累计 $3.4 亿</td><td>外部买盘有限且波动大</td></tr>
+  </table>
+  <div class="callout warn"><b class="t">问题 4 的核心答案（解锁部分）</b>按 10 月之前的节奏（每月 33–53 万枚），回购足以对冲团队卖出；但 10 月一次 375 万枚之后，近半年平均每月约 93 万枚，<b>回购已经只够抵消团队领取</b>，价格要靠 Hyperliquid Strategies、ETF 等外部买盘来托。场外交易虽然避免了直接砸盘，但接盘机构没有公开锁定期，这部分筹码以后仍可能流入交易所。更大的风险是“节奏继续放大”：按线性假设已归属未领取的约 1 亿枚随时可以领出；一旦团队在 2027–2028 年按接近上限的速度领取并出售，每月 $8 亿量级的供给，需要回购的 10 倍以上的外部买盘来消化，这在任何一种牛市假设下都很难持续。另外 4.1 亿枚未来排放如果用于第二季空投，也会集中释放。两者都没有链上约束，只能靠团队信誉。建议每月 6 日核对团队领取量和去向（第九部分跟踪表）。</div>
+
+  <!-- ============ 八 ============ -->
+  <h2 id="s8">八、估值与供需模拟器</h2>
+  <p class="muted">把第二部分的收入公式和第七部分的供需账放在一起：拖动滑块调整交易量、费率、估值倍数、计入的流通量和团队领取节奏，可以看到对应的年回购、隐含价格和每月净供给。默认值按 2026-10-09 实际数据校准（年化交易量约 $2.5 万亿、有效费率 4.4 个基点、收入占比 81%，推算年收入约 $8.9 亿，与近 30 天年化 $8.95 亿一致）。团队每月领取默认取近半年平均值约 93 万枚（含 10 月场外出售的 375 万枚），卖出比例取 80%（7、8 月领取后全部卖出，10 月场外接盘后约三分之一回到质押）。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" id="simstats" style="grid-template-columns: repeat(3, 1fr);"></div>
+      <table id="simtable"></table>
+      <h4>隐含价格随年收入变化（按当前选定的流通量）</h4>
+      <div class="chart" id="ch-sim"></div>
+    </div>
+  </div>
+  <p class="small">简化模型：年收入 = 年交易量 × 有效费率 × 收入占比 + 稳定币利息分成；隐含价格 = 年收入 × 估值倍数 ÷ 计入流通量；每月净供给 = 团队领取 × 卖出比例 + 质押奖励 × 卖出比例 − 月回购 − 外部净买入（换算成枚数）。未考虑回购对价格的反身性、未来排放的一次性释放、HIP-3 分成比例变化，以及熊市中交易量与价格的同步下跌。</p>
+
+  <h3>8.1 情景表（隐含价格，美元）</h3>
+  <table>
+    <tr><th>情景</th><th class="r">年收入</th><th class="r">20x · 现流通 3.02 亿</th><th class="r">30x · 现流通 3.02 亿</th><th class="r">30x · 2028E 流通 5.4 亿</th><th class="r">30x · 完全稀释 9.51 亿</th></tr>
+    <tr class="bad"><td>熊市：交易量腰斩再打六折</td><td class="r">$3.5 亿</td><td class="r">$23</td><td class="r">$35</td><td class="r">$19</td><td class="r">$11</td></tr>
+    <tr class="hl"><td>维持现状（近 30 天年化）</td><td class="r">$8.95 亿</td><td class="r">$59</td><td class="r">$89</td><td class="r">$50</td><td class="r">$28</td></tr>
+    <tr class="good"><td>增长：HIP-3 + 稳定币利息 + 美国准入</td><td class="r">$15 亿</td><td class="r">$99</td><td class="r">$149</td><td class="r">$83</td><td class="r">$47</td></tr>
+    <tr class="good"><td>超级周期：成为全球主要衍生品场所之一</td><td class="r">$30 亿</td><td class="r">$199</td><td class="r">$298</td><td class="r">$167</td><td class="r">$95</td></tr>
+  </table>
+  <p class="small">2028E 流通 5.4 亿 = 现流通 3.02 亿 + 团队份额 2.38 亿 + 两年质押奖励约 0.2 亿 − 两年回购约 0.25 亿（不含未来排放的其他用途）。<b>读法：现价 $85.6 ≈ “收入维持现状、按现流通量给 30 倍”，或者 “收入增长到 $15 亿、团队全部释放后仍给 30 倍”。</b>换句话说，现价既要求收入增长，也要求解锁被平稳消化。倍数仅作对比用，不代表合理估值。</p>
+
+  <!-- ============ 九 ============ -->
+  <h2 id="s9">九、前景判断与跟踪</h2>
+  <h3>9.1 三个层面的判断</h3>
+  <div class="grid3">
+    <div class="card good"><div class="hd">作为交易所：护城河真实且在加深</div><div class="bd">未平仓量、盘口深度、手续费都断档领先，Aster、Lighter 靠积分抢到的是成交量，不是收入。HIP-3 让它从“加密永续”扩展到美股、大宗商品和预上市公司，HIP-4 切入预测市场，AQAv2 拿到了 Coinbase/Circle 的背书。团队产品迭代速度在行业里罕见。</div></div>
+    <div class="card warn"><div class="hd">作为生意：强周期，2026 年收入并未增长</div><div class="bd">收入 ≈ 交易量 × 费率，加密交易量是高度顺周期的。2026 年前 9 个月收入同比 −18%，HIP-3 的增长部分被五五分成稀释。Hyperliquid 本质上是“加密市场活跃度的杠杆”：熊市中收入完全可能回到 2025 年初的每月 $4,000 万水平。</div></div>
+    <div class="card bad"><div class="hd">作为代币：机制顶级，估值已计入乐观预期</div><div class="bd">价值捕获机制在 DeFi 里是最好的（自动回购、视同销毁、零风投）。但现价对应流通市值约 29 倍、完全稀释约 91 倍（按近 30 天年化收入），并且 2026 年的上涨主要来自倍数扩张。最大的变量是团队的 2.3 亿枚和 4.1 亿枚未来排放。</div></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h4>看多逻辑</h4>
+      <ul class="muted">
+        <li><b>全资产交易层</b>：美股、大宗商品 24/7 永续是传统市场没有的产品，周末和盘后的价格发现需求真实存在（例如地缘事件中的原油）；</li>
+        <li><b>稳定币利息</b>：链上约 $72 亿稳定币，如果 AQAv2 的利息分成全部转为回购，按 3–4% 利率估算每年可增加 $2–3 亿收入（⚠️ 利率和到账机制未验证）；</li>
+        <li><b>美国准入</b>：CFTC 2026-05 批准首个美国永续合约，若 Hyperliquid 或其生态找到合规接入路径，美国用户是最大的增量；</li>
+        <li><b>机构化渠道</b>：ETF、上市公司让传统资金能直接买 HYPE；币安上币后流动性进一步提升；</li>
+        <li><b>团队相对克制</b>：累计领取量只有份额的约 4%，卖出走做市商和场外交易而不是直接砸盘；治理上也主动用投票把援助基金认定为销毁。但 10 月一次 375 万枚说明这种克制没有约束力。</li>
+      </ul>
+    </div>
+    <div>
+      <h4>看空逻辑</h4>
+      <ul class="muted">
+        <li><b>估值已经提前计入</b>：收入同比下滑，价格翻倍，倍数约 3 倍扩张；若收入不能回到 2025 年高峰，存在杀估值风险；</li>
+        <li><b>解锁节奏不受约束</b>：团队份额和未来排放合计约 6.4 亿枚，没有公开的强制时间表；团队领出后基本全部卖出，2026-10 一次场外出售 375 万枚，近半年平均每月领取量已与回购持平；</li>
+        <li><b>监管与在岸竞争</b>：美国合规永续（Kalshi、Coinbase、CME 24/7）可能分流机构和美国用户；Hyperliquid 本身仍处于离岸、前端屏蔽美国用户的状态；</li>
+        <li><b>中心化与尾部风险</b>：基金会占质押 47%，JELLY 式的人工干预可能再现；HLP、ADL 在极端行情中的表现存在争议；2025-11 POPCAT 被操纵导致 HLP 亏损约 $490 万（⚠️ 金额未逐笔核对）；</li>
+        <li><b>反身性</b>：HYPE 可以抵押借款（LTV 65%）、上市公司用增发买币、ETF 资金追涨，下跌时这些都可能反向放大；</li>
+        <li><b>HIP-3 集中度</b>：增长高度依赖 Trade.xyz 一家，且需要与部署者分成。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout good"><b class="t">一句话判断</b>Hyperliquid 是这一轮周期里最成功的 DeFi 产品，也是唯一一个能用“现金流”给代币定价、并因此吸引到 ETF 和上市公司的 DeFi 协议。HYPE 的价格不是泡沫，有约 $9 亿年收入和自动回购托底；但它也已经不便宜，现价要求“收入从 $9 亿增长到 $15 亿以上”和“团队平稳释放 2.3 亿枚”同时成立。合理的提问不是“还能不能再涨二十倍”，而是：<b>你是否相信未来两年 Hyperliquid 的收入能再翻一倍，同时团队继续保持克制？</b>如果相信，现价仍有空间；如果只相信其中一个，现价大致已经反映；如果遇到加密熊市，参考 2025 年初的经验，回撤 50–70% 都在历史范围内。</div>
+
+  <h3>9.2 后续跟踪指标</h3>
+  <table>
+    <tr><th>指标 / 事件</th><th>为什么重要</th><th>频率</th></tr>
+    <tr class="hl"><td>月度协议收入（DefiLlama）</td><td>估值的分母。能否回到并超过每月 $1 亿（2025-08 高峰 $1.14 亿）</td><td>每月</td></tr>
+    <tr class="hl"><td>每月 6 日团队领取量</td><td>解锁风险的唯一直接指标；关注是否再出现 10 月那样的数百万枚级发放，以及领出后是卖出（转 Flowdesk / 交易所 / 场外交易）还是重新质押；10 月场外接盘机构的地址（0x8757…）是否转入交易所</td><td>每月</td></tr>
+    <tr><td>援助基金余额（0xfefe…fefe）</td><td>回购是否按节奏进行；当前 4,793 万枚</td><td>每周</td></tr>
+    <tr><td>未平仓量与手续费份额 vs Aster / Lighter</td><td>护城河是否被侵蚀；看未平仓量和手续费，不看名义成交</td><td>每月</td></tr>
+    <tr><td>HIP-3 成交占比、Trade.xyz 集中度</td><td>第二增长曲线的健康度；部署者是否多样化</td><td>每月</td></tr>
+    <tr><td>AQAv2 利息分成到账</td><td>稳定币利息能否成为可验证的第二收入来源</td><td>每季度</td></tr>
+    <tr><td>Hyperliquid Strategies 持仓与市净值溢价</td><td>最大外部买家；若股价跌破持币净值，可能转为卖方或回购股票</td><td>每周</td></tr>
+    <tr><td>ETF 净流入</td><td>机构需求温度计</td><td>每周</td></tr>
+    <tr><td>未来排放（4.1 亿枚）的任何用途公告</td><td>第二季空投或激励计划会带来集中供给</td><td>事件驱动</td></tr>
+    <tr><td>美国监管进展（CFTC、在岸永续）</td><td>决定是增量市场还是分流竞争</td><td>事件驱动</td></tr>
+  </table>
+
+  <h3>9.3 大事记</h3>
+  <table>
+    <tr><th style="width:130px">时间</th><th>事件</th></tr>
+    <tr><td>2022</td><td>Jeff Yan、iliensinc 等创立 Hyperliquid Labs，团队自筹资金，不接受风投</td></tr>
+    <tr><td>2023</td><td>永续交易所上线（先封闭测试后公开）；HLP 金库上线；2023-11 启动积分计划</td></tr>
+    <tr><td>2024 上半年</td><td>自建 L1 与原生现货（HIP-1 / HIP-2）上线</td></tr>
+    <tr class="good"><td>2024-11-29</td><td>HYPE 上线，31% 空投给约 9.4 万个地址；开盘约 $3.8</td></tr>
+    <tr><td>2024-12</td><td>三周内涨到约 $35；朝鲜黑客地址交易传闻引发短暂恐慌</td></tr>
+    <tr><td>2025-02</td><td>HyperEVM 上线</td></tr>
+    <tr class="bad"><td>2025-03</td><td>12 日 50 倍 ETH 巨鲸事件，HLP 亏损约 $400 万；26 日 JELLY 被操纵，验证者下架并结算，引发中心化批评</td></tr>
+    <tr class="bad"><td>2025-04</td><td>关税冲击，HYPE 跌至约 $9.3（上线后最低回撤点）</td></tr>
+    <tr class="good"><td>2025-08</td><td>单月手续费 $1.45 亿，历史最高</td></tr>
+    <tr><td>2025-09</td><td>USDH 发行权由 Native Markets 竞得；Aster 在 CZ 站台下崛起；18 日 HYPE 创当时新高约 $59</td></tr>
+    <tr class="bad"><td>2025-10-10</td><td>全市场约 $190 亿清算，Hyperliquid 触发自动减仓；同月 HIP-3 上线</td></tr>
+    <tr class="bad"><td>2025-11 / 12</td><td>11-29 团队首次领取 175 万枚；积分战下成交份额被报道跌破 20%；12 月 Hyperliquid Strategies（Sonnet 合并）完成；12-24 验证者 85% 赞成将援助基金 HYPE 认定为销毁</td></tr>
+    <tr class="good"><td>2026-01 / 02</td><td>白银、黄金暴涨，HIP-3 未平仓量从 $2.6 亿涨到超 $9 亿，HYPE 一周涨 60%；02-05 HIP-3 单日成交 $52 亿</td></tr>
+    <tr><td>2026-03</td><td>原油等大宗商品接力，HIP-3 未平仓量 $17.4 亿</td></tr>
+    <tr class="good"><td>2026-05</td><td>01 日 Trade.xyz 上线预上市永续；02 日 HIP-4 上线；12–15 日 21Shares、Bitwise 现货 ETF 上市；14 日 AQAv2（Coinbase / Circle）；21 日新高 $62；29 日 CFTC 批准首个美国永续合约</td></tr>
+    <tr><td>2026-06 / 07</td><td>Grayscale HYPG 单日流入 $1.13 亿；三家 HIP-3 部署者关闭；HIP-3 一度接近全站成交 50%</td></tr>
+    <tr><td>2026-08</td><td>HIP-4 开放无许可部署；HYPE 月末 $84</td></tr>
+    <tr class="hl"><td>2026-09</td><td>18 日上线 HYPE / BTC 抵押借款；23 日历史最高 $97.99；24 日币安上线 HYPE 现货；Hyperliquid Strategies 单月买入 551 万枚</td></tr>
+    <tr class="bad"><td>2026-10</td><td>团队 10 月份额 375 万枚（约 $3.3 亿）07 日完成解押，联合创始人称通过场外交易整笔卖给一家机构，之后 125 万枚回到质押；09 日 HYPE 约 $85.6，较高点回撤约 13%</td></tr>
+  </table>
+
+  <div class="callout warn"><b class="t">数据分歧说明</b>① 流通量有三种口径（3.02 亿 / 2.54 亿 / 2.22 亿），导致市值在 $190–259 亿之间，本报告横向比较统一使用 DefiLlama/CoinGecko 口径，其余处使用官方 API 口径。② 手续费分配比例在官方 Wiki（93/7）、媒体报道（97/3、99/1）之间不一致，本报告以 DefiLlama 的“收入”字段为准。③ 2025 年末“成交份额跌破 20%”来自 BeInCrypto 引用的 DefiLlama 数据，包含大量积分驱动成交，2026-08 CryptoBriefing 报道前八大永续 DEX 中 Hyperliquid 占 58%，统计口径差异很大。④ 团队归属的完整时间表未公开，“每月 992 万枚”是第三方按线性假设推算的上限。⑤ 团队逐月领取量的月份归属在不同来源中相差一个月：MLM / Qwantify 按分配月份计（例如“6 月 45.2 万枚”），链上卖出发生在次月 6–8 日（2026-07-08 转出 45.2 万枚）；本报告图表采用 MLM 的分配月份。</div>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://hyperliquid.xyz/">Hyperliquid 官网</a> · <a href="https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees">官方文档：Fees</a> · <a href="https://hyperliquid-co.gitbook.io/wiki/architecture/hypercore/vault">Hyperliquid Wiki：Vault</a> · Hyperliquid 链上 API（<code>tokenDetails</code>、<code>candleSnapshot</code>、<code>validatorSummaries</code>、<code>spotClearinghouseState</code>、<code>vaultDetails</code>、<code>metaAndAssetCtxs</code>，2026-10-09 拉取）</li>
+    <li><a href="https://defillama.com/protocol/hyperliquid">DefiLlama Hyperliquid</a>（费用、收入、TVL、同业收入与市值）· <a href="https://defillama.com/protocol/dydx">DefiLlama dYdX</a></li>
+    <li>行情与事件：<a href="https://www.forbes.com/sites/digital-assets/2026/05/23/why-hyperliquids-hype-is-rising-and-why-the-answer-is-not-the-etf/">Forbes：Why HYPE Is Rising</a> · <a href="https://crypto.news/the-real-hyperliquid-story-isnt-the-etf/">crypto.news：AQAv2</a> · <a href="https://cryptoslate.com/hyperliquid-hype-rally-etf-cftc-perps/">CryptoSlate：ETF 与 CFTC</a> · <a href="https://www.cryptotimes.io/2026/10/08/hyperliquid-hype-price-holds-near-87-after-pullback-from-98-peak/">CryptoTimes：回撤与币安上币</a> · <a href="https://crypto.news/hyperliquid-strategies-buys-45-8m-hype-while-whale-selling-concerns-remain/">crypto.news：HSI 增持</a></li>
+    <li>代币与解锁：<a href="https://tokenomist.ai/research/hype-tokenomics-330k-or-9-9m-hype-unlocks">Tokenomist：330K or 9.9M</a> · <a href="https://www.theblock.co/news/defi/2025-12-29-hype-tokens-unstaked-for-hyperliquid-labs-first-allocation-383880">The Block：团队首批分配</a> · <a href="https://cointelegraph.com/news/hyperliquid-validators-vote-assistance-fund-supply">Cointelegraph：援助基金投票</a> · <a href="https://crypto.news/hyper-foundation-confirms-hype-burn-as-validators-back-assistance-fund-vote/">crypto.news：销毁确认</a> · <a href="https://bbx.com/article/546993">MLM 团队逐月分配统计</a> · <a href="https://www.odaily.news/en/newsflash/498645">Odaily：2026-07 团队卖出</a> · <a href="https://lookonchain.com/feeds/67455">Lookonchain：2026-08 团队卖出</a> · <a href="https://beincrypto.com/hyperliquid-token-unlock-320-million-price-impact/">BeInCrypto：10 月 375 万枚场外交易</a> · <a href="https://thechainobserver.com/hyperliquid-moves-330m-hype-allocation/">The Chain Observer：场外交易后续去向</a></li>
+    <li>HIP-3 / HIP-4 / AQA：<a href="https://www.theblock.co/news/defi/2026-07-13-hyperliquid-hip-3-markets-surge-50-perp-volume-onchain-stock-trading-grows-408064">The Block：HIP-3 近 50%</a> · <a href="https://hyperliquidresearch.xyz/reporting/tradexyz-2026-q2">HRC：Trade[xyz] Q2</a> · <a href="https://0xarchive.io/resources/market-data-guides/what-is-tradexyz">0xArchive：TradeXYZ</a> · <a href="https://www.talos.com/insights/trade-xyzs-role-in-hyperliquid">Talos</a> · <a href="https://www.coinbase.com/en-gb/blog/coinbase-and-hyperliquid-aligning-markets-on-hyperliquid-to-usdc">Coinbase 博客</a> · <a href="https://www.circle.com/blog/circle-expands-support-for-usdc-on-hyperliquid">Circle 博客</a></li>
+    <li>竞争：<a href="https://cipher-intelligence.io/blog/perp-dex-ranking/">Cipher Intelligence：永续 DEX 排名</a> · <a href="https://cipher-intelligence.io/blog/hyperliquid-vs-dydx-perpetuals/">Hyperliquid vs dYdX 实测</a> · <a href="https://cryptoslate.com/hyperliquid-is-erasing-1-billion-in-token-supply-but-the-market-is-still-punishing-the-wrong-metric/">CryptoSlate：Cantor 研报</a> · <a href="https://www.theblock.co/news/markets/2025-12-19-weekly-hyperliquid-outflows-430m-lighter-aster-tighten-perp-dex-competition-dune-383314">The Block：2025-12 资金流出</a> · <a href="https://blockworks.com/news/hyperliquid-hype-airdrop">Blockworks：空投</a></li>
+    <li>机构：<a href="https://www.stocktitan.net/sec-filings/PURR/10-k-hyperliquid-strategies-inc-files-annual-report-1c87e1076d1b.html">Hyperliquid Strategies 10-K</a> · <a href="https://www.tokenpost.com/news/business/26572">TokenPost：HSI 持仓</a> · <a href="https://www.tokenpost.com/news/investing/24696">TokenPost：ETF 周度流入</a> · <a href="https://247wallst.com/investing/cryptocurrency/2026/09/26/what-changed-for-hyperliquid-etfs-in-september/">24/7 Wall St.：9 月 ETF</a></li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。不同来源对“流通量”“费用”“收入”“成交量”的口径存在差异，已在文中标注；情景测算和模拟器为简化估算。加密资产存在本金全部损失的风险。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = opt.width || 640, H = opt.height || 260, L = 52, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data).filter((v) => v !== null);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    let y;
+    if (opt.log) {
+      const lo = Math.floor(Math.log10(Math.min(...all))), hi = Math.ceil(Math.log10(Math.max(...all)));
+      y = (v) => T + ((hi - Math.log10(v)) * (H - T - B)) / (hi - lo);
+      for (let e = lo; e <= hi; e++) {
+        [1, 2, 5].forEach((m) => {
+          const v = m * Math.pow(10, e);
+          if (Math.log10(v) > hi + 1e-9) return;
+          el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": m === 1 ? 0.9 : 0.4 }, svg);
+          el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, (opt.prefix || "") + (v < 1 ? v.toFixed(Math.max(0, -e)) : v) + (opt.suffix || ""));
+        });
+      }
+    } else {
+      const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+      y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, (opt.prefix || "") + fmt(v) + (opt.suffix || ""));
+      }
+    }
+    const every = Math.ceil(cats.length / (opt.ticks || 12));
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    (opt.marks || []).forEach((m) => {
+      el("line", { x1: x(m.i), x2: x(m.i), y1: T, y2: H - B, stroke: css("--orange"), "stroke-dasharray": "4 3" }, svg);
+      el("text", { x: x(m.i) + (m.left ? -4 : 4), y: T + 10 + (m.dy || 0), "text-anchor": m.left ? "end" : "start" }, svg, m.label);
+    });
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      let seg = [];
+      const flush = () => { if (seg.length > 1) el("polyline", { points: seg.join(" "), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": s.dash ? "5 4" : "" }, svg); seg = []; };
+      s.data.forEach((v, i) => { if (v === null) flush(); else seg.push(`${x(i)},${y(v)}`); });
+      flush();
+      s.data.forEach((v, i) => {
+        if (v === null) return;
+        const c = el("circle", { cx: x(i), cy: y(v), r: cats.length > 24 ? 2 : 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${(opt.prefix || "") + fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const horiz = !!opt.horizontal;
+    const n = cats.length, m = series.length;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = opt.width || 640, L = horiz ? (opt.labelWidth || 150) : 48, R = horiz ? 60 : 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = Math.min(40, (band * 0.75) / m);
+      const every = Math.ceil(n / (opt.ticks || 12));
+      cats.forEach((c, i) => {
+        if (i % every === 0) el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i];
+          const x0 = L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const col = m === 1 ? (opt.highlight !== undefined && opt.highlight.includes(i) ? css("--orange") : color(0, s.tone)) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: Math.min(y(v), y(0)), width: bw - 2, height: Math.abs(y(v) - y(0)), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          if (!opt.noLabels) el("text", { x: x0 + bw / 2 - 1, y: y(v) - 4, "text-anchor": "middle", style: m > 1 ? "font-size:9px" : "" }, svg, fmt(v));
+        });
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = opt.highlight !== undefined ? (opt.highlight.includes(i) ? css("--orange") : css("--c1")) : color(si, s.tone);
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.abs(x(v) - x(0)), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  /* 柱线组合图：左轴柱、右轴线 */
+  function comboChart(id, cats, bar, line, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = opt.width || 1000, H = opt.height || 280, L = 48, R = 52, T = 12, B = 32;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const a = niceRange(0, Math.max(...bar.data)), b = niceRange(0, Math.max(...line.data));
+    const ticks = Math.max(Math.round((a.hi - a.lo) / a.step), 1);
+    const bStep = b.hi / ticks;
+    const ya = (v) => T + ((a.hi - v) * (H - T - B)) / (a.hi - a.lo);
+    const yb = (v) => T + ((ticks * bStep - v) * (H - T - B)) / (ticks * bStep);
+    for (let k = 0; k <= ticks; k++) {
+      const v = a.lo + k * a.step;
+      el("line", { x1: L, x2: W - R, y1: ya(v), y2: ya(v), stroke: css("--line"), "stroke-width": k === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: ya(v) + 4, "text-anchor": "end" }, svg, fmt(v));
+      el("text", { x: W - R + 6, y: ya(v) + 4 }, svg, fmt(k * bStep));
+    }
+    const n = cats.length, band = (W - L - R) / n, bw = Math.min(30, band * 0.6);
+    const cx = (i) => L + band * (i + 0.5);
+    cats.forEach((c, i) => {
+      if (i % Math.ceil(n / 14) === 0) el("text", { x: cx(i), y: H - 10, "text-anchor": "middle" }, svg, c);
+      const v = bar.data[i];
+      const r = el("rect", { x: cx(i) - bw / 2, y: ya(v), width: bw, height: ya(0) - ya(v), fill: css("--c1"), rx: 2 }, svg);
+      el("title", {}, r, `${bar.name}｜${c}：${fmt(v)}`);
+    });
+    el("polyline", { points: line.data.map((v, i) => `${cx(i)},${yb(v)}`).join(" "), fill: "none", stroke: css("--c7"), "stroke-width": 2 }, svg);
+    line.data.forEach((v, i) => { const c = el("circle", { cx: cx(i), cy: yb(v), r: 2.5, fill: css("--c7") }, svg); el("title", {}, c, `${line.name}｜${cats[i]}：${fmt(v)}`); });
+    legend(host, [{ name: bar.name, tone: "--c1" }, { name: line.name, tone: "--c7" }]);
+  }
+
+  /* ---------- 第三部分 ---------- */
+  barChart("ch-perp-fee", ["Hyperliquid", "Lighter", "Aster", "dYdX"],
+    [{ name: "近 30 天手续费", data: [90.8, 5.7, 5.4, 0.3] }], { horizontal: true, labelWidth: 90, width: 460, highlight: [0] });
+
+  /* ---------- 第四部分 ---------- */
+  barChart("ch-peer-rev", ["Hyperliquid", "pump.fun", "Sky", "Aave", "Jupiter", "Uniswap", "Lighter", "Lido", "Pendle", "dYdX"],
+    [{ name: "近 12 个月收入", data: [717.5, 327.9, 201.9, 97.1, 82.9, 64.2, 64.2, 35.5, 16.7, 5.4] }], { horizontal: true, labelWidth: 90, width: 460, highlight: [0] });
+
+  /* ---------- 第五部分 ---------- */
+  const PM = ["24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  const PP = [8.50, 24.01, 26.93, 19.95, 12.99, 20.00, 32.68, 39.57, 40.76, 44.27, 45.21, 43.67, 31.89, 25.43, 30.98, 31.23, 36.59, 39.72, 72.05, 64.98, 52.50, 84.16, 90.89, 85.62];
+  lineChart("ch-price", PM, [{ name: "HYPE 月末收盘", data: PP, tone: "--c7" }], {
+    log: true, prefix: "$", width: 1000, height: 300, ticks: 24,
+    marks: [{ i: 0, label: "TGE 开盘约 $3.8" }, { i: 4, label: "JELLY 事件", dy: 14 }, { i: 5, label: "低点 $9.3", dy: 28 }, { i: 10, label: "高点 $59 / Aster 崛起", left: true }, { i: 12, label: "团队开始领取", dy: 14 }, { i: 14, label: "白银 HIP-3", dy: 28 }, { i: 18, label: "ETF + AQAv2", left: true, dy: 110 }, { i: 22, label: "ATH $98 / 币安上币", left: true, dy: 70 }],
+  });
+  const MC = ["25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09"];
+  const FEE = [52.2, 46.6, 40.9, 44.2, 73.0, 63.1, 96.4, 145.0, 115.3, 124.8, 101.4, 68.7, 77.3, 70.7, 69.5, 58.7, 62.2, 81.0, 55.1, 77.8, 91.3];
+  const REV = [49.1, 44.2, 38.7, 41.7, 68.7, 59.5, 90.8, 113.9, 85.2, 97.2, 77.7, 51.2, 59.8, 54.0, 51.5, 42.4, 46.3, 60.0, 38.4, 61.4, 74.1];
+  comboChart("ch-fee-price", MC,
+    { name: "月度手续费（百万美元，左轴）", data: FEE },
+    { name: "HYPE 月末收盘（美元，右轴）", data: PP.slice(2, 23) });
+
+  /* ---------- 第六部分 ---------- */
+  barChart("ch-rev-m", MC, [
+    { name: "手续费", data: FEE, tone: "--c1" },
+    { name: "协议收入（回购）", data: REV, tone: "--c3" },
+  ], { height: 250, noLabels: true, ticks: 7 });
+  lineChart("ch-tvl", PM, [{ name: "存款规模（十亿美元）", data: [1.28, 2.04, 2.42, 2.63, 2.08, 2.31, 3.55, 3.71, 4.91, 5.76, 5.84, 4.89, 4.38, 4.15, 4.57, 4.23, 4.90, 4.71, 5.56, 5.72, 6.13, 6.72, 7.41, 7.06], tone: "--c1" }], { prefix: "$", height: 250, ticks: 8 });
+
+  /* ---------- 第七部分 ---------- */
+  barChart("ch-team", ["25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-10", "线性上限"],
+    [{ name: "百万枚", data: [1.75, 1.2, 0.14, 0.173, 0.333, 0.533, 0.452, 0.433, 0.433, 3.75, 9.92], tone: "--c1" }], { height: 240, highlight: [9, 10] });
+
+  /* ---------- 估值与供需模拟器 ---------- */
+  const DEF = { vol: 2.5, bps: 4.4, share: 81, stable: 0, aqa: 3.5, mult: 25, supply: 302, price: 85.6, team: 0.93, teamSell: 80, stake: 0.8, stakeSell: 20, ext: 50 };
+  const PRESETS = [
+    ["当前（2026-10）", {}],
+    ["熊市：交易量 −60%", { vol: 1.0, price: 40, ext: 0 }],
+    ["增长：交易量 $3.5 万亿 + 稳定币利息", { vol: 3.5, stable: 7.2 }],
+    ["10 月之前的节奏：每月 43 万枚、全部卖出", { team: 0.43, teamSell: 100 }],
+    ["团队按上限领取、卖出 80%", { team: 9.92, teamSell: 80 }],
+    ["2028 全面释放后的流通量", { supply: 540 }],
+    ["完全稀释口径", { supply: 951 }],
+  ];
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); if (a < 0.005) return "$0"; return a >= 100 ? `${s}$${(a / 100).toFixed(2)} 亿` : `${s}$${Math.round(a * 100).toLocaleString("en-US")} 万`; };
+  const CTRL = [
+    ["收入"],
+    ["vol", "年交易量（万亿美元）", 0.3, 8, 0.1, (v) => "$" + v.toFixed(1) + " 万亿"],
+    ["bps", "有效费率（基点）", 2, 7, 0.1, (v) => v.toFixed(1) + " bp"],
+    ["share", "进入援助基金的比例", 50, 100, 1, (v) => v + "%"],
+    ["stable", "参与利息分成的稳定币（十亿美元）", 0, 20, 0.1, (v) => "$" + v.toFixed(1) + "B"],
+    ["aqa", "稳定币参考利率", 0, 6, 0.1, (v) => v.toFixed(1) + "%"],
+    ["估值"],
+    ["mult", "估值倍数（市值 / 年收入）", 5, 60, 1, (v) => v + "x"],
+    ["supply", "计入的流通量（百万枚）", 220, 951, 1, (v) => v + "M"],
+    ["price", "HYPE 价格", 5, 300, 0.1, (v) => "$" + v.toFixed(1)],
+    ["供需（每月）"],
+    ["team", "团队每月领取（百万枚）", 0, 10, 0.01, (v) => v.toFixed(2) + "M"],
+    ["teamSell", "团队领取后卖出比例", 0, 100, 1, (v) => v + "%"],
+    ["stake", "每月质押奖励（百万枚）", 0, 2, 0.05, (v) => v.toFixed(2) + "M"],
+    ["stakeSell", "质押奖励卖出比例", 0, 100, 1, (v) => v + "%"],
+    ["ext", "ETF + 上市公司每月净买入（百万美元）", -200, 600, 10, (v) => "$" + v + "M"],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => c.length === 1 ? `<h4>${c[0]}</h4>` : `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  /* 收入单位：百万美元 */
+  const tradeRev = (s) => s.vol * 1e6 * (s.bps / 1e4) * (s.share / 100);
+  const stableRev = (s) => s.stable * 1000 * (s.aqa / 100);
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]]); });
+    const rev = tradeRev(S) + stableRev(S);
+    const implied = (rev * S.mult) / S.supply;
+    const mcap = S.price * S.supply, curMult = rev > 0 ? mcap / rev : Infinity;
+    const buyM = rev / 12 / S.price;
+    const extM = S.ext / S.price;
+    const sellM = S.team * S.teamSell / 100 + S.stake * S.stakeSell / 100;
+    const net = sellM - buyM - extM;
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(rev), "年协议收入（= 年回购）"],
+      [implied >= S.price ? "green" : "red", "$" + implied.toFixed(1), `隐含价格（${S.mult}x，${S.supply}M 枚）`],
+      ["", curMult === Infinity ? "∞" : curMult.toFixed(1) + "x", "当前价格对应的市值 / 收入"],
+      ["", ((rev / mcap) * 100).toFixed(2) + "%", "回购收益率（年回购 / 市值）"],
+      ["green", buyM.toFixed(2) + "M", "每月回购（百万枚）"],
+      [net > 0 ? "red" : "green", (net > 0 ? "+" : "") + net.toFixed(2) + "M", "每月净卖压（正 = 供给过剩）"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["交易收入 / 稳定币利息收入", usd(tradeRev(S)) + " / " + usd(stableRev(S))],
+      ["对应市值（价格 × 计入流通量）", usd(mcap)],
+      ["每月卖出供给（团队 + 质押）", sellM.toFixed(2) + "M 枚 ≈ " + usd(sellM * S.price)],
+      ["每月吸收（回购 + 外部买入）", (buyM + extM).toFixed(2) + "M 枚 ≈ " + usd((buyM + extM) * S.price)],
+      ["回购覆盖卖出供给", sellM > 0 ? ((buyM / sellM) * 100).toFixed(0) + "%" : "—"],
+      ["每年回购占计入流通量", ((buyM * 12 / S.supply) * 100).toFixed(2) + "%"],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+    const g = [200, 350, 500, 700, 895, 1100, 1500, 2000, 2500, 3000];
+    lineChart("ch-sim", g.map((v) => "$" + v / 100 + "亿"), [
+      { name: "隐含价格 @15x", data: g.map((r) => Math.round((r * 15 / S.supply) * 10) / 10), tone: "--c6" },
+      { name: "隐含价格 @25x", data: g.map((r) => Math.round((r * 25 / S.supply) * 10) / 10), tone: "--c1" },
+      { name: "隐含价格 @35x", data: g.map((r) => Math.round((r * 35 / S.supply) * 10) / 10), tone: "--c3" },
+      { name: "当前价格", data: g.map(() => S.price), tone: "--c7", dash: true },
+    ], { prefix: "$", height: 250, ticks: 10 });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>

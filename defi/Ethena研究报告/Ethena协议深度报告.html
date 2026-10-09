@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ethena（ENA）协议深度报告（2026-10-08）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  ul { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .card.good .hd { color: var(--green); } .card.bad .hd { color: var(--red); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  .callout.good { border-color: var(--green); } .callout.good b.t { color: var(--green); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--fill2); padding: 0 4px; border-radius: 3px; }
+  .bar100 { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .diagram { margin: 12px 0 4px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram .n { fill: var(--fill); stroke: var(--line); stroke-width: 1.2; }
+  .diagram .n.hl { stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .n.off { fill: var(--bg); stroke: var(--fg3); stroke-dasharray: 5 4; }
+  .diagram .t { fill: var(--fg); font-size: 15px; font-weight: 600; }
+  .diagram .s { fill: var(--fg2); font-size: 12px; }
+  .diagram .l { fill: var(--fg2); font-size: 12px; }
+  .diagram .l.acc { fill: var(--accent); font-weight: 600; }
+  .diagram .a { stroke: var(--fg2); stroke-width: 1.4; fill: none; }
+  .diagram .a.d { stroke-dasharray: 5 4; }
+  .diagram .mk { fill: var(--fg2); }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid5, .grid-32, .sim { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、Ethena 是做什么的</a>
+  <a href="#s2">二、收益引擎与 2026 转型</a>
+  <a href="#s3">三、为什么市值排进 DeFi 前三</a>
+  <a href="#s4">四、经营数据</a>
+  <a href="#s5">五、压力测试与风险</a>
+  <a href="#s6">六、ENA 代币</a>
+  <a href="#s7">七、价值捕获</a>
+  <a href="#s8">八、回购模拟器</a>
+  <a href="#s9">九、结论与跟踪</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">深度研究</span>数据截至 2026-10-08 · 来源：ethena.fi（官网与公开 API）、docs.ethena.fi、Ethena 治理论坛月度报告与费用开关提案、DefiLlama、CoinGecko、StablecoinX 披露、The Block、CoinDesk</p>
+  <h1>Ethena（ENA）协议深度报告：把“加密杠杆税”做成美元理财，规模缩水三分之二，代币三个月涨了 3 倍</h1>
+  <p class="muted">一句话结论：Ethena 发行的 USDe 是一种“对冲出来的美元”——持有加密现货，同时在交易所开等额空单，赚取多头杠杆交易者支付的资金费率。它在 2024–2025 年牛市中以史上最快速度长到 $148 亿，累计为用户创造约 $10 亿收益，是 DeFi 少有的“真收入”项目。但 2026 年资金费率塌陷后，USDe 缩水 67%，储备 80% 以上变成了稳定币和借贷头寸，核心差异化暂时“关机”。ENA 目前<b>没有任何现金流归属</b>：费用开关已投票通过，但要等 USDe 14 日均值回到 $75 亿才启动，且首档回购每年只有约 $1,800 万，远小于团队每月约 $2,000–3,000 万的解锁。ENA 从 7 月低点涨了约 3 倍，主要是在给“代币经济修复 + 下一轮牛市”提前定价，基本面尚未兑现。</p>
+  <div class="stats">
+    <div class="stat"><b>$48.8 亿</b><span>USDe 流通量（2025-10-04 峰值 $148.2 亿，-67%）</span></div>
+    <div class="stat"><b>$2.58 亿</b><span>近 12 个月毛收入（近 30 天年化 $2.2 亿）</span></div>
+    <div class="stat red"><b>≈ $0</b><span>归属 ENA 的收入（费用开关未触发）</span></div>
+    <div class="stat orange"><b>$0.221</b><span>ENA 价格（ATH $1.52，-85%；7 月低点 $0.071，+210%）</span></div>
+    <div class="stat"><b>$29.6 亿</b><span>ENA 流通市值（FDV $33.1 亿，DeFi 第 3）</span></div>
+  </div>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、Ethena 是做什么的</h2>
+  <h3>1.1 核心产品：USDe，一种“对冲出来的美元”</h3>
+  <p class="lead">USDT / USDC 靠银行里的美元和国债支撑，DAI 靠超额抵押的借贷支撑，USDe 走的是第三条路：<b>Delta 中性对冲</b>。拿 1 美元的 ETH 现货，同时在交易所开 1 美元的 ETH 永续合约空单——ETH 涨了，现货赚的钱被空单亏掉；ETH 跌了，现货亏的钱被空单赚回来，组合价值始终约等于 1 美元。这个组合还能“生息”：空单能收到资金费率，ETH 现货可以是 stETH 拿质押收益（早期如此；当前储备里的 stETH、mETH 已基本清零，持有的是流动性更好的普通 ETH）。</p>
+
+  <h4>资金全流程：铸造 → 托管 → 配置 → 生息 → 分配</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 520" role="img" aria-label="USDe 资金全流程图">
+      <defs><marker id="mkA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <!-- 第一行：铸造与托管 -->
+      <rect class="n" x="20" y="10" width="200" height="82" rx="8"/>
+      <text class="t" x="120" y="38" text-anchor="middle">白名单做市商</text>
+      <text class="s" x="120" y="60" text-anchor="middle">需 KYC / KYB</text>
+      <text class="s" x="120" y="78" text-anchor="middle">美国居民除外</text>
+      <rect class="n hl" x="370" y="10" width="240" height="82" rx="8"/>
+      <text class="t" x="490" y="38" text-anchor="middle">铸造 / 赎回合约</text>
+      <text class="s" x="490" y="60" text-anchor="middle">按美元价值 1:1，铸造费 0</text>
+      <text class="s" x="490" y="78" text-anchor="middle">当前只收 USDT、USDC</text>
+      <rect class="n" x="747.5" y="10" width="240" height="82" rx="8"/>
+      <text class="t" x="867.5" y="38" text-anchor="middle">场外托管（OES）</text>
+      <text class="s" x="867.5" y="60" text-anchor="middle">Coinbase 主托管</text>
+      <text class="s" x="867.5" y="78" text-anchor="middle">Copper、Ceffu、Anchorage 等</text>
+      <path class="a" d="M222,38 H366" marker-end="url(#mkA)"/>
+      <text class="l" x="294" y="30" text-anchor="middle">USDT / USDC</text>
+      <path class="a" d="M368,66 H224" marker-end="url(#mkA)"/>
+      <text class="l" x="294" y="84" text-anchor="middle">USDe</text>
+      <path class="a" d="M612,38 H743.5" marker-end="url(#mkA)"/>
+      <text class="l" x="678" y="30" text-anchor="middle">储备资产</text>
+      <path class="a" d="M745.5,66 H614" marker-end="url(#mkA)"/>
+      <text class="l" x="678" y="84" text-anchor="middle">赎回时调回稳定币</text>
+      <!-- 做市商到散户 -->
+      <path class="a" d="M120,92 V174" marker-end="url(#mkA)"/>
+      <text class="l" x="128" y="128">二级市场卖出 USDe</text>
+      <text class="l" x="128" y="146">（Curve、交易所）</text>
+      <!-- 托管到三类配置 -->
+      <path class="a" d="M372.5,140 H867.5"/>
+      <path class="a" d="M867.5,92 V174" marker-end="url(#mkA)"/>
+      <path class="a" d="M372.5,140 V174" marker-end="url(#mkA)"/>
+      <path class="a" d="M619.5,140 V174" marker-end="url(#mkA)"/>
+      <text class="l acc" x="496" y="132" text-anchor="middle">按资金费率与利率动态配置</text>
+      <!-- 第二行：散户与配置去向 -->
+      <rect class="n" x="20" y="178" width="200" height="82" rx="8"/>
+      <text class="t" x="120" y="206" text-anchor="middle">散户 / 普通用户</text>
+      <text class="s" x="120" y="228" text-anchor="middle">不能直接铸造</text>
+      <text class="s" x="120" y="246" text-anchor="middle">在 Curve、交易所买入</text>
+      <rect class="n" x="260" y="178" width="225" height="82" rx="8"/>
+      <text class="t" x="372.5" y="206" text-anchor="middle">交易所对冲（基差）</text>
+      <text class="s" x="372.5" y="228" text-anchor="middle">现货镜像为保证金 + 永续空单</text>
+      <text class="s" x="372.5" y="246" text-anchor="middle">当前约 18%：BTC、ETH、SOL 等</text>
+      <rect class="n" x="507" y="178" width="225" height="82" rx="8"/>
+      <text class="t" x="619.5" y="206" text-anchor="middle">DeFi 借贷</text>
+      <text class="s" x="619.5" y="228" text-anchor="middle">Aave、Morpho 等</text>
+      <text class="s" x="619.5" y="246" text-anchor="middle">储备持有 aUSDC、aUSDT</text>
+      <rect class="n" x="755" y="178" width="225" height="82" rx="8"/>
+      <text class="t" x="867.5" y="206" text-anchor="middle">稳定币 / RWA / 机构贷款</text>
+      <text class="s" x="867.5" y="228" text-anchor="middle">USDT、USDC、USDtb、CLO</text>
+      <text class="s" x="867.5" y="246" text-anchor="middle">Anchorage、Maple 等直贷</text>
+      <!-- 生息 -->
+      <path class="a" d="M372.5,260 V304" marker-end="url(#mkA)"/>
+      <text class="l" x="380" y="288">资金费率</text>
+      <path class="a" d="M619.5,260 V304" marker-end="url(#mkA)"/>
+      <text class="l" x="627" y="288">借贷利息</text>
+      <path class="a" d="M867.5,260 V304" marker-end="url(#mkA)"/>
+      <text class="l" x="875" y="288">国债与贷款利息</text>
+      <rect class="n hl" x="260" y="308" width="720" height="62" rx="8"/>
+      <text class="t" x="620" y="334" text-anchor="middle">协议毛收入：年化约 $2.2 亿，协议收益率约 5%</text>
+      <text class="s" x="620" y="356" text-anchor="middle">储备金 $6,200 万兜底（资金费率为负时补贴，自 2024-12 未动用）；协议自身几乎零留存</text>
+      <!-- 散户质押 -->
+      <path class="a" d="M120,260 V424" marker-end="url(#mkA)"/>
+      <text class="l" x="128" y="330">质押 USDe</text>
+      <text class="l" x="128" y="348">换成 sUSDe</text>
+      <!-- 分配 -->
+      <path class="a" d="M300,370 V398 H160 V424" marker-end="url(#mkA)"/>
+      <text class="l acc" x="230" y="391" text-anchor="middle">34.3%</text>
+      <path class="a" d="M372.5,370 V424" marker-end="url(#mkA)"/>
+      <text class="l acc" x="380" y="404">34.3%</text>
+      <path class="a" d="M619.5,370 V424" marker-end="url(#mkA)"/>
+      <text class="l acc" x="627" y="404">31.4%</text>
+      <path class="a d" d="M867.5,370 V424" marker-end="url(#mkA)"/>
+      <text class="l" x="875" y="404">未触发</text>
+      <!-- 第四行：收益去向 -->
+      <rect class="n hl" x="20" y="428" width="200" height="82" rx="8"/>
+      <text class="t" x="120" y="456" text-anchor="middle">sUSDe 持有人</text>
+      <text class="s" x="120" y="478" text-anchor="middle">约 5% APY</text>
+      <text class="s" x="120" y="496" text-anchor="middle">解押冷却期 1 天</text>
+      <rect class="n" x="260" y="428" width="225" height="82" rx="8"/>
+      <text class="t" x="372.5" y="456" text-anchor="middle">交易所 / 渠道合作方</text>
+      <text class="s" x="372.5" y="478" text-anchor="middle">Bybit、Binance 等</text>
+      <text class="s" x="372.5" y="496" text-anchor="middle">发放 USDe 持有奖励</text>
+      <rect class="n" x="507" y="428" width="225" height="82" rx="8"/>
+      <text class="t" x="619.5" y="456" text-anchor="middle">Aave 杠杆激励</text>
+      <text class="s" x="619.5" y="478" text-anchor="middle">补贴 sUSDe / USDe</text>
+      <text class="s" x="619.5" y="496" text-anchor="middle">循环借贷用户</text>
+      <rect class="n off" x="755" y="428" width="225" height="82" rx="8"/>
+      <text class="t" x="867.5" y="456" text-anchor="middle">基金会 → 回购 ENA</text>
+      <text class="s" x="867.5" y="478" text-anchor="middle">费用开关：毛收入 5%–20%</text>
+      <text class="s" x="867.5" y="496" text-anchor="middle">USDe ≥ $75 亿才触发，当前为 0</text>
+    </svg>
+  </div>
+  <p class="small">图：分配比例为 Blockworks 近 30 天口径（至 2026-08-24）。赎回为反向流程：白名单方交回 USDe，按 $1 拿回 USDT / USDC，若资金在基差仓位则先平掉对冲；sUSDe 解押有 1–7 天动态冷却期（目前 1 天）。早期也支持 ETH、BTC 等直接铸造，当前 API 只开放 USDT、USDC 两个铸造对。</p>
+
+  <div class="grid2">
+    <div>
+      <h4>算例：ETH 涨跌时 1 枚 USDe 背后的组合</h4>
+      <table>
+        <tr><th>ETH 价格</th><th class="r">现货价值</th><th class="r">空单盈亏</th><th class="r">组合价值</th></tr>
+        <tr><td>$3,000（开仓时）</td><td class="r">$1.000</td><td class="r">$0</td><td class="r">$1.000</td></tr>
+        <tr><td>$2,000（-33%）</td><td class="r">$0.667</td><td class="r">+$0.333</td><td class="r">$1.000</td></tr>
+        <tr><td>$4,000（+33%）</td><td class="r">$1.333</td><td class="r">-$0.333</td><td class="r">$1.000</td></tr>
+      </table>
+      <p class="small">示意算例，忽略资金费率与手续费。空单盈亏在交易所结算，现货在场外托管，两边要定期再平衡。</p>
+    </div>
+    <div>
+      <h4>为什么资金费率通常是正的</h4>
+      <p class="muted">加密市场的永续合约上，想加杠杆做多的人长期多于做空的人。为了让合约价格贴住现货，多头要定期付费给空头，这就是资金费率。Ethena 天然站在空头一侧，等于向全市场的多头杠杆收一笔“杠杆税”。牛市杠杆越拥挤，费率越高：2021 年 BTC/ETH 平均年化约 34%，2024 年约 12.5%；熊市费率接近 0 甚至为负，2026 年至今只有约 1.8%（2–4 月为负）。</p>
+    </div>
+  </div>
+
+  <h3>1.2 三种美元的区别</h3>
+  <table>
+    <tr><th>维度</th><th>USDT / USDC（法币储备）</th><th>DAI / USDS（超额抵押）</th><th>USDe（Delta 中性）</th></tr>
+    <tr><td>背后资产</td><td>银行存款、短期美债</td><td>ETH、稳定币、RWA 等抵押品</td><td>加密现货 + 等额空单；熊市时以稳定币、借贷头寸为主</td></tr>
+    <tr><td>收益来源</td><td>美债利息</td><td>借款利息 + RWA 利息</td><td>资金费率 + 质押收益 + 稳定币/借贷利息</td></tr>
+    <tr><td>收益归谁</td><td>发行方（Tether / Circle）</td><td>DAO 与储蓄率存款人</td><td>几乎全部分给 sUSDe 持有人、交易所合作方和激励计划</td></tr>
+    <tr><td>扩张上限</td><td>理论无限，受监管约束</td><td>受抵押品需求约束</td><td>受永续合约未平仓量（OI）约束，单一交易所、单一币种都有上限</td></tr>
+    <tr><td>主要风险</td><td>银行与监管</td><td>抵押品清算</td><td>资金费率转负、交易所/托管方风险、赎回挤兑</td></tr>
+  </table>
+
+  <h4>铸造 USDe 是“卖出换币”，不是“抵押借款”</h4>
+  <p class="muted">最容易误解的一点：早期用 BTC / ETH 铸造 USDe，经济上是<b>按市价把币卖给 Ethena、换回等值美元稳定币</b>，按 Ethena 的 RFQ 报价原子结算，本质是一次兑换。币交出去后所有权就转移了，之后涨跌与铸造者无关。这和 Maker、Liquity 的“抵押借稳定币”完全不同：</p>
+  <table>
+    <tr><th>维度</th><th>抵押借贷（Maker / Sky、Liquity）</th><th>Ethena 铸造 USDe</th></tr>
+    <tr><td>本质</td><td>抵押 ETH，借出 DAI</td><td>把 ETH 卖掉，换成 USDe</td></tr>
+    <tr><td>ETH 所有权与涨跌</td><td>仍归你，只是被锁住；涨了你赚</td><td>归 Ethena 储备，涨跌由空单对冲掉</td></tr>
+    <tr><td>抵押率</td><td>超额抵押，常见 150% 以上</td><td>按美元价值 1:1（对冲后价值锁定在美元，不需要缓冲）</td></tr>
+    <tr><td>还款与清算</td><td>要还 DAI 才能取回 ETH；跌破清算线会被清算</td><td>不用还款，没有清算</td></tr>
+    <tr><td>赎回拿到什么</td><td>原来那份 ETH</td><td>按 $1 拿回等值资产（当前为 USDT / USDC），不是原来的 ETH</td></tr>
+  </table>
+  <p class="small">推论：既然用 ETH 铸造本来就等于卖出 ETH，“先卖成 USDT 再铸造”的结果完全一样，只多一笔现货手续费。所以当前只开放 USDT、USDC 铸造对，对铸造者和协议收入几乎没有影响。想保留币价涨幅又要稳定币流动性的人，应该用抵押借贷协议，而不是铸造 USDe。</p>
+
+  <h3>1.3 关键机制与安全设计</h3>
+  <h4>托管与安全结构：资产放在哪、谁来监督</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 282" role="img" aria-label="Ethena 托管与安全结构图">
+      <defs><marker id="mkB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <!-- 第一行：资产位置 -->
+      <rect class="n" x="20" y="10" width="240" height="82" rx="8"/>
+      <text class="t" x="140" y="38" text-anchor="middle">交易所</text>
+      <text class="s" x="140" y="60" text-anchor="middle">Binance、OKX、Bybit、Deribit</text>
+      <text class="s" x="140" y="78" text-anchor="middle">开永续空单，不持有现货</text>
+      <rect class="n hl" x="380" y="10" width="240" height="82" rx="8"/>
+      <text class="t" x="500" y="38" text-anchor="middle">场外托管方（OES）</text>
+      <text class="s" x="500" y="60" text-anchor="middle">Coinbase、Copper、Ceffu 等</text>
+      <text class="s" x="500" y="78" text-anchor="middle">私钥与资产在破产隔离账户</text>
+      <rect class="n" x="740" y="10" width="240" height="82" rx="8"/>
+      <text class="t" x="860" y="38" text-anchor="middle">DeFi 借贷与机构贷款</text>
+      <text class="s" x="860" y="60" text-anchor="middle">Aave、Morpho、直贷</text>
+      <text class="s" x="860" y="78" text-anchor="middle">不受托管保护，承担对手方风险</text>
+      <path class="a" d="M378,38 H264" marker-end="url(#mkB)"/>
+      <text class="l" x="320" y="30" text-anchor="middle">镜像为保证金</text>
+      <path class="a" d="M262,66 H376" marker-end="url(#mkB)"/>
+      <text class="l" x="320" y="84" text-anchor="middle">定期结算盈亏</text>
+      <path class="a" d="M622,38 H736" marker-end="url(#mkB)"/>
+      <text class="l" x="680" y="30" text-anchor="middle">调度部分稳定币</text>
+      <path class="a" d="M738,66 H624" marker-end="url(#mkB)"/>
+      <text class="l" x="680" y="84" text-anchor="middle">aToken 与本息</text>
+      <!-- 监督关系 -->
+      <path class="a d" d="M140,188 V96" marker-end="url(#mkB)"/>
+      <text class="l" x="148" y="146">审批交易所与对手方</text>
+      <path class="a d" d="M500,188 V96" marker-end="url(#mkB)"/>
+      <text class="l" x="508" y="146">每周核验抵押率</text>
+      <path class="a d" d="M860,188 V96" marker-end="url(#mkB)"/>
+      <text class="l" x="868" y="146">储备整体亏损时兜底</text>
+      <!-- 第二行：监督与兜底 -->
+      <rect class="n" x="20" y="190" width="240" height="82" rx="8"/>
+      <text class="t" x="140" y="218" text-anchor="middle">风险委员会</text>
+      <text class="s" x="140" y="240" text-anchor="middle">Kairos、Blockworks、LlamaRisk</text>
+      <text class="s" x="140" y="258" text-anchor="middle">审批储备资产与费用开关参数</text>
+      <rect class="n" x="380" y="190" width="240" height="82" rx="8"/>
+      <text class="t" x="500" y="218" text-anchor="middle">每周储备证明</text>
+      <text class="s" x="500" y="240" text-anchor="middle">Chaos Labs、Chainlink 等 4 家</text>
+      <text class="s" x="500" y="258" text-anchor="middle">抵押率约 102%（2026-09-05）</text>
+      <rect class="n" x="740" y="190" width="240" height="82" rx="8"/>
+      <text class="t" x="860" y="218" text-anchor="middle">储备金</text>
+      <text class="s" x="860" y="240" text-anchor="middle">约 $6,200 万，所需规模约 9 倍</text>
+      <text class="s" x="860" y="258" text-anchor="middle">自 2024-12 起未动用</text>
+    </svg>
+  </div>
+  <p class="small">现货和稳定币放在托管方，交易所只看到“镜像”的保证金额度：交易所倒闭时资产仍在托管方，损失理论上只限于未结算的盈亏。托管方保管私钥但不锁死资产，经风险委员会批准，部分稳定币由 Ethena 调度存入 Aave、Morpho 或贷给机构生息，这部分承担的是借贷协议和对手方风险，不受托管保护。</p>
+  <div class="grid2">
+    <div class="box"><b>铸造与赎回只对白名单开放</b><p>普通用户无法直接找协议铸造或赎回，只能在 Curve、交易所买卖。好处是合规与风控集中；代价是二级市场锚定依赖做市商套利（2025-10-10 Binance 事件即源于此）。</p></div>
+    <div class="box"><b>动态冷却期</b><p>2026-03 起 sUSDe 解押期按储备流动性在 1 / 3 / 5 / 7 天之间切换；目前储备以稳定币为主，冷却期为 1 天。</p></div>
+  </div>
+
+  <h3>1.4 产品矩阵：从一个稳定币到三条业务线</h3>
+  <table>
+    <tr><th>产品</th><th class="r">规模</th><th>说明</th></tr>
+    <tr class="hl"><td>USDe</td><td class="r">$48.8 亿</td><td>旗舰合成美元。流通在 Ethereum（约 $26 亿）、Plasma、Solana、Base、Robinhood Chain、TON 等 14 条链；在 Bybit、Coinbase、Robinhood、Binance、MEXC 等平台持有可获奖励</td></tr>
+    <tr><td>sUSDe</td><td class="r">约 $12.3 亿</td><td>USDe 的质押版，当前 APY 约 5.0%（30 日均 4.87%，上线以来平均 10.4%）；质押率已降到约 25%</td></tr>
+    <tr><td>USDtb</td><td class="r">$5.0 亿</td><td>以贝莱德 BUIDL（代币化国债基金）为储备的“合规版”稳定币，峰值 $18.4 亿（2025-09）；也作为 USDe 熊市时的储备资产，详见 1.5</td></tr>
+    <tr><td>白标稳定币（Whitelabel）</td><td class="r">&gt; $6 亿（2026-04）</td><td>为其他生态定制稳定币：Jupiter 的 jupUSD、MegaETH 的 USDm、Sui 的 suiUSDe。2025-09 竞标 Hyperliquid 的 USDH 失败</td></tr>
+    <tr><td>Ethena Pay</td><td class="r">Beta</td><td>2026-09-01 上线的自托管“新银行”App，结算在 Avalanche，余额即 USDe，最高 6% 收益 + Visa 卡；首批 48 国，暂不含美国、欧盟</td></tr>
+    <tr><td>生态项目</td><td class="r">—</td><td>HyENA（Hyperliquid 上以 USDe 为保证金的永续市场，45% 手续费归 Ethena 生态）、Ethereal 永续 DEX；sENA 持有人可获这些项目空投</td></tr>
+  </table>
+  <p class="small">来源：DefiLlama stablecoins、aavescan、ethena.fi/api、治理论坛 2026 年 3–6 月报告、The Block（2026-09-01）。白标规模为官方 2026-04 披露，之后未见更新。</p>
+
+  <h3>1.5 USDtb：Ethena 的合规版美元</h3>
+  <p class="muted">USDtb 走的是和 USDe 相反的路线：不做对冲、不碰资金费率，储备约 99% 是贝莱德代币化国债基金 BUIDL、约 1% 是现金，本质是“链上美国短期国债”，可以理解为“Ethena 版 USDC”。2024-12 推出；2025-10-13 起由 Anchorage Digital Bank（美国唯一获联邦特许可发行稳定币的加密银行，受 OCC 监管）按 GENIUS 法案发行和托管，USDT、USDC 不再作为储备。德勤按月出具储备证明：2026-06-30 储备 $7.77 亿（BUIDL $7.67 亿 + 现金 $1,023 万），流通 $7.75 亿。</p>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>维度</th><th>USDe</th><th>USDtb</th></tr>
+        <tr><td>储备</td><td>稳定币、借贷、基差仓位等组合</td><td>约 99% BUIDL + 1% 现金</td></tr>
+        <tr><td>收益来源</td><td>资金费率 + 稳定币生息</td><td>美国短期国债利息</td></tr>
+        <tr><td>持有人能否拿收益</td><td>质押成 sUSDe 可以</td><td>不能，GENIUS 法案禁止发行方向持有人付息</td></tr>
+        <tr><td>监管</td><td>离岸，不对美国人开放</td><td>美国联邦监管</td></tr>
+        <tr><td>定位</td><td>生息、交易所保证金</td><td>机构合规美元、白标与 USDe 储备的底层资产</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>三个作用</h4>
+      <ul class="muted">
+        <li><b>USDe 熊市避风港</b>：资金费率转负时，USDe 储备可换成 USDtb 吃国债利息；这部分利息已改为分给 sUSDe 持有人。</li>
+        <li><b>合规入口</b>：进入 USDe 进不去的美国机构、券商、银行渠道。</li>
+        <li><b>白标底层</b>：jupUSD 约 99% 由 USDtb 支撑，USDm 同理；合作方用自己品牌发币，与 Ethena 分成储备利息。</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b class="t">利率升高时，USDtb 反而更难留住终端用户</b>持有人拿不到利息，国债利率越高，闲置持有 USDtb 的机会成本越大，大额资金倾向于换成 BUIDL、sUSDS、sUSDe 等能直接拿收益的产品（类比 2022–2023 年加息期 USDC 从约 $550 亿降到约 $240 亿，但当时还叠加了熊市和硅谷银行事件）。受益的是发行方、白标合作方和把 USDtb 放进储备的 Ethena 自己。所以 USDtb 的自然需求弱、规模波动大（一年内从 $18.4 亿降到 $5.0 亿），按 3.5%–4% 国债利率估算年利息约 $1,800–2,000 万，且归 sUSDe，对 ENA 几乎没有贡献。另一个约束是 24 小时即时赎回只靠约 1% 的现金缓冲，超出部分要等美国银行工作时间赎回 BUIDL。</div>
+  <p class="small">来源：Anchorage USDtb 储备证明（2026-03-31、2026-06-30）、Kairos Research 治理提案《Holding Whitelabel Stablecoin Assets in USDe Backing》、DefiLlama stablecoins（USDtb id 221）。</p>
+
+  <h3>1.6 发展历程</h3>
+  <table>
+    <tr><th style="width:130px">时间</th><th>事件</th></tr>
+    <tr><td>2023</td><td>Guy Young（前 Cerberus Capital）创立，灵感来自 Arthur Hayes 的“合成美元”构想；Dragonfly 领投种子轮</td></tr>
+    <tr><td>2024-02</td><td>USDe 主网公开上线，配合 Shard 积分活动快速增长</td></tr>
+    <tr><td>2024-04-02</td><td>ENA 空投并上 Binance Launchpool；04-11 创历史高点 $1.52（FDV 约 $228 亿）</td></tr>
+    <tr><td>2024 下半年</td><td>资金费率回落，USDe 从 $36 亿缩至 $25 亿；年底牛市回归，12 月涨到 $59 亿；推出 USDtb</td></tr>
+    <tr><td>2025-07</td><td>StablecoinX 宣布 $3.6 亿 PIPE 打造 ENA 储备公司；基金会附属机构启动 $2.6 亿 ENA 回购</td></tr>
+    <tr class="good"><td>2025-08 / 09</td><td>USDe 一个季度从 $53 亿涨到 $145 亿；Q3 毛收入 $1.51 亿，创纪录</td></tr>
+    <tr class="bad"><td>2025-10-10</td><td>全市场暴跌，USDe 在 Binance 一度跌至 $0.65（交易所内部预言机问题），24 小时赎回约 $19 亿，协议未动用储备金；此后进入长达半年的去杠杆</td></tr>
+    <tr><td>2026-01 / 02</td><td>上线韩国 Upbit、Bithumb；首个白标稳定币 jupUSD；ETH 资金费率 2 月均值 -4%，为 2023 年以来最差</td></tr>
+    <tr><td>2026-03</td><td>sUSDe 动态冷却期上线（7 天降为 1 天）；与 Anchorage、Maple、Coinbase 资管签署机构直贷协议</td></tr>
+    <tr class="bad"><td>2026-04</td><td>rsETH 跨链桥事件引发全行业去杠杆，USDe 4 天内赎回约 $16.8 亿，月底降至 $39 亿；锚定未破</td></tr>
+    <tr><td>2026-06</td><td>Coinbase 成为主托管与永续交易场所；接入贝莱德 Aladdin；引入 AAA 级 CLO（JAAA、STAC）作储备；StablecoinX 以代码 “USDE” 在纳斯达克上市</td></tr>
+    <tr class="hl"><td>2026-08-27</td><td>四项代币经济调整：回购部分种子投资人锁仓、投资人剩余代币 10-05 一次性解锁、协议 IP 与经济价值归基金会、发起费用开关投票</td></tr>
+    <tr class="hl"><td>2026-09</td><td>Ethena Pay 上线；费用开关投票 100% 通过；扩展到 Binance 代币化美股基差交易；09-30 结束全部 USDe 相关 ENA 激励（第 6 季为最终季）</td></tr>
+    <tr><td>2026-10-05</td><td>投资人剩余约 14.1 亿 ENA 一次性解锁（第三方按原解锁表推算，官方未公布确切数字）；StablecoinX 的 30.3 亿 ENA 锁定期豁免</td></tr>
+  </table>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、收益引擎与 2026 年的转型</h2>
+  <p class="lead">Ethena 的收益率本质上是“加密市场杠杆需求”的温度计。2024 年 sUSDe 年均收益 17.5%，2025 年 6.5%，2026 年至今 4.1%。2026 年资金费率塌陷后，Ethena 把储备从基差交易大规模切换到稳定币、DeFi 借贷、RWA 和机构贷款，避免了负收益，但也让 USDe 在熊市里变得和其他“生息稳定币”越来越像。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>2.1 资金费率：收益的原动力</h3>
+      <div class="chart" id="ch-funding"></div>
+      <p class="small">图：Binance BTC / ETH 永续资金费率年度合计（两者平均，%）· 来源：SafeArbitrage 基于 Binance fapi 数据（2026 年截至 09-27，括号内为线性年化 2.41%）</p>
+    </div>
+    <div>
+      <h3>2.2 sUSDe 月均 APY</h3>
+      <div class="chart" id="ch-apy"></div>
+      <p class="small">图：sUSDe 月均 APY（%）· 来源：DefiLlama Yields（Ethereum sUSDe 池）· 2024-02 至 2026-10</p>
+    </div>
+  </div>
+  <p class="muted">2024 年 3 月 sUSDe 月均 APY 高达 37.7%，这是 USDe 早期爆发的根本原因：在一个“稳定币”上拿到 20%–30% 收益，对交易所和 DeFi 用户极具吸引力。2025 年下半年第二波牛市时 APY 回到 7%–8%，2026 年在 3.5%–5% 徘徊，已与 Sky 储蓄率（sUSDS）、Maple syrupUSDC 等同类产品处于同一区间。</p>
+
+  <h3>2.3 储备构成的大切换：从“基差工厂”到“稳定币理财组合”</h3>
+  <div class="chart" id="ch-backing"></div>
+  <p class="small">图：USDe 储备中基差交易头寸 vs 现金类资产（稳定币、DeFi 借贷、RWA、机构贷款）占比（%）· 来源：治理论坛月度报告（2025-08、2026-01/02、03/04、05、06）与 ethena.fi/api/positions/current/collateral（2026-10-08）</p>
+  <div class="grid-32">
+    <div>
+      <h4>2026-06 末储备构成（基差交易占比最低时）</h4>
+      <table>
+        <tr><th>类别</th><th class="r">金额</th><th class="r">占比</th><th class="r">APY</th></tr>
+        <tr><td>DeFi 借贷（Aave、Morpho、Kamino、Jupiter）</td><td class="r">约 $20 亿</td><td class="r">46.0%</td><td class="r">3.1%</td></tr>
+        <tr><td>流动稳定币（USDT、USDC、USDtb、PYUSD、RLUSD）</td><td class="r">约 $20 亿</td><td class="r">35.0%</td><td class="r">3.8%</td></tr>
+        <tr><td>RWA（JAAA、STAC 等 AAA 级 CLO）</td><td class="r">$5.01 亿</td><td class="r">11.2%</td><td class="r">5%</td></tr>
+        <tr><td>机构贷款（Anchorage、Maple、Coinbase 资管等）</td><td class="r">$3.10 亿</td><td class="r">6.9%</td><td class="r">4–7%</td></tr>
+        <tr class="bad"><td>加密基差（Binance、Bybit、OKX、INTX）</td><td class="r">$0.39 亿</td><td class="r">1.0%</td><td class="r">-0.1%</td></tr>
+      </table>
+      <p class="small">来源：Ethena June 2026 Governance Update</p>
+    </div>
+    <div>
+      <h4>2026-10-08 当前储备（$48.95 亿）</h4>
+      <div class="chart" id="ch-backnow"></div>
+      <p class="small">来源：ethena.fi/api/positions/current/collateral。对冲头寸所在交易所：Binance $6.66 亿、OKX $2.02 亿、Bybit $1.13 亿、Deribit $0.19 亿。</p>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">这次切换意味着什么</b>好处是 USDe 在熊市里不必硬扛负资金费率：基差仓位从 2025 年中约一半降到 2026-06 的 1%，资金费率回暖后又加回到 18%。这是一种“可开可关”的收益结构，比强制持有基差的旧设计更稳健。代价是：当 80%–99% 的储备都是稳定币和借贷头寸时，USDe 的收益基本等于“Aave / Morpho / 国债收益减去分给合作方的部分”，相当于一个稳定币理财组合，和 sUSDS、syrupUSDC 等竞品没有本质差异。熊市里 Ethena 的护城河是分发渠道，而不是收益率。</div>
+
+  <h4>只收稳定币，牛市还能吃到资金费率吗？</h4>
+  <p class="muted">能。图中橙色的基差仓位，正是 Ethena 用稳定币自己买入 BTC / ETH 等现货、再开等额空单形成的，不是用户拿币铸造来的。资金费率付给的是空单，收入约等于“空单名义价值 × 资金费率”，与钱以什么资产进来无关：</p>
+  <table>
+    <tr><th>同样进来 $1 亿</th><th>用户存 ETH 铸造（早期）</th><th>用户存 USDT 铸造（现在）</th></tr>
+    <tr><td>Ethena 的操作</td><td>收下 ETH，必须立即开 $1 亿 ETH 空单</td><td>资金费率好时用 USDT 买 $1 亿 ETH 再开空单；不好时继续持有稳定币生息</td></tr>
+    <tr><td>最终持仓与资金费率收入</td><td>ETH 现货 + ETH 空单</td><td>完全一样（如果选择做基差）</td></tr>
+    <tr><td>额外成本</td><td>无</td><td>一次现货买入手续费与滑点，约几个基点；牛市资金费率年化常见 10%–30%</td></tr>
+    <tr><td>灵活性</td><td>资金费率转负也只能硬扛</td><td>可在 1% 到 50% 以上之间调节基差占比</td></tr>
+  </table>
+  <p class="small">真正限制牛市收入的是三件事：USDe 需求规模（牛市用户为高收益而来，本来就带着稳定币）、永续合约未平仓量容量（空单占比过高会压低资金费率）、单一交易所与单一币种的风控限额。唯一实际丢掉的是 ETH 质押收益：当前储备持有普通 ETH 而非 stETH，按 7% 的 ETH 仓位估算影响约 0.2 个百分点，这是出于流动性和脱锚风险的主动选择，与铸造入口无关。官方未宣布“永久停止” BTC / ETH 铸造，文档注明铸造对“可能变化”。</p>
+
+  <h3>2.4 新的收益来源：试图摆脱对加密周期的依赖</h3>
+  <table>
+    <tr><th>方向</th><th>进展</th><th>容量判断</th></tr>
+    <tr><td>美股基差（代币化股票 + 股票永续空单）</td><td>2026-09-25 宣布，现货用 Binance bStocks，对冲用 Binance 股票永续</td><td>Binance 股票永续未平仓约 $29 亿，近 6 个月平均基差年化 3.56%：容量和收益目前都不大</td></tr>
+    <tr><td>黄金基差（PAXG、XAUT）</td><td>2026-04 提案，黄金资金费率与加密相关性低（PAXG 约 3.6%、XAUT 约 5.1%）</td><td>分散作用为主，规模有限</td></tr>
+    <tr><td>RWA（AAA 级 CLO）</td><td>2026-06 引入 Janus Henderson 的 JAAA 和 Securitize 的 STAC，约 $5 亿</td><td>收益约 5%，但引入了信用风险</td></tr>
+    <tr><td>机构直贷</td><td>Anchorage、Maple、Coinbase 资管、FalconX、Kraken 等签署主借贷协议</td><td>收益 4–7%，需要链下法律追偿</td></tr>
+  </table>
+  <p class="muted">这些方向让 Ethena 越来越像一家“收益型资管”，但没有一个能复制牛市资金费率那样 15%–30% 的收益率。USDe 能否回到百亿规模，最终仍取决于加密市场的杠杆周期。</p>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、为什么市值能排进 DeFi 前三，真的有前景吗</h2>
+  <div class="grid2">
+    <div>
+      <h3>3.1 DeFi 代币市值排名</h3>
+      <div class="chart" id="ch-mcap"></div>
+      <p class="small">图：流通市值（亿美元）· 来源：CoinGecko · 2026-10-08。不含 LINK 等基础设施代币。</p>
+    </div>
+    <div>
+      <h3>3.2 美元稳定币排名（不含 USDT / USDC）</h3>
+      <div class="chart" id="ch-stable"></div>
+      <p class="small">图：流通量（亿美元）· 来源：DefiLlama · 2026-10-08。USDT $1,843 亿、USDC $737 亿未画入；USDS 与 DAI 同属 Sky。</p>
+    </div>
+  </div>
+
+  <h3>3.3 与众不同的五个地方</h3>
+  <div class="grid5">
+    <div class="box"><b>1. 真收入、真规模</b><p>累计毛收入约 $10 亿；2025 Q3 单季 $1.51 亿，年化 $6 亿，一度是 DeFi 收入前三。USDe 峰值 $148 亿，曾是第三大美元稳定币。</p></div>
+    <div class="box"><b>2. 独特的收益来源</b><p>唯一一个收益来自“加密杠杆需求”而非美债利率的大型美元产品。牛市里收益率是美债的 3–8 倍，这是其他稳定币做不到的。</p></div>
+    <div class="box"><b>3. 渠道网络</b><p>Bybit、Binance、OKX、Deribit、Coinbase、Kraken、Robinhood、Upbit 都接受 USDe 作保证金或发奖励；曾是 Aave 最大的稳定币抵押品类别、Pendle 最大的资产。</p></div>
+    <div class="box"><b>4. 资本与机构背书</b><p>Dragonfly、Franklin Templeton 等投资；纳斯达克上市公司 StablecoinX 持有 20% 的 ENA；Coinbase、贝莱德 Aladdin、Janus Henderson、Robinhood 合作。</p></div>
+    <div class="box"><b>5. 叙事与筹码结构</b><p>“互联网美元 / 稳定币”是 2025–26 最强叙事之一。ENA 上线即高 FDV（ATH 时约 $228 亿），市场早已习惯给它大估值。</p></div>
+  </div>
+
+  <h3>3.4 熊市里，用户为什么持有 USDe，而不是直接去 Aave 存 USDT</h3>
+  <p class="muted">先区分角色：直接铸造的只有白名单做市商，动机是锚定套利（USDe 高于 $1 时铸造卖出，低于 $1 时买入赎回），不是收益。普通用户是在二级市场买入并持有 USDe / sUSDe，真正的问题是“持有 USDe 比存 Aave 好在哪”。</p>
+  <div class="grid-32">
+    <div>
+      <table>
+        <tr><th>产品（以太坊主网）</th><th class="r">当前 APY</th><th class="r">30 日均值</th><th>额外风险层</th></tr>
+        <tr class="hl"><td>sUSDe</td><td class="r">5.01%</td><td class="r">4.93%</td><td>Ethena 运营 + 托管 + 交易所 + 储备里的 Aave / Morpho / CLO</td></tr>
+        <tr><td>Aave USDC</td><td class="r">3.83%</td><td class="r">4.21%</td><td>Aave 合约与坏账</td></tr>
+        <tr><td>Aave USDT</td><td class="r">3.69%</td><td class="r">3.85%</td><td>Aave 合约与坏账</td></tr>
+        <tr><td>sUSDS（Sky 储蓄率）</td><td class="r">3.80%</td><td class="r">3.60%</td><td>Sky 抵押品与 RWA</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama Yields（2026-10-08）。sUSDe 多出的约 1.1–1.3 个百分点主要来自储备配置：约 18% 的基差仓位（9 月资金费率回暖）、AAA 级 CLO（约 5%）和机构贷款（4%–7%），协议整体收益率约 5.0%（官方 API）。</p>
+    </div>
+    <div>
+      <h4>Aave 存款给不了、USDe 能给的</h4>
+      <ul class="muted">
+        <li><b>交易所里会生息的保证金</b>：在 Bybit、Binance、OKX、Deribit 等可直接做合约保证金并拿奖励，USDT 做保证金是零收益。这是最核心的需求。</li>
+        <li><b>DeFi 可组合性</b>：sUSDe 在 Aave 循环借贷、Pendle 固定收益与收益率交易。</li>
+        <li><b>牛市收益期权</b>：资金费率回升时基差占比可拉回 50% 以上，2024 年 sUSDe 年均 17.5%。</li>
+        <li><b>分发渠道</b>：Ethena Pay、白标稳定币、券商与交易所理财入口。</li>
+      </ul>
+    </div>
+  </div>
+  <table>
+    <tr><th>收益类型</th><th>资金来源</th><th>算不算补贴</th><th>可持续性</th></tr>
+    <tr><td>sUSDe 约 5%</td><td>储备资产实际收益的分成</td><td>基本不算：储备金 $6,200 万自 2024-12 起未动用，没有用国库补收益</td><td>随资金费率与利率波动；费用开关触发后会被按比例扣减</td></tr>
+    <tr><td>交易所持有 USDe 的奖励</td><td>毛收入的约 34% 转给渠道</td><td>算，相当于获客成本</td><td>取决于协议愿意自己少赚多少；目前协议几乎不留存</td></tr>
+    <tr><td>Aave 上 sUSDe 循环借贷的高收益</td><td>毛收入的约 31% 补贴</td><td>算</td><td>同上；2026-04 rsETH 事件显示循环杠杆退潮很快</td></tr>
+    <tr><td>ENA 积分与季度奖励</td><td>增发分配 ENA</td><td>算</td><td>已于 2026-09-30 全部结束</td></tr>
+  </table>
+  <div class="callout warn"><b class="t">判断</b>对只想被动吃息的人，熊市里直接存 Aave 或 sUSDS 是理性选择：sUSDe 只多出 1 个多百分点，却叠加了 Aave 之上的运营、托管、交易所风险；Blockworks 统计 705 天中有 243 天 sUSDe 收益低于 sUSDS。USDe 的真正卖点是交易所保证金场景（与牛熊无关）和牛市资金费率弹性。这也意味着“用户收益”和“ENA 回购”在抢同一块蛋糕：协议留存越多，利差越薄。</div>
+
+  <h3>3.5 但市值排名不等于基本面排名</h3>
+  <table>
+    <tr><th>协议</th><th class="r">流通市值</th><th class="r">年毛费用</th><th class="r">协议收入</th><th class="r">归代币持有人</th><th class="r">市值 / 毛费用</th><th class="r">市值 / 持有人收入</th></tr>
+    <tr><td>Hyperliquid（HYPE）</td><td class="r">$194.5 亿</td><td class="r">$9.29 亿</td><td class="r">$7.07 亿</td><td class="r">$7.07 亿</td><td class="r">21x</td><td class="r">28x</td></tr>
+    <tr><td>Uniswap（UNI）</td><td class="r">$48.8 亿</td><td class="r">$9.67 亿</td><td class="r">$0.55 亿</td><td class="r">$0.55 亿（30 天年化 $1.43 亿）</td><td class="r">5.0x</td><td class="r">34–89x</td></tr>
+    <tr class="hl"><td>Ethena（ENA）</td><td class="r">$29.6 亿</td><td class="r">$2.58 亿</td><td class="r">$0.02 亿</td><td class="r">$0</td><td class="r">11.5x</td><td class="r">无穷大</td></tr>
+    <tr><td>Aave（AAVE）</td><td class="r">$26.6 亿</td><td class="r">$7.18 亿</td><td class="r">$0.93 亿</td><td class="r">$0.19 亿</td><td class="r">3.7x</td><td class="r">140x</td></tr>
+    <tr><td>Sky（SKY）</td><td class="r">$18.7 亿</td><td class="r">$3.93 亿</td><td class="r">$2.02 亿</td><td class="r">$0.60 亿</td><td class="r">4.8x</td><td class="r">31x</td></tr>
+    <tr><td>Morpho（MORPHO）</td><td class="r">$18.0 亿</td><td class="r">$2.06 亿</td><td class="r">$0</td><td class="r">$0</td><td class="r">8.7x</td><td class="r">无穷大</td></tr>
+  </table>
+  <p class="small">来源：CoinGecko 市值、DefiLlama 近 365 天 Fees / Revenue / Holders Revenue（2026-10-08）。不同协议的“费用”含义不同：Ethena 的费用几乎全部是付给存款人的收益，相当于银行的利息支出。</p>
+  <div class="callout warn"><b class="t">关键观察</b>按“市值 / 毛费用”计，ENA 是借贷和稳定币赛道里最贵的之一（11.5 倍，Aave 3.7 倍、Sky 4.8 倍），而归属持有人的收入是 0。换句话说，ENA 当前的市值不是由已有现金流支撑的，而是由“USDe 重回百亿规模后费用开关打开”的预期支撑的。另外，ENA 市值比 2025-10 底还高（$29.7 亿 vs $28.2 亿），但同期 USDe 规模只剩一半；价格反而跌了 44%——市值上升很大一部分来自流通量从约 72 亿枚增加到 134 亿枚。</div>
+
+  <h3>3.6 真的很有前景吗：正反两面</h3>
+  <div class="grid2">
+    <div class="card good"><div class="hd">看多的理由</div><div class="bd">
+      <ul>
+        <li><b>经历了两次极端压力测试</b>：2025-10-10 与 2026-04 两次挤兑，累计赎回超 $35 亿，抵押率始终 &gt; 100%，未动用储备金。合成美元这条路被证明是可行的。</li>
+        <li><b>周期弹性极大</b>：牛市回来时资金费率上升，USDe 规模和收入都会成倍放大（2025-07 到 2025-09 一个季度 +170%），费用开关也会随规模自动上档。</li>
+        <li><b>收益来源在分散</b>：股票、黄金基差、RWA、机构贷款逐步建立，降低单一资金费率依赖。</li>
+        <li><b>渠道与机构化</b>：Coinbase 主托管、贝莱德 Aladdin、Robinhood、Ethena Pay 直达消费者，白标稳定币让其他生态“用 Ethena 发币”。</li>
+        <li><b>代币经济修复</b>：投资人抛压一次性出清、协议 IP 与价值归基金会、9 月底停止 ENA 激励（不再为增长而增发），费用开关规则透明。</li>
+      </ul>
+    </div></div>
+    <div class="card bad"><div class="hd">看空的理由</div><div class="bd">
+      <ul>
+        <li><b>规模缩水 67% 且尚未恢复</b>：USDe 从 $148 亿降到 $49 亿，sUSDe 质押率从 58% 降到约 25%，说明“为收益而来”的资金已大量离开。</li>
+        <li><b>核心差异化在熊市失效</b>：收益率已与 sUSDS、syrupUSDC 等相近；还要和 Falcon USDf、USDai、交易所理财等竞争。</li>
+        <li><b>收入几乎全部转手</b>：毛收入约三分之一给 sUSDe、三分之一给交易所合作方、三分之一给 Aave 杠杆激励，协议自身几乎不留存。</li>
+        <li><b>代币价值捕获遥远且偏弱</b>：首档回购要 USDe 增长 54% 才触发，且只有约 $1,800 万/年；而团队每月仍解锁 9,375 万枚。</li>
+        <li><b>中心化与对手方风险</b>：约 66% 的对冲头寸在 Binance；铸造赎回仅限白名单；不对美国用户开放，欧盟业务 2025 年已撤出。</li>
+      </ul>
+    </div></div>
+  </div>
+  <div class="callout"><b class="t">我们的判断</b>Ethena 是一个<b>真实、经过验证、但强周期</b>的生意，不是“稳赚的 DeFi 蓝筹”。它的长期前景取决于两个变量：一是加密杠杆周期（决定资金费率和规模），二是能否把 Ethena Pay、白标、机构渠道做成不依赖高收益的“粘性美元需求”。作为协议，它大概率会长期存在并在下一轮牛市再次放量；作为代币，ENA 是一个押注“USDe 回到 $100–200 亿”的高贝塔期权，当前价格已经提前反映了相当一部分乐观预期。</div>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、经营数据</h2>
+  <p class="lead">一句话概括：Ethena 的收入 ≈ USDe 规模 × 协议收益率。2026 年协议收益率稳定在 4.5%–5%，规模缩水使毛收入从 2025 Q3 的单季 $1.51 亿降到 2026 年每季 $5,000 多万；9 月以来规模回升约 20%，收入止跌回升。</p>
+
+  <h3>4.1 USDe 与 USDtb 流通量</h3>
+  <div class="chart" id="ch-supply"></div>
+  <p class="small">图：月末流通量（亿美元）· 来源：DefiLlama stablecoins（USDe id 146、USDtb id 221）· 2024-01 至 2026-10-08</p>
+  <p class="muted">USDe 的规模曲线有三个清晰的周期：2024 年 3–6 月的第一波（$5 亿到 $36 亿）、2024-11 到 2025-01 的第二波（到 $59 亿）、2025-07 到 2025-10 的第三波（到 $148 亿）。每一波都与 BTC / ETH 资金费率高企同步，每次退潮都回撤 30%–70%。2026-04 底部约 $39 亿，之后在 $39–49 亿之间震荡，9 月因资金费率回暖和美股基差上线回升到 $49 亿。</p>
+
+  <h4>缩水 67%：是熊市周期，还是脱锚后的信任危机？</h4>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>阶段</th><th class="r">USDe 规模</th><th>主要原因</th></tr>
+        <tr><td>2025-10-04 峰值 → 10-09</td><td class="r">$148.2 亿 → $146.5 亿</td><td>事件前已见顶</td></tr>
+        <tr class="bad"><td>10-09 → 10-12</td><td class="r">→ $127.0 亿</td><td>10-10 暴跌与 Binance 事件，3 天 -$19.5 亿</td></tr>
+        <tr><td>10-12 → 12-31</td><td class="r">→ $63.0 亿</td><td>资金费率塌陷、循环杠杆退潮，-$64 亿</td></tr>
+        <tr class="good"><td>2026 Q1</td><td class="r">$63 亿 → $59 亿</td><td>基本稳住，期间 ETH 资金费率为 2023 年来最差</td></tr>
+        <tr class="bad"><td>04-18 → 04-30</td><td class="r">$58.3 亿 → $38.1 亿</td><td>外部 rsETH 事件引发 Aave 去杠杆</td></tr>
+        <tr class="good"><td>至 2026-10-08</td><td class="r">→ $48.8 亿</td><td>资金费率回暖、美股基差上线</td></tr>
+      </table>
+    </div>
+    <div>
+      <table>
+        <tr><th>同期对比（2025-10-04 → 2026-10-08）</th><th class="r">规模变化</th></tr>
+        <tr class="hl"><td>USDe</td><td class="r">-67%</td></tr>
+        <tr><td>Astherus USDF（同为资金费率型）</td><td class="r">-69%</td></tr>
+        <tr><td>Resolv USR（同为 Delta 中性）</td><td class="r">-97%</td></tr>
+        <tr><td>Falcon USDf（多元抵押合成美元）</td><td class="r">+2%</td></tr>
+        <tr><td>USDT / USDC</td><td class="r">+4% / -2%</td></tr>
+        <tr><td>USDS（Sky，储蓄率约 3.8%）</td><td class="r">+60%</td></tr>
+        <tr><td>USD1</td><td class="r">+65%</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama stablecoins。</p>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">判断：收益周期决定方向，两次事件加速了下跌</b>依据有四点：① 10-10 是 Binance 内部市场价格崩溃，USDe 协议本身没有脱锚，$19 亿赎回全部按 1:1 兑付；② 事件直接流出只占总缩水约五分之一，大头来自之后收益下降带来的持续流出，而 2026 Q1 资金费率最差时规模反而稳住，资金费率回暖后又回升；③ 稳定币总盘子没缩，钱从“资金费率型”流向“纯利息型”，同类产品同步缩水；④ 2024 下半年没有任何事件的熊市也缩了约 30%，这一轮峰值被 Aave 循环借贷、Pendle 和 ENA 积分吹得更大（一个季度从 $53 亿到 $145 亿），退得也更快。信任层面的伤害并非为零：10-10 暴露了单一交易所流动性风险，2026-04 暴露了循环杠杆的脆弱性，ENA 一年跌 59% 也削弱了积分吸引力。后续验证信号：资金费率回升时规模能否回到 $75 亿以上；ENA 激励结束后规模是否明显流失。</div>
+
+  <h3>4.2 毛收入（付给用户和合作方之前）</h3>
+  <div class="grid2">
+    <div>
+      <div class="chart" id="ch-qrev"></div>
+      <p class="small">图：季度毛收入（百万美元）· 来源：DefiLlama Ethena 利润表（Gross Protocol Revenue）。2023-12 至 2024-03 的数据包含统计异常（把铸造金额计为费用），未画入。</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-mrev"></div>
+      <p class="small">图：月度毛收入（百万美元）· 来源：DefiLlama dailyFees 按月汇总 · 2025-01 至 2026-09</p>
+    </div>
+  </div>
+
+  <h3>4.3 官方月度收入与分配</h3>
+  <table>
+    <tr><th>月份</th><th class="r">USDtb 利息</th><th class="r">USDe 收入</th><th class="r">合计</th><th class="r">分给 sUSDe</th><th class="r">分给合作方</th><th class="r">Aave 杠杆激励</th><th class="r">储备金</th></tr>
+    <tr><td>2025-12</td><td class="r">—</td><td class="r">—</td><td class="r">$2,480 万</td><td class="r" colspan="4">—</td></tr>
+    <tr><td>2026-01</td><td class="r">$245 万</td><td class="r">$2,737 万</td><td class="r">$2,982 万</td><td class="r" rowspan="2">54.6%</td><td class="r" rowspan="2">27.9%</td><td class="r" rowspan="2">17.5%</td><td class="r" rowspan="2">0</td></tr>
+    <tr><td>2026-02</td><td class="r">$237 万</td><td class="r">$1,883 万</td><td class="r">$2,120 万</td></tr>
+    <tr><td>2026-03</td><td class="r">$272 万</td><td class="r">$1,876 万</td><td class="r">$2,149 万</td><td class="r">55.4%</td><td class="r">30.4%</td><td class="r">13.8%</td><td class="r">0</td></tr>
+    <tr><td>2026-04</td><td class="r">$247 万</td><td class="r">$1,954 万</td><td class="r">$2,201 万</td><td class="r">50.3%</td><td class="r">36.0%</td><td class="r">12.0%</td><td class="r">0</td></tr>
+    <tr><td>2026-05</td><td class="r">约 $240 万</td><td class="r">—</td><td class="r">约 $1,650 万</td><td class="r">约 44%</td><td class="r">约 38%</td><td class="r">约 18%</td><td class="r">0</td></tr>
+    <tr class="hl"><td>近 30 天（至 2026-08-24）</td><td class="r" colspan="2">年化 $1.75 亿（不含铸造费）</td><td class="r">—</td><td class="r">34.3%</td><td class="r">34.3%</td><td class="r">31.4%</td><td class="r">0</td></tr>
+  </table>
+  <p class="small">来源：治理论坛 2026 年 1–2 月、3–4 月、5 月报告（Kairos Research / Blockworks Research 看板）；近 30 天分配来自 Blockworks Advisory 费用开关分析（2026-08-27）。官方年化收入：3 月末 $2.21 亿、4 月末 $2.34 亿；截至 2026-08 近 12 个月 $2.84 亿、累计约 $10.4 亿。</p>
+
+  <div class="grid-32">
+    <div>
+      <h3>4.4 每 100 美元毛收入去了哪里</h3>
+      <div class="bar100">
+        <div style="width:32.7%;background:var(--c1)"></div>
+        <div style="width:32.7%;background:var(--c4)"></div>
+        <div style="width:29.9%;background:var(--c5)"></div>
+        <div style="width:4.7%;background:var(--c3)"></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--c1)"></i>sUSDe 质押收益 32.7</span><span><i style="background:var(--c4)"></i>交易所 / 渠道合作方 32.7</span><span><i style="background:var(--c5)"></i>Aave 杠杆激励 29.9</span><span><i style="background:var(--c3)"></i>铸造费（协议留存）4.7</span></div>
+      <p class="muted">这是理解 Ethena 商业模式最重要的一张图。“合作方奖励”类似 Circle 把储备利息分给 Coinbase：交易所帮 USDe 获客，Ethena 把收益分给交易所里的 USDe 持有人。“Aave 杠杆激励”是补贴在 Aave 上循环借贷 USDe / sUSDe 的用户。这两项占比从全历史的约 35% 升到近期的 66%，说明在资金费率低迷时，Ethena 要花越来越多的收益来“买”规模。协议自己几乎不留钱：DefiLlama 口径近 30 天协议收入仅约 $1.8 万。</p>
+      <p class="small">按 Blockworks 近 30 天分配比例（34.3 / 34.3 / 31.4）乘以 95.3%，铸造费占毛收入 4.7%（年化约 $840 万）。</p>
+    </div>
+    <div>
+      <h3>4.5 sUSDe 质押率</h3>
+      <div class="chart" id="ch-stake"></div>
+      <p class="small">图：sUSDe / USDe（%）· 来源：治理论坛月度报告；2026-10 按 aavescan sUSDe 12.3 亿 / USDe 48.8 亿估算</p>
+    </div>
+  </div>
+  <p class="muted">质押率下降有两层含义：一是冷却期从 7 天降到 1 天，持有 USDe 的机会成本变小；二是越来越多 USDe 通过交易所奖励、Aave、Pendle 等渠道获得收益，而不是直接质押。这也是“合作方奖励”占比上升的原因。</p>
+
+  <h3>4.6 单位经济学</h3>
+  <div class="grid4">
+    <div class="box"><b>协议收益率 ≈ 5.0%</b><p>ethena.fi API：近 30 日协议收益率 4.995%，sUSDe 4.87%。Blockworks 回测期（2024-09 至 2026-08）实现收益率中位约 4.6%，超过 6% 的天数占 17%。</p></div>
+    <div class="box"><b>每 $10 亿 USDe ≈ $5,000 万/年</b><p>按 5% 计。回到 2025 年峰值 $148 亿、收益率 6% 时，年毛收入约 $8.9 亿。</p></div>
+    <div class="box"><b>2026 Q3 毛收入 $5,355 万</b><p>季度年化约 $2.14 亿；近 30 天年化 $2.21 亿；与 2025 Q3 的 $1.51 亿相比下降 65%。</p></div>
+    <div class="box"><b>储备金 $6,200 万</b><p>约为风险委员会建议规模（$500–700 万）的 9 倍，USDtb 利息已改为分给 sUSDe 持有人。</p></div>
+  </div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、压力测试与风险</h2>
+  <h3>5.1 两次真实挤兑</h3>
+  <table>
+    <tr><th>事件</th><th>发生了什么</th><th>Ethena 的表现</th></tr>
+    <tr><td>2025-10-10 全市场暴跌</td><td>USDe 在 Binance 一度跌至 $0.65。Binance 用自家薄弱的订单簿作为抵押品预言机，且没有与 Ethena 的直接铸造赎回通道，做市商无法套利；有分析称有人在 Binance 砸盘约 $9,000 万 USDe，触发约 $10 亿连环清算</td><td>24 小时赎回约 $19 亿（约 13% 供应），Curve 等主要场所偏离不超过 0.3%；抵押率保持在约 100.6%，未动用储备金；Binance 事后对受影响用户补偿</td></tr>
+    <tr><td>2026-04 rsETH 事件</td><td>Kelp rsETH 跨链桥事件引发全行业去杠杆，Aave 上 USDe / sUSDe 循环借贷大规模平仓</td><td>4-19 至 4-23 赎回约 $16.8 亿，月底供应降至 $39 亿；抵押率反而升到 101.6%；预防性暂停 LayerZero 跨链桥，并把验证节点从 2/2 加强到 4/4</td></tr>
+  </table>
+  <p class="muted">两次事件证明了一点：当储备以稳定币为主时，USDe 的赎回本质是“把稳定币还给你”，不需要紧急平掉对冲仓位，所以能扛住大额赎回。但这也意味着在储备以基差交易为主的牛市高点（如 2025 年 9 月，基差约占一半），同等规模的挤兑压力会更大，届时才是真正的考验。</p>
+
+  <h3>5.2 风险清单</h3>
+  <table>
+    <tr><th>风险</th><th>说明</th><th>当前程度</th></tr>
+    <tr><td>资金费率风险</td><td>长期负费率会侵蚀储备；2026 年 2–4 月为负，Ethena 通过切换到稳定币规避</td><td><span class="tag green">低</span>储备以现金类为主</td></tr>
+    <tr><td>交易所对手方</td><td>对冲头寸约 66% 在 Binance，其余在 OKX、Bybit、Deribit、Coinbase International；托管有 OES 保护，但未结算盈亏仍有风险</td><td><span class="tag orange">中</span></td></tr>
+    <tr><td>托管与运营</td><td>大量环节在链下：白名单铸造、托管、交易执行、机构贷款法律合同</td><td><span class="tag orange">中</span></td></tr>
+    <tr><td>储备资产信用风险</td><td>DeFi 借贷（智能合约与坏账）、CLO、机构贷款、代币化股票都引入了新风险；“现金类”不等于零风险</td><td><span class="tag orange">中，上升中</span></td></tr>
+    <tr><td>竞争</td><td>sUSDS、Maple syrupUSDC、Falcon USDf（$16.6 亿）、USDai、交易所自有理财，以及 Hyperliquid 原生稳定币</td><td><span class="tag red">高</span></td></tr>
+    <tr><td>监管</td><td>不对美国人开放铸造与 sUSDe；2025 年因 BaFin 监管问题关闭德国子公司、放弃欧盟 MiCA 授权；美国 GENIUS 法案禁止支付型稳定币发行方直接付息</td><td><span class="tag orange">中</span></td></tr>
+    <tr><td>增长靠补贴</td><td>合作方奖励与 Aave 激励占毛收入约 66%；ENA 激励已于 2026-09-30 停止，规模能否在无代币补贴下增长有待验证</td><td><span class="tag orange">中</span></td></tr>
+  </table>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、ENA 代币</h2>
+  <div class="stats">
+    <div class="stat"><b>150 亿枚</b><span>总量上限，无通胀增发</span></div>
+    <div class="stat"><b>134.1 亿</b><span>流通量（约 89%，CoinGecko）</span></div>
+    <div class="stat orange"><b>$0.221</b><span>价格；近 30 天 +36%，近 1 年 -59%</span></div>
+    <div class="stat"><b>$3.65 亿</b><span>24 小时成交额</span></div>
+    <div class="stat blue"><b>20.2%</b><span>StablecoinX 持有占总量比例（30.29 亿枚）</span></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h3>6.1 初始分配</h3>
+      <div class="chart" id="ch-alloc"></div>
+      <p class="small">来源：Ethena 官方代币经济（2024-04）。核心贡献者与投资人：1 年锁定后释放 25%，之后 3 年按月线性释放（至 2028-04）。</p>
+    </div>
+    <div>
+      <h3>6.2 价格走势</h3>
+      <div class="chart" id="ch-price"></div>
+      <p class="small">图：ENA 月度价格（美元）· 来源：DefiLlama coins / CoinGecko · 2024-04 至 2026-10</p>
+    </div>
+  </div>
+  <p class="muted">ENA 的价格几乎就是 USDe 规模的放大版：2024-12 到 2025-01、2025-08 到 2025-09 两次高点都对应 USDe 扩张期；2025-10 到 2026-07 跟随 USDe 缩水跌了 88%，最低 $0.071。7 月以来的上涨叠加了三件事：8 月 27 日的代币经济调整、9 月资金费率回暖带来的 USDe 回升，以及整体加密市场反弹。</p>
+
+  <h3>6.3 2026-08-27 四项代币经济调整</h3>
+  <table>
+    <tr><th>调整</th><th>内容</th><th>对 ENA 的意义</th></tr>
+    <tr><td>回购种子投资人锁仓</td><td>基金会通过场外交易，买下“原始分配 &gt; 0.25% 且过去 9 个月卖过 ENA”的主要种子投资人的全部未解锁代币（仅一个地址拒绝）</td><td>移除持续抛售者的后续供给；买入数量未披露</td></tr>
+    <tr><td>投资人剩余代币一次性解锁</td><td>原定每月约 7,813 万枚、持续到 2028-03 的投资人解锁，改为 2026-10-05 一次性释放（第三方推算约 14.1 亿枚）</td><td>把 17 个月的悬顶压力压缩到一天；未接受回购的“长期持有型”投资人自此可自由卖出</td></tr>
+    <tr><td>协议价值归基金会</td><td>Ethena Labs 与基金会签署主框架协议：协议 IP 和经济价值归基金会、由 ENA 持有人治理，Labs 股东不再获得剩余现金流（协议预计 10 月公布）</td><td>解决“代币 vs 股权”的价值归属疑问，是费用开关的法律前提</td></tr>
+    <tr><td>费用开关</td><td>按 USDe 规模分档把毛收入的 5%–20% 划给基金会，其中 95% 用于公开市场回购 ENA</td><td>首次给 ENA 建立了规则化的价值捕获路径，但当前规模下未触发（见第七部分）</td></tr>
+  </table>
+
+  <h3>6.4 剩余供给压力</h3>
+  <table>
+    <tr><th>来源</th><th class="r">数量</th><th>说明</th></tr>
+    <tr><td>团队（核心贡献者）</td><td class="r">约 9,375 万枚 / 月</td><td>维持原解锁表至 2028-04，剩余约 16.9 亿枚（约占总量 11%）；按当前价每月约 $2,070 万</td></tr>
+    <tr><td>基金会</td><td class="r">约 4,063 万枚 / 月</td><td>Tokenomist 口径；团队 + 基金会合计约 1.34 亿枚 / 月，约 $2,970 万</td></tr>
+    <tr><td>StablecoinX</td><td class="r">30.29 亿枚</td><td>2026-10-05 起锁定豁免，但出售需基金会同意，且基金会有 5 个工作日的优先购买权；平均成本 $0.0908，目前浮盈约 140%</td></tr>
+    <tr><td>生态发展分配</td><td class="r">—</td><td>用于激励、合作和增长预算，未公布释放表；USDe 相关激励已于 2026-09-30 归零，第 6 季空投规模待公布</td></tr>
+  </table>
+  <p class="small">CoinGecko 显示流通 134.1 亿、未流通约 15.9 亿；各方对基金会与生态分配是否计入流通的口径不同，剩余解锁量按不同来源在 16–24 亿枚之间。</p>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、代币价值捕获能力</h2>
+  <p class="lead">结论：<b>目前为零，规则已定，但启动门槛高、首档力度弱、强周期。</b>ENA 今天的用途只有治理、sENA 质押获得生态项目空投，以及费用开关的“期权”。</p>
+
+  <h3>7.1 费用开关规则（2026-09 投票通过）</h3>
+  <table>
+    <tr><th>USDe 14 日均值</th><th class="r">划给基金会的毛收入比例</th><th class="r">年回购（收益率 4.6%）</th><th class="r">年回购（收益率 5%）</th><th class="r">年回购（收益率 6%）</th><th class="r">回购 / 当前市值（5%）</th></tr>
+    <tr class="bad"><td>&lt; $75 亿（当前 $48.8 亿）</td><td class="r">0%</td><td class="r">$0</td><td class="r">$0</td><td class="r">$0</td><td class="r">0%</td></tr>
+    <tr><td>$75 亿</td><td class="r">5%</td><td class="r">$1,640 万</td><td class="r">$1,780 万</td><td class="r">$2,140 万</td><td class="r">0.60%</td></tr>
+    <tr><td>$100 亿</td><td class="r">10%</td><td class="r">$4,370 万</td><td class="r">$4,750 万</td><td class="r">$5,700 万</td><td class="r">1.60%</td></tr>
+    <tr><td>$150 亿</td><td class="r">15%</td><td class="r">$9,830 万</td><td class="r">$1.07 亿</td><td class="r">$1.28 亿</td><td class="r">3.61%</td></tr>
+    <tr><td>$200 亿</td><td class="r">20%</td><td class="r">$1.75 亿</td><td class="r">$1.90 亿</td><td class="r">$2.28 亿</td><td class="r">6.42%</td></tr>
+  </table>
+  <p class="small">计算：USDe 规模 × 协议收益率 × 档位比例 × 95%（基金会所得的 95% 用于回购，5% 用于增长）。当前市值按 $29.6 亿。抽成按比例从 sUSDe、合作方奖励、Aave 激励三条线中扣除。$150 亿和 $200 亿两档历史上从未达到（14 日均值峰值 $146.5 亿）。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>7.2 回购 vs 解锁</h3>
+      <div class="chart" id="ch-unlock"></div>
+      <p class="small">图：按当前价 $0.221 计的年金额（百万美元）· 解锁按团队 + 基金会约 1.34 亿枚 / 月；回购按 5% 协议收益率</p>
+    </div>
+    <div>
+      <h3>7.3 回测：大部分时间是关着的</h3>
+      <p class="muted">Blockworks Advisory 用 2024-09-19 到 2026-08-24 共 705 天的真实数据回测这套规则：</p>
+      <ul class="muted">
+        <li>只有 118 天处于启动状态（2025-07 到 2025-11），全周期共回购 $1,704 万；</li>
+        <li>启动期间年化 $5,270 万（当时市值收益率 3.36%），摊到全周期只有每年 $882 万（0.56%）；</li>
+        <li>相对于每年约 $5.12 亿的计划解锁（2026-08 时价格），启动时只能抵消约 10%，全周期不到 2%；</li>
+        <li>规则是顺周期的：规模大时 ENA 也贵，回测平均买入价比均匀买入贵 12.8%。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn"><b class="t">反身性陷阱：抽成会拖慢触发抽成的那个指标</b>费用开关是从毛收入里按比例扣，10% 的抽成意味着 sUSDe 收益率相对下降 10%。Blockworks 的回归显示：sUSDe 相对 sUSDS 的收益比与未来 30 天 USDe 规模增速显著相关（系数约 0.24，t 值约 4），而与质押比例无关。也就是说，抽成越多，USDe 越难增长，而 USDe 增长正是抽成上档的条件。风险委员会选择了“披露监控、不设收益率下限”，这在牛市问题不大，在规模刚过门槛时可能来回开关。</div>
+
+  <h3>7.4 价值捕获能力评分</h3>
+  <table>
+    <tr><th>维度</th><th>评价</th><th>说明</th></tr>
+    <tr><td>当前现金流</td><td><span class="tag red">无</span></td><td>协议几乎不留存收入，ENA 无分红、无回购</td></tr>
+    <tr><td>规则透明度</td><td><span class="tag green">好</span></td><td>档位、触发条件（14 日均值）、执行比例都公开，可链上验证</td></tr>
+    <tr><td>启动门槛</td><td><span class="tag orange">高</span></td><td>需要 USDe 增长 54% 到 $75 亿</td></tr>
+    <tr><td>力度</td><td><span class="tag orange">首档弱、高档强</span></td><td>$75 亿时约 0.6% 回购收益率；$200 亿时约 6.4%，可与 HYPE、SKY 相比</td></tr>
+    <tr><td>法律确定性</td><td><span class="tag orange">进行中</span></td><td>主框架协议原则上达成，预计 10 月公布全文</td></tr>
+    <tr><td>稀释抵消</td><td><span class="tag red">弱</span></td><td>2028-04 前团队与基金会解锁的价值远高于首档回购</td></tr>
+  </table>
+
+  <h3>7.5 换个视角：把 Ethena 当成一家基金公司</h3>
+  <p class="muted">Ethena 很像一家“货币基金 + 期现套利基金”二合一的资管公司：熊市是货币基金，牛市切换成期现套利基金。USDe 是基金份额，ENA 是这家公司的股权。但它和传统基金公司有三处关键不同：</p>
+  <div class="grid3">
+    <div class="box"><b>1. 卖点不只是利差，更是渠道</b><p>类比余额宝：能做大靠的是长在支付宝里，而不是收益更高。USDe 能在交易所直接当保证金还生息，这是它花约 34% 毛收入分给交易所的原因。</p></div>
+    <div class="box"><b>2. 超额收益来自市场结构，不是投资能力</b><p>收益来自加密多头的杠杆需求，强周期（2024 年 17.5%、2025 年 6.5%、2026 年至今 4.1%），策略可被 Falcon、交易所理财等复制，规模越大利差越薄。</p></div>
+    <div class="box"><b>3. 目前是一家不收管理费的基金公司</b><p>传统基金按规模收 1%–2% 管理费；Ethena 毛收入几乎全部分出，管理费率约为 0。费用开关首档相当于规模的约 0.2%，最高档约 0.9%。</p></div>
+  </div>
+  <table>
+    <tr><th>基金公司视角指标</th><th class="r">数值</th><th>说明</th></tr>
+    <tr><td>管理规模（USDe 供应量）</td><td class="r">$48.8 亿</td><td>2025 年峰值 $148 亿</td></tr>
+    <tr><td>ENA 完全稀释市值</td><td class="r">$33.1 亿</td><td>流通市值 $29.6 亿</td></tr>
+    <tr class="hl"><td>市值 / 管理规模</td><td class="r">约 68%</td><td>传统上市资管公司通常只有管理规模的个位数百分比</td></tr>
+    <tr><td>当前归属 ENA 的年收入</td><td class="r">约 $0</td><td>费用开关未触发</td></tr>
+    <tr><td>假设当前毛收入按最高档 20% 抽成</td><td class="r">约 $4,400 万 / 年</td><td>按近 30 天年化毛收入 $2.2 亿计，对应完全稀释市盈率约 75 倍；实际规则要求规模到 $200 亿才抽 20%</td></tr>
+  </table>
+  <p class="muted">按基金公司逻辑，ENA 的价格主要是在为“下一轮牛市的规模扩张”和“稳定币发行方”叙事付钱，而不是为当下的盈利能力付钱。要兑现，需要规模大幅增长并开始收费；而一旦收费，用户拿到的利差又会被压缩，两者存在天然冲突（见 7.3 反身性陷阱）。</p>
+
+  <!-- ============ 八 ============ -->
+  <h2 id="s8">八、回购模拟器</h2>
+  <p class="muted">拖动参数，看不同 USDe 规模、协议收益率和 ENA 价格下，费用开关能带来多少回购、能抵消多少解锁。默认值为 2026-10-08 实际数据。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" id="simstats" style="grid-template-columns: repeat(3, 1fr);"></div>
+      <table id="simtable"></table>
+      <h4>年回购随 USDe 规模变化（当前收益率与价格下）</h4>
+      <div class="chart" id="ch-sim1"></div>
+      <h4>回购收益率随 ENA 价格变化（当前规模与收益率下）</h4>
+      <div class="chart" id="ch-sim2"></div>
+    </div>
+  </div>
+  <p class="small">模拟器为简化模型：毛收入 = USDe 规模 × 协议收益率 + 其他业务线毛收入；回购 = 毛收入 × 档位比例 × 95%；不考虑抽成对 USDe 增长的负反馈、回购对价格的影响，以及基金会持有的其他资产。</p>
+
+  <!-- ============ 九 ============ -->
+  <h2 id="s9">九、结论与跟踪</h2>
+  <div class="grid3">
+    <div class="card"><div class="hd">作为存款产品（USDe / sUSDe）</div><div class="bd">经过两次大额挤兑验证、抵押率透明，是目前最成熟的合成美元。但它不是“无风险美元”：收益依赖交易所、托管方、DeFi 借贷与信用资产，赎回依赖 Ethena 运营。当前约 5% 的收益与 sUSDS 等竞品相近，风险溢价并不丰厚；牛市资金费率上升时吸引力会显著提高。</div></div>
+    <div class="card"><div class="hd">作为生意</div><div class="bd">收入 = 规模 × 收益率，两者都随加密杠杆周期大幅波动。2026 年证明了它能在熊市里“活得好”，但也暴露了熊市里差异化消失、要靠分给合作方的奖励来维持规模。Ethena Pay 和白标是第二增长曲线的尝试，尚处早期。</div></div>
+    <div class="card"><div class="hd">作为代币（ENA）</div><div class="bd">当前零现金流，市值约 $30 亿完全由预期支撑。代币经济调整方向正确，但投资人一次性解锁刚刚发生、团队解锁仍持续到 2028 年。ENA 本质是对“USDe 重回 $100–200 亿”的高贝塔看涨期权；如果你相信下一轮杠杆牛市，它是最直接的标的之一，否则估值偏贵。</div></div>
+  </div>
+
+  <h3>9.1 后续跟踪指标</h3>
+  <table>
+    <tr><th>指标 / 事件</th><th>为什么重要</th><th>时间</th></tr>
+    <tr class="hl"><td>USDe 14 日均值 vs $75 亿</td><td>费用开关首档触发条件，当前差 54%</td><td>每日</td></tr>
+    <tr><td>BTC / ETH 资金费率、基差仓位占比</td><td>决定协议收益率与 USDe 吸引力；基差占比已从 1% 回升到 18%</td><td>每周</td></tr>
+    <tr><td>sUSDe 与 sUSDS 收益比</td><td>Blockworks 回归显示与 USDe 增速高度相关</td><td>每周</td></tr>
+    <tr><td>主框架协议全文</td><td>确认协议价值归属基金会与 ENA 持有人</td><td>2026-10</td></tr>
+    <tr><td>10-05 解锁后的链上流向、StablecoinX 的“融资性出售”</td><td>判断新增流通筹码是否涌入交易所</td><td>2026-10 / 11</td></tr>
+    <tr><td>Ethena Pay 进入美国、英国、欧盟的进度与余额</td><td>能否形成不依赖高收益的粘性需求</td><td>2026 Q4</td></tr>
+    <tr><td>美股基差与 RWA 规模</td><td>新收益来源能否放量</td><td>每月</td></tr>
+    <tr><td>第 6 季空投规模与解锁安排</td><td>激励结束后的最后一笔生态分配</td><td>待公布</td></tr>
+  </table>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://ethena.fi/">Ethena 官网</a>与公开 API（<code>/api/yields/protocol-and-staking-yield</code>、<code>/api/positions/current/collateral</code>）· <a href="https://docs.ethena.fi/">Ethena 文档</a> · <a href="https://pay.ethena.fi/blog/introducing-ethena-pay">Introducing Ethena Pay</a></li>
+    <li>Ethena 治理论坛：<a href="https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830">ENA Fee Switch Activation</a>（含 Blockworks Advisory 回测、OAK Research 意见）、<a href="https://gov.ethenafoundation.com/t/ethena-s-march-and-april-2026-governance-update/791">2026 年 3–4 月</a>、<a href="https://gov.ethenafoundation.com/t/ethenas-may-2026-governance-update/796">5 月</a>、<a href="https://gov.ethenafoundation.com/t/ethena-s-june-2026-governance-update/808">6 月</a>、<a href="https://gov.ethenafoundation.com/t/ethena-s-january-and-february-2026-governance-update/753">1–2 月</a>及 2025 年各月治理报告</li>
+    <li><a href="https://defillama.com/protocol/ethena">DefiLlama Ethena</a>（费用、收入、利润表）· DefiLlama Stablecoins（USDe、USDtb）· DefiLlama Yields（sUSDe）· <a href="https://aavescan.com/rates/ethena-susde">aavescan sUSDe</a> · CoinGecko ENA 行情与同类市值</li>
+    <li><a href="https://www.theblock.co/news/ecosystems/2026-08-27-ethena-foundation-proposes-fee-switch-ena-token-buybacks-other-updates-412951">The Block：四项调整</a> · <a href="https://www.coindesk.com/markets/2026/08/27/ethena-surges-as-buyback-vote-vc-unlock-overhaul-boost-token-outlook">CoinDesk：ENA 代币经济调整</a> · <a href="https://www.coindesk.com/markets/2025/10/13/no-ethena-s-usde-didn-t-de-peg">CoinDesk：2025-10-10 Binance 事件</a> · <a href="https://www.theblock.co/news/deals/2026-09-25-ethena-expands-usde-backing-strategy-into-bstocks-and-equity-perpetuals-on-binance-416367">The Block：美股基差</a></li>
+    <li>StablecoinX 纳斯达克公告与 SEC 招股书（ENA 持仓、锁定豁免条款）· SafeArbitrage 资金费率统计 · Bitrue / Tokenomist 解锁推算</li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。不同来源的统计口径存在差异（尤其是“收入”与“流通量”），已在文中标注；回购与情景测算为按公开规则的简化估算。加密资产与合成美元产品存在本金全部损失的风险。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = opt.width || 640, H = opt.height || 260, L = 48, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+    }
+    const every = Math.ceil(cats.length / (opt.ticks || 12));
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    if (opt.mark !== undefined) {
+      el("line", { x1: x(opt.mark), x2: x(opt.mark), y1: T, y2: H - B, stroke: css("--orange"), "stroke-dasharray": "4 3" }, svg);
+      if (opt.markLabel) el("text", { x: x(opt.mark) + 4, y: T + 10 }, svg, opt.markLabel);
+    }
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      const pts = s.data.map((v, i) => (v === null ? null : `${x(i)},${y(v)}`));
+      let seg = [];
+      const flush = () => { if (seg.length > 1) el("polyline", { points: seg.join(" "), fill: "none", stroke: col, "stroke-width": 2 }, svg); seg = []; };
+      pts.forEach((p) => { if (p === null) flush(); else seg.push(p); });
+      flush();
+      s.data.forEach((v, i) => {
+        if (v === null) return;
+        const c = el("circle", { cx: x(i), cy: y(v), r: cats.length > 20 ? 2 : 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const horiz = !!opt.horizontal, stacked = !!opt.stacked;
+    const n = cats.length, m = series.length;
+    const all = stacked ? cats.map((_, i) => series.reduce((a, s) => a + s.data[i], 0)) : series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = opt.width || 640, L = horiz ? (opt.labelWidth || 150) : 48, R = horiz ? 60 : 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = stacked ? Math.min(40, band * 0.7) : Math.min(40, (band * 0.7) / m);
+      const every = Math.ceil(n / 12);
+      cats.forEach((c, i) => {
+        if (i % every === 0) el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        let acc = 0;
+        series.forEach((s, si) => {
+          const v = s.data[i];
+          const x0 = stacked ? L + band * (i + 0.5) - bw / 2 : L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const top = stacked ? y(acc + v) : Math.min(y(v), y(0));
+          const h = stacked ? y(acc) - y(acc + v) : Math.abs(y(v) - y(0));
+          const col = m === 1 ? color(opt.colorEach ? i : (v < 0 ? 1 : 0), s.tone && !opt.colorEach ? s.tone : undefined) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: top, width: bw - 2, height: Math.max(h, 0), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          if (!stacked) el("text", { x: x0 + bw / 2 - 1, y: (v >= 0 ? y(v) - 4 : y(v) + 12), "text-anchor": "middle" }, svg, fmt(v));
+          acc += v;
+        });
+        if (stacked && opt.totals) el("text", { x: L + band * (i + 0.5), y: y(acc) - 4, "text-anchor": "middle", style: "font-size:9px" }, svg, fmt(acc));
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = opt.highlight !== undefined ? (i === opt.highlight ? css("--orange") : css("--c1")) : (m === 1 ? color(opt.colorEach ? i : 0) : color(si, s.tone));
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.abs(x(v) - x(0)), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  function donut(id, data) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const total = data.reduce((a, d) => a + d.value, 0);
+    const svg = el("svg", { viewBox: "0 0 640 220" }, host);
+    const cx = 110, cy = 110, r = 90, ri = 54;
+    let a0 = -Math.PI / 2;
+    data.forEach((d, i) => {
+      const a1 = a0 + (d.value / total) * Math.PI * 2, large = a1 - a0 > Math.PI ? 1 : 0;
+      const p = (rad, a) => `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`;
+      const path = el("path", { d: `M${p(r, a0)} A${r},${r} 0 ${large} 1 ${p(r, a1)} L${p(ri, a1)} A${ri},${ri} 0 ${large} 0 ${p(ri, a0)} Z`, fill: color(i), stroke: css("--bg"), "stroke-width": 1.5 }, svg);
+      el("title", {}, path, `${d.label}：${d.value}（${((d.value / total) * 100).toFixed(1)}%）`);
+      el("rect", { x: 250, y: 22 + i * 26, width: 12, height: 12, rx: 2, fill: color(i) }, svg);
+      el("text", { x: 270, y: 33 + i * 26, style: "font-size:13px" }, svg, `${d.label}  ${d.text || d.value}（${((d.value / total) * 100).toFixed(1)}%）`);
+      a0 = a1;
+    });
+  }
+
+  /* ---------- 第二部分 ---------- */
+  barChart("ch-funding", ["2021", "2022", "2023", "2024", "2025", "2026 YTD", "2026 年化"],
+    [{ name: "BTC/ETH 平均资金费率", data: [34.10, 2.48, 8.04, 12.50, 5.03, 1.77, 2.41], tone: "--c1" }], { suffix: "%", height: 240 });
+  const AM = ["24-02", "24-03", "24-04", "24-05", "24-06", "24-07", "24-08", "24-09", "24-10", "24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  lineChart("ch-apy", AM, [{ name: "sUSDe 月均 APY", data: [20.7, 37.7, 22.7, 18.9, 17.8, 11.3, 6.8, 6.5, 11.2, 19.8, 20.5, 12.1, 9.2, 6.7, 5.0, 5.6, 4.9, 6.4, 7.6, 7.1, 4.2, 5.2, 4.4, 4.8, 3.7, 3.5, 4.2, 3.8, 3.9, 4.0, 4.3, 4.8, 5.1], tone: "--c3" }], { suffix: "%", height: 240 });
+  barChart("ch-backing", ["2025-08", "2026-01 初", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-10-08"], [
+    { name: "基差交易头寸", data: [48, 35.5, 24.9, 11.4, 13.3, 9, 1, 18.4], tone: "--c7" },
+    { name: "现金类（稳定币 / DeFi 借贷 / RWA / 机构贷款）", data: [52, 64.5, 75.1, 88.6, 86.7, 91, 99, 81.6], tone: "--c1" },
+  ], { stacked: true, suffix: "%", width: 1000, height: 260 });
+  donut("ch-backnow", [
+    { label: "现金类", value: 3995, text: "$39.95 亿" },
+    { label: "BTC 基差", value: 486, text: "$4.86 亿" },
+    { label: "ETH 基差", value: 343, text: "$3.43 亿" },
+    { label: "SOL / XRP / BNB / 黄金 / 美股", value: 72, text: "$0.72 亿" },
+  ]);
+
+  /* ---------- 第三部分 ---------- */
+  barChart("ch-mcap", ["HYPE", "UNI", "ENA", "AAVE", "ONDO", "SKY", "MORPHO", "JUP", "ETHFI", "SYRUP"],
+    [{ name: "流通市值", data: [194.5, 48.8, 29.6, 26.6, 23.0, 18.7, 18.0, 12.6, 7.1, 2.7] }], { horizontal: true, labelWidth: 70, highlight: 2 });
+  barChart("ch-stable", ["USDS", "USDe", "DAI", "USD1", "USDG", "PYUSD", "RLUSD", "USYC", "USDf"],
+    [{ name: "流通量", data: [71.2, 48.9, 47.7, 44.0, 31.1, 28.7, 25.3, 24.0, 16.6] }], { horizontal: true, labelWidth: 70, highlight: 1 });
+
+  /* ---------- 第四部分 ---------- */
+  const SM = ["24-01", "24-02", "24-03", "24-04", "24-05", "24-06", "24-07", "24-08", "24-09", "24-10", "24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  lineChart("ch-supply", SM, [
+    { name: "USDe 流通量（亿美元）", data: [1.4, 5.2, 15.3, 23.5, 29.7, 36.1, 32.1, 28.4, 25.5, 27.2, 43.6, 58.8, 59.3, 58.8, 52.5, 46.7, 53.6, 53.0, 82.0, 123.2, 144.6, 95.6, 72.1, 63.0, 65.9, 60.7, 58.8, 38.1, 45.1, 44.6, 38.7, 40.8, 49.0, 48.8], tone: "--c1" },
+    { name: "USDtb 流通量（亿美元）", data: [null, null, null, null, null, null, null, null, null, null, null, 0.9, 0.9, 0.9, 14.3, 14.4, 14.5, 14.6, 14.5, 14.8, 18.4, 18.3, 13.4, 8.4, 8.7, 8.9, 9.4, 6.4, 11.0, 7.8, 4.0, 5.3, 5.4, 5.0], tone: "--c4" },
+  ], { width: 1000, height: 300, mark: 21, markLabel: "2025-10-04 峰值 $148.2 亿" });
+
+  barChart("ch-qrev", ["24Q2", "24Q3", "24Q4", "25Q1", "25Q2", "25Q3", "25Q4", "26Q1", "26Q2", "26Q3"],
+    [{ name: "季度毛收入", data: [51.0, 27.8, 125.9, 88.7, 48.7, 151.1, 96.2, 65.1, 51.6, 53.6], tone: "--c1" }], { height: 240 });
+  const RM = ["25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09"];
+  lineChart("ch-mrev", RM, [{ name: "月度毛收入", data: [47.6, 26.5, 14.6, 10.0, 20.5, 18.2, 43.1, 54.7, 53.3, 48.9, 27.0, 20.3, 29.2, 18.1, 17.8, 20.2, 14.7, 16.7, 17.5, 15.9, 20.1], tone: "--c1" }], { height: 240 });
+  barChart("ch-stake", ["2025-08", "2025-09", "2026-02", "2026-04", "2026-05", "2026-10"],
+    [{ name: "sUSDe 质押率", data: [46.3, 42.7, 58.0, 44.0, 39.7, 25.2], tone: "--c3" }], { suffix: "%", height: 220 });
+
+  /* ---------- 第六部分 ---------- */
+  donut("ch-alloc", [
+    { label: "核心贡献者", value: 30, text: "45 亿" },
+    { label: "生态发展", value: 28, text: "42 亿" },
+    { label: "投资人", value: 25, text: "37.5 亿" },
+    { label: "Ethena 基金会", value: 15, text: "22.5 亿" },
+    { label: "Binance Launchpool", value: 2, text: "3 亿" },
+  ]);
+  const PM = ["24-04", "24-05", "24-06", "24-07", "24-08", "24-09", "24-10", "24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  lineChart("ch-price", PM, [{ name: "ENA 价格", data: [1.296, 0.874, 0.885, 0.377, 0.275, 0.208, 0.286, 0.329, 0.908, 1.220, 0.581, 0.383, 0.314, 0.292, 0.325, 0.276, 0.580, 0.559, 0.394, 0.284, 0.210, 0.173, 0.103, 0.090, 0.106, 0.088, 0.077, 0.082, 0.148, 0.268, 0.221], tone: "--c7" }], { height: 240 });
+
+  /* ---------- 第七部分 ---------- */
+  barChart("ch-unlock", ["团队+基金会年解锁", "回购 @$75 亿", "回购 @$100 亿", "回购 @$150 亿", "回购 @$200 亿"],
+    [{ name: "年金额（百万美元）", data: [356, 17.8, 47.5, 106.9, 190] }], { horizontal: true, labelWidth: 130, highlight: 0 });
+
+  /* ---------- 模拟器 ---------- */
+  const CIRC = 13406, TOTAL = 15000;
+  const TIERS = [[200, 0.2], [150, 0.15], [100, 0.1], [75, 0.05]];
+  const tierOf = (sup) => { for (const [t, r] of TIERS) if (sup >= t) return r; return 0; };
+  const DEF = { supply: 48.8, apy: 5.0, price: 0.221, other: 0, unlock: 134.4, custom: false, take: 10 };
+  const PRESETS = [
+    ["当前", {}],
+    ["熊市：$35 亿，收益率 3.5%", { supply: 35, apy: 3.5, price: 0.12 }],
+    ["回到首档 $75 亿", { supply: 75 }],
+    ["回到 2025 峰值：$150 亿，6%", { supply: 150, apy: 6 }],
+    ["牛市：$200 亿，8%", { supply: 200, apy: 8, price: 0.6 }],
+    ["官方五年愿景：$1,000 亿", { supply: 1000, apy: 5 }],
+    ["假设立即固定抽成 10%", { custom: true, take: 10 }],
+  ];
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); if (a < 0.005) return "$0"; return a >= 100 ? `${s}$${(a / 100).toFixed(2)} 亿` : `${s}$${Math.round(a * 100).toLocaleString("en-US")} 万`; };
+  const CTRL = [
+    ["USDe 规模与收益"],
+    ["supply", "USDe 流通量（14 日均值）", 20, 1000, 0.1, (v) => "$" + v.toFixed(1) + " 亿"],
+    ["apy", "协议收益率（毛收入 / USDe）", 2, 12, 0.1, (v) => v.toFixed(1) + "%"],
+    ["other", "其他业务线毛收入（Pay、白标等，百万美元/年）", 0, 200, 1, (v) => "$" + v + "M"],
+    ["代币"],
+    ["price", "ENA 价格", 0.05, 1.5, 0.001, (v) => "$" + v.toFixed(3)],
+    ["unlock", "团队 + 基金会月解锁（百万枚）", 0, 200, 0.1, (v) => v.toFixed(1) + "M"],
+    ["抽成规则"],
+    ["custom"],
+    ["take", "固定抽成比例（勾选上方时生效）", 0, 30, 1, (v) => v + "%"],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => {
+      if (c.length === 1 && c[0] === "custom") return `<div class="row"><label class="lbl"><span>不用官方分档，改用固定抽成</span><input type="checkbox" id="in-custom" ${S.custom ? "checked" : ""}></label></div>`;
+      if (c.length === 1) return `<h4>${c[0]}</h4>`;
+      return `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`;
+    }).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+    document.getElementById("in-custom").addEventListener("change", (e) => { S.custom = e.target.checked; update(); });
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  const grossOf = (sup, s) => sup * s.apy + s.other;
+  const takeOf = (sup, s) => (s.custom ? s.take / 100 : tierOf(sup));
+  const buyOf = (sup, s) => grossOf(sup, s) * takeOf(sup, s) * 0.95;
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]], S); });
+    const gross = grossOf(S.supply, S), take = takeOf(S.supply, S), buy = buyOf(S.supply, S);
+    const mcap = CIRC * S.price, fdv = TOTAL * S.price;
+    const bought = buy / S.price, unlockY = S.unlock * 12, unlockUsd = unlockY * S.price;
+    const tierLbl = S.custom ? "固定抽成" : (take === 0 ? "未达 $75 亿门槛" : `官方档位（≥ $${[75, 100, 150, 200][[0.05, 0.1, 0.15, 0.2].indexOf(take)]} 亿）`);
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(gross), "年毛收入"],
+      [take > 0 ? "green" : "red", (take * 100).toFixed(0) + "%", `抽成比例（${tierLbl}）`],
+      [buy > 0 ? "green" : "red", usd(buy), "年回购金额"],
+      ["", ((buy / mcap) * 100).toFixed(2) + "%", "回购 / 流通市值"],
+      ["", usd(mcap), `流通市值（FDV ${usd(fdv)}）`],
+      [unlockUsd > buy ? "orange" : "green", ((buy / Math.max(unlockUsd, 1e-9)) * 100).toFixed(0) + "%", "回购能抵消的解锁比例"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["每年回购 ENA 数量", bought.toFixed(1) + "M 枚（占总量 " + ((bought / TOTAL) * 100).toFixed(2) + "%）"],
+      ["每年团队 + 基金会解锁", unlockY.toFixed(0) + "M 枚（约 " + usd(unlockUsd) + "）"],
+      ["年净新增流通", (unlockY - bought).toFixed(0) + "M 枚"],
+      ["流通市值 / 年回购", buy > 0 ? (mcap / buy).toFixed(1) + "x" : "无穷大"],
+      ["抽成对收益率的影响", "协议收益率相对下降 " + (take * 100).toFixed(0) + "%（" + S.apy.toFixed(1) + "% → " + (S.apy * (1 - take)).toFixed(2) + "%）"],
+      ["距首档门槛还差", S.supply >= 75 ? "已达到" : "$" + (75 - S.supply).toFixed(1) + " 亿（+" + ((75 / S.supply - 1) * 100).toFixed(0) + "%）"],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+    const g1 = [25, 50, 74.9, 75, 99.9, 100, 125, 149.9, 150, 175, 199.9, 200, 250, 300];
+    lineChart("ch-sim1", g1.map((v) => "$" + Math.round(v) + "亿"), [
+      { name: "年回购（百万美元）", data: g1.map((sup) => r1(buyOf(sup, S))), tone: "--c3" },
+      { name: "年解锁价值（百万美元）", data: g1.map(() => r1(unlockUsd)), tone: "--c2" },
+    ], { height: 230, ticks: 14 });
+    const g2 = [0.05, 0.1, 0.15, 0.221, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5];
+    lineChart("ch-sim2", g2.map((p) => "$" + p), [
+      { name: "回购 / 流通市值", data: g2.map((p) => r2((buy / (CIRC * p)) * 100)), tone: "--c4" },
+    ], { suffix: "%", height: 200 });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>

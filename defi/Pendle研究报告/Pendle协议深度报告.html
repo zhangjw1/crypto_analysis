@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendle（PENDLE）协议深度报告（2026-10-09）</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --fg2: #57606a; --fg3: #8c959f;
+    --line: #d8dee4; --fill: #f6f8fa; --fill2: #eef1f4;
+    --accent: #2f6feb; --green: #1a7f37; --red: #cf222e; --orange: #bc4c00; --gray: #8c959f;
+    --c1: #2f6feb; --c2: #cf222e; --c3: #1a7f37; --c4: #bf8700; --c5: #8250df; --c6: #57606a; --c7: #e16f24;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --fg2: #9198a1; --fg3: #6e7681;
+      --line: #30363d; --fill: #161b22; --fill2: #1c2128;
+      --accent: #4493f8; --green: #3fb950; --red: #f85149; --orange: #db6d28;
+      --c1: #4493f8; --c2: #f85149; --c3: #3fb950; --c4: #d29922; --c5: #a371f7; --c6: #9198a1; --c7: #f0883e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 24px 80px; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav .wrap { padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a { color: var(--fg2); text-decoration: none; font-size: 13px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; }
+  nav a:hover { color: var(--fg); border-color: var(--fg3); }
+  h1 { font-size: 24px; line-height: 1.35; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 24px 0 8px; }
+  h4 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 6px 0 10px; }
+  ul, ol { margin: 6px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .muted { color: var(--fg2); }
+  .small { font-size: 12px; color: var(--fg3); }
+  .lead { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--fg2); margin: 12px 0 16px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg2); margin-right: 6px; }
+  .tag.red { color: var(--red); border-color: var(--red); }
+  .tag.orange { color: var(--orange); border-color: var(--orange); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .tag.blue { color: var(--accent); border-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+  .stat { padding: 10px 12px; background: var(--fill); border-radius: 6px; }
+  .stat b { display: block; font-size: 20px; line-height: 1.3; }
+  .stat span { font-size: 12px; color: var(--fg2); }
+  .stat.red b { color: var(--red); } .stat.orange b { color: var(--orange); } .stat.green b { color: var(--green); } .stat.blue b { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+  .box { background: var(--fill); border-radius: 6px; padding: 12px; }
+  .box > b { display: block; margin-bottom: 4px; }
+  .box p { margin: 0; font-size: 13px; color: var(--fg2); }
+  .card { border: 1px solid var(--line); border-radius: 6px; }
+  .card .hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+  .card .bd { padding: 10px 12px; font-size: 13px; color: var(--fg2); }
+  .card.good .hd { color: var(--green); } .card.bad .hd { color: var(--red); }
+  .callout { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 14px 0; background: var(--fill); }
+  .callout b.t { display: block; margin-bottom: 4px; }
+  .callout.warn { border-color: var(--orange); } .callout.warn b.t { color: var(--orange); }
+  .callout.info { border-color: var(--accent); } .callout.info b.t { color: var(--accent); }
+  .callout.good { border-color: var(--green); } .callout.good b.t { color: var(--green); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--fill); font-weight: 600; color: var(--fg2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--fill2); font-weight: 600; }
+  tr.bad td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+  tr.good td:first-child { box-shadow: inset 2px 0 0 var(--green); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--fill2); padding: 0 4px; border-radius: 3px; }
+  .formula { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--fill2); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+  .bar100 { display: flex; height: 30px; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+  .bar100 span { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; padding: 0 2px; }
+  .step { display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; margin-right: 6px; }
+  .chart { width: 100%; margin: 8px 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart svg text { fill: var(--fg2); font-size: 11px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg2); margin: 4px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; align-items: start; }
+  .ctrl { border: 1px solid var(--line); border-radius: 6px; padding: 14px; }
+  .ctrl .row { margin-bottom: 10px; }
+  .ctrl .row .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--fg2); }
+  .ctrl .row .lbl b { color: var(--fg); }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl h4 { margin: 12px 0 6px; font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+  .presets button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+  .diagram { margin: 12px 0 4px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram .n { fill: var(--fill); stroke: var(--line); stroke-width: 1.2; }
+  .diagram .n.hl { stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .n.gr { stroke: var(--green); stroke-width: 1.5; }
+  .diagram .n.or { stroke: var(--orange); stroke-width: 1.5; }
+  .diagram .t { fill: var(--fg); font-size: 15px; font-weight: 600; }
+  .diagram .s { fill: var(--fg2); font-size: 12px; }
+  .diagram .l { fill: var(--fg2); font-size: 12px; }
+  .diagram .l.acc { fill: var(--accent); font-weight: 600; }
+  .diagram .a { stroke: var(--fg2); stroke-width: 1.4; fill: none; }
+  .diagram .a.d { stroke-dasharray: 5 4; }
+  .diagram .mk { fill: var(--fg2); }
+  .diagram .n.rd { stroke: var(--red); stroke-width: 1.5; }
+  .diagram .ok { fill: var(--green); font-size: 13px; font-weight: 600; }
+  .diagram .bad { fill: var(--red); font-size: 13px; font-weight: 600; }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { .grid2, .grid3, .grid4, .grid-32, .sim { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    nav { display: none; }
+    h2 { page-break-before: always; }
+    .wrap { padding: 0; }
+    .card, table, .chart { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#s1">一、Pendle 是做什么的</a>
+  <a href="#s2">二、机制详解</a>
+  <a href="#s3">三、百倍行情复盘</a>
+  <a href="#s4">四、2025 巅峰与 2026 塌缩</a>
+  <a href="#s5">五、经营数据</a>
+  <a href="#s6">六、PENDLE 代币</a>
+  <a href="#s7">七、价值捕获</a>
+  <a href="#s8">八、估值模拟器</a>
+  <a href="#s9">九、前景判断与跟踪</a>
+</div></nav>
+
+<div class="wrap">
+  <p class="small"><span class="tag blue">深度研究</span>数据截至 2026-10-09 · 来源：pendle.finance 与 docs.pendle.finance、Pendle 官方 Medium / The Pendle Print、DefiLlama（TVL、费用、收入、交易量、价格）、CoinDesk、The Block、Galaxy Research、Alea Research、Blockworks Research、TokenInsight</p>
+  <h1>Pendle（PENDLE）协议深度报告：链上利率市场的垄断者，为什么生意规模缩到了高峰期的十分之一</h1>
+  <p class="muted">一句话结论：Pendle 把生息资产拆成“本金”（PT）和“收益权”（YT）两部分分别交易，相当于把美国国债的本息拆离（STRIPS）和利率交易所搬到了链上。它在收益代币化赛道占据 95% 以上的份额，护城河是真实的。2022-11 到 2024-04，PENDLE 从约 $0.04 涨到 $7.50（约 180 倍），背后是协议费用同步增长了约 100 倍：它恰好处在 LSD、再质押积分、Ethena 合成美元三个收益叙事都绕不开的位置，<b>这轮上涨有基本面支撑，不是纯炒作</b>。但它的收入约等于“TVL × 底层收益率 × 5%”，两个因子都强烈顺周期。2025-09 Ethena 积分季结束后，TVL 从 $133.9 亿跌到 $12.2 亿（-91%），近 30 天费用年化只有约 $527 万，比 2025 年全年 $3,955 万少了近 87%。2026 年的代币改革（sPENDLE + 算法排放）让价值捕获能力进入 DeFi 第一梯队：80% 费用用于回购，通胀率降到约 0.2%。问题在于，现在被捕获的现金流本身太小，PENDLE 当前约 $5.9 亿的完全稀释估值，定价的是“下一轮收益率周期回来”。</p>
+  <div class="stats">
+    <div class="stat orange"><b>$12.2 亿</b><span>TVL（2025-09-19 峰值 $133.9 亿，-91%）</span></div>
+    <div class="stat"><b>$1,702 万</b><span>近 12 个月协议费用（近 30 天年化 $527 万）</span></div>
+    <div class="stat green"><b>$3,955 万</b><span>2025 年全年费用（2024 年 $1,910 万）</span></div>
+    <div class="stat"><b>$2.09</b><span>PENDLE 价格（ATH $7.50，-72%；2022-11 低点约 $0.04）</span></div>
+    <div class="stat blue"><b>$5.9 亿</b><span>完全稀释估值（流通市值约 $3.6 亿）</span></div>
+  </div>
+
+  <!-- ============ 一 ============ -->
+  <h2 id="s1">一、Pendle 是做什么的</h2>
+  <h3>1.1 一句话定位：链上的“利率交易所”</h3>
+  <p class="lead">DeFi 里大量资产自带浮动收益：stETH 有质押收益，sUSDe 有资金费率收益，Aave 存款凭证有借贷利息，再质押代币还附带积分和空投预期。但这些收益都是<b>浮动的、和本金绑在一起的</b>。想锁定固定收益的人没有工具，想押注收益上涨的人也只能全额买入本金。Pendle 做的就是把这两部分拆开，分别定价、分别交易。</p>
+  <div class="grid3">
+    <div class="box"><b>PT（Principal Token，本金代币）</b><p>相当于<b>零息债券 / 贴现国债</b>：今天以折价买入，到期按 1:1 兑回底层资产。折价幅度就是锁定的固定收益率。例如 0.954 买入、半年后兑回 1，年化约 10%，不管这半年底层收益涨还是跌。</p></div>
+    <div class="box"><b>YT（Yield Token，收益代币）</b><p>相当于<b>剥离出来的利息票</b>：持有期间获得对应本金产生的全部收益和积分，到期后价值归零。因为只付“利息部分”的价格，YT 天然是收益率的杠杆多头，常见杠杆在 10–30 倍。</p></div>
+    <div class="box"><b>LP（流动性提供者）</b><p>在 PT / SY 池子里做市，赚交易手续费、底层资产收益、PT 的固定收益和 PENDLE 激励。因为 PT 到期必然回到面值，LP 的无常损失远小于普通 AMM。</p></div>
+  </div>
+
+  <h3>1.2 传统金融类比</h3>
+  <table>
+    <tr><th>Pendle 组件</th><th>传统金融对应物</th><th>差异</th></tr>
+    <tr><td>SY → PT + YT 拆分</td><td>美国国债本息拆离（STRIPS）</td><td>任何人可以对任何生息代币拆分，无需交易商；底层资产是链上收益，波动远大于国债</td></tr>
+    <tr><td>PT 隐含收益率</td><td>零息债到期收益率</td><td>同时反映底层收益预期和底层资产的信用风险（例如 USDe 脱锚风险）</td></tr>
+    <tr><td>YT</td><td>浮动利率腿、利息票</td><td>还包含积分、空投等非现金收益，可以变相“预售空投”</td></tr>
+    <tr><td>Pendle AMM</td><td>利率互换 / 债券二级市场</td><td>到期日固定、价格随时间收敛，按时间衰减设计曲线</td></tr>
+    <tr><td>Boros</td><td>利率互换中的“永续资金费率互换”</td><td>交易的是中心化交易所永续合约的资金费率，带保证金和杠杆</td></tr>
+  </table>
+
+  <h3>1.3 产品矩阵</h3>
+  <table>
+    <tr><th>产品</th><th>上线</th><th>做什么</th><th class="r">当前规模</th></tr>
+    <tr class="hl"><td>Pendle V2（核心）</td><td>2022-11</td><td>生息资产的 PT / YT 拆分与交易；目前部署在以太坊、Arbitrum、Monad、X Layer、Plasma、BNB Chain、Base、HyperEVM、Robinhood Chain 等</td><td class="r">TVL $12.2 亿</td></tr>
+    <tr><td>PT 循环贷（PT Looping）</td><td>2026-09 正式版</td><td>一键完成“买 PT → 抵押到 Morpho / Euler / Aave → 借稳定币 → 再买 PT”的循环，费用约为循环收益的 10%、上限 10 个基点</td><td class="r">—</td></tr>
+    <tr><td>Pendle 生态金库（Morpho）</td><td>2026</td><td>USDC 存款全部借给 PT 抵押借款人，APY 约 6.66%；2026-09 接入 Zama 隐私存款</td><td class="r">超 $7,500 万</td></tr>
+    <tr><td>Boros</td><td>2025-08-05</td><td>资金费率互换：锁定或押注 Binance、Hyperliquid、OKX 等永续合约的资金费率；后续扩展到黄金、白银、原油、纳斯达克等市场</td><td class="r">保证金 $756 万；未平仓量峰值 $2.45 亿</td></tr>
+    <tr><td>Citadels</td><td>2025 规划</td><td>非 EVM 链（Solana、TON）的 PT 分发、KYC 机构版、伊斯兰合规版；2026-07 Galaxy 通过 Fireblocks 上线 PT 金库</td><td class="r">早期，规模未披露</td></tr>
+  </table>
+  <p class="small">来源：Pendle 官网、The Pendle Print #122–#126、DefiLlama。Citadels 的非 EVM 部署截至本报告未见官方确认完成，⚠️ 未验证。</p>
+
+  <h3>1.4 团队与融资</h3>
+  <p class="muted">联合创始人 TN Lee、Vu Nguyen，团队位于新加坡。2021-04 完成 $370 万种子轮（Mechanism Capital、HashKey、Spartan、CMS、Crypto.com Capital 等参投），同年通过流动性引导池（LBP）发行 PENDLE；2023-08 获币安实验室（Binance Labs）未披露金额投资，2023-11 Spartan 场外追加。按 Pendle 文档，团队和投资人代币已于 2024-09 全部解锁。核心合约自 2021 年运行至今未发生被盗事件（2024-09 生态项目 Penpie 被攻击约 $2,700 万，Pendle 紧急暂停合约，保住了约 $1.05 亿资金）。</p>
+
+  <!-- ============ 二 ============ -->
+  <h2 id="s2">二、机制详解</h2>
+  <h3>2.1 资金全流程</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 470" role="img" aria-label="Pendle 资金全流程图">
+      <defs><marker id="mkA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <!-- 第一行 -->
+      <rect class="n" x="20" y="10" width="210" height="82" rx="8"/>
+      <text class="t" x="125" y="38" text-anchor="middle">用户的生息资产</text>
+      <text class="s" x="125" y="60" text-anchor="middle">sUSDe、eETH、USDG</text>
+      <text class="s" x="125" y="78" text-anchor="middle">aUSDC、代币化基金等</text>
+      <rect class="n hl" x="290" y="10" width="210" height="82" rx="8"/>
+      <text class="t" x="395" y="38" text-anchor="middle">SY 标准化包装</text>
+      <text class="s" x="395" y="60" text-anchor="middle">把各种收益接口统一成</text>
+      <text class="s" x="395" y="78" text-anchor="middle">同一种代币标准</text>
+      <rect class="n gr" x="560" y="10" width="200" height="82" rx="8"/>
+      <text class="t" x="660" y="38" text-anchor="middle">PT 本金代币</text>
+      <text class="s" x="660" y="60" text-anchor="middle">折价交易，到期 1:1 兑付</text>
+      <text class="s" x="660" y="78" text-anchor="middle">= 固定收益</text>
+      <rect class="n" x="800" y="10" width="180" height="82" rx="8"/>
+      <text class="t" x="890" y="38" text-anchor="middle">固定收益买家</text>
+      <text class="s" x="890" y="60" text-anchor="middle">机构、金库、保守资金</text>
+      <text class="s" x="890" y="78" text-anchor="middle">Aave / Morpho 抵押循环</text>
+      <path class="a" d="M232,51 H286" marker-end="url(#mkA)"/>
+      <path class="a" d="M502,51 H556" marker-end="url(#mkA)"/>
+      <text class="l" x="529" y="43" text-anchor="middle">拆分</text>
+      <path class="a" d="M762,51 H796" marker-end="url(#mkA)"/>
+      <!-- 第二行 -->
+      <rect class="n hl" x="290" y="190" width="210" height="96" rx="8"/>
+      <text class="t" x="395" y="218" text-anchor="middle">Pendle AMM</text>
+      <text class="s" x="395" y="240" text-anchor="middle">PT / SY 池，时间衰减曲线</text>
+      <text class="s" x="395" y="258" text-anchor="middle">YT 通过闪电兑换走同一池</text>
+      <text class="s" x="395" y="276" text-anchor="middle">LP：手续费 + 底层收益 + 激励</text>
+      <rect class="n or" x="560" y="190" width="200" height="82" rx="8"/>
+      <text class="t" x="660" y="218" text-anchor="middle">YT 收益代币</text>
+      <text class="s" x="660" y="240" text-anchor="middle">获得全部利息 + 积分</text>
+      <text class="s" x="660" y="258" text-anchor="middle">到期价值归零</text>
+      <rect class="n" x="800" y="190" width="180" height="82" rx="8"/>
+      <text class="t" x="890" y="218" text-anchor="middle">收益 / 积分投机者</text>
+      <text class="s" x="890" y="240" text-anchor="middle">押注收益上升</text>
+      <text class="s" x="890" y="258" text-anchor="middle">或杠杆刷空投</text>
+      <path class="a" d="M530,51 V231 H556" marker-end="url(#mkA)"/>
+      <path class="a" d="M762,231 H796" marker-end="url(#mkA)"/>
+      <path class="a d" d="M502,205 H620 V96" />
+      <path class="a d" d="M502,262 H556" />
+      <text class="l" x="440" y="130" text-anchor="middle">二级市场交易</text>
+      <text class="l" x="440" y="148" text-anchor="middle">价格 = 隐含收益率</text>
+      <path class="a d" d="M395,92 V186" marker-end="url(#mkA)"/>
+      <!-- 第三行 -->
+      <rect class="n hl" x="20" y="360" width="740" height="90" rx="8"/>
+      <text class="t" x="390" y="388" text-anchor="middle">协议费用：YT 所获收益与积分的 5% + PT 交易手续费（按剩余期限折算）</text>
+      <text class="s" x="390" y="410" text-anchor="middle">手续费的 20% 归 LP；其余手续费与全部 YT 费用：80% 回购 PENDLE、10% 国库、10% 运营</text>
+      <text class="s" x="390" y="430" text-anchor="middle">到期未赎回的 PT / LP 底层继续产生的收益，全部划入国库</text>
+      <path class="a" d="M660,272 V356" marker-end="url(#mkA)"/>
+      <text class="l" x="668" y="320">5% 收益抽成</text>
+      <path class="a" d="M395,286 V356" marker-end="url(#mkA)"/>
+      <text class="l" x="403" y="320">交易手续费</text>
+      <rect class="n gr" x="800" y="360" width="180" height="90" rx="8"/>
+      <text class="t" x="890" y="388" text-anchor="middle">sPENDLE 持有人</text>
+      <text class="s" x="890" y="410" text-anchor="middle">每两周领取回购的 PENDLE</text>
+      <text class="s" x="890" y="430" text-anchor="middle">及实物空投</text>
+      <path class="a" d="M762,405 H796" marker-end="url(#mkA)"/>
+      <text class="l acc" x="779" y="397" text-anchor="middle">80%</text>
+    </svg>
+  </div>
+  <p class="small">费用规则来源：docs.pendle.finance「Fees」「sPENDLE」页面（2026-10-09 查阅）。积分类收益由合作方在分配时扣下 5% 打到 Pendle 的手续费钱包，所得空投以实物分给 sPENDLE 持有人，不用于回购。</p>
+
+  <h3>2.2 定价：PT 价格就是一条收益率曲线</h3>
+  <div class="formula">PT 价格 = 1 ÷ (1 + 隐含年化收益率)^(剩余天数 / 365)　　YT 价格 = 1 − PT 价格（以底层资产计）</div>
+  <p class="muted">市场对 PT 的报价可以直接换算出一个“隐含收益率”。它和底层资产当前的实际收益率之差，就是市场对未来收益走势的判断：隐含收益率高于现货收益率，说明市场预期收益会上升，或者在为积分付溢价；反之则是在为风险打折。由于同一资产有多个到期日，Pendle 实际上给 DeFi 提供了第一条可交易的“收益率曲线”。</p>
+  <div class="grid2">
+    <div>
+      <h4>示例：隐含收益率 10%、剩余 180 天</h4>
+      <table>
+        <tr><th>到期实际收益率</th><th class="r">PT 年化</th><th class="r">YT 期间回报</th></tr>
+        <tr><td>0%（收益归零）</td><td class="r">10.0%</td><td class="r">-100%</td></tr>
+        <tr><td>5%</td><td class="r">10.0%</td><td class="r">-49.6%</td></tr>
+        <tr><td>10%（与隐含持平）</td><td class="r">10.0%</td><td class="r">-0.4%</td></tr>
+        <tr class="good"><td>15%</td><td class="r">10.0%</td><td class="r">+47.6%</td></tr>
+        <tr class="good"><td>20%</td><td class="r">10.0%</td><td class="r">+94.6%</td></tr>
+      </table>
+      <p class="small">PT 价格 0.954、YT 价格 0.046，相当于约 21.8 倍收益杠杆。YT 回报已扣除 5% 收益抽成，未计入积分；忽略手续费与滑点。</p>
+    </div>
+    <div>
+      <h4>为什么 AMM 要专门设计</h4>
+      <ul class="muted">
+        <li><b>价格必然收敛</b>：PT 到期一定等于 1，普通的恒定乘积曲线会让 LP 在临近到期时被套利。Pendle V2 参考 Notional 的设计，让曲线随时间自动收窄，价格聚集在合理的收益率区间。</li>
+        <li><b>一个池子服务两种代币</b>：池子里只有 PT 和 SY。买 YT 时，路由先借出 SY、拆成 PT + YT、把 PT 卖回池子还款，YT 交给用户（闪电兑换），因此流动性不被拆散。</li>
+        <li><b>LP 的无常损失有限</b>：只要持有到期，PT 部分回到面值，LP 的损失主要来自收益率剧烈变化时的中途退出。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>2.3 PT / YT 收益计算器</h3>
+  <p class="muted">拖动参数，看隐含收益率、剩余期限与实际收益率如何决定 PT 和 YT 的结果。默认值即上面的示例。</p>
+  <div class="sim">
+    <div class="ctrl" id="pt-ctrl"></div>
+    <div>
+      <div class="stats" id="pt-stats" style="grid-template-columns: repeat(3, 1fr);"></div>
+      <h4>YT 期间回报随到期实际收益率变化</h4>
+      <div class="chart" id="ch-ptyt"></div>
+    </div>
+  </div>
+  <p class="small">计算器为简化模型：YT 回报 = [(1 + 实际收益率)^(天数/365) − 1] × (1 − 收益抽成) ÷ YT 价格 − 1；未计入积分价值、交易手续费、滑点和 gas。</p>
+
+  <h3>2.4 四类用户与真实需求</h3>
+  <table>
+    <tr><th>用户</th><th>在 Pendle 做什么</th><th>需求真实性</th></tr>
+    <tr><td>固定收益需求（金库、机构、保守资金）</td><td>买 PT 锁定收益，到期兑付</td><td><span class="tag green">强</span>任何利率市场都需要固定端；RWA 与稳定币规模扩大后这部分需求会继续增长</td></tr>
+    <tr><td>杠杆循环（PT Looping）</td><td>PT 抵押到 Aave / Morpho / Euler 借稳定币再买 PT，赚 PT 固定收益与借款利率之差</td><td><span class="tag orange">强周期</span>利差为正时爆发，利差转负时集体平仓（见第四部分）</td></tr>
+    <tr><td>收益 / 积分投机</td><td>买 YT 押注收益上升，或以低成本获得 10–30 倍积分敞口</td><td><span class="tag orange">强周期</span>2024–2025 的主要增长引擎，积分潮退去后明显萎缩</td></tr>
+    <tr><td>发行方（Ethena、ether.fi、RWA 发行方）</td><td>在 Pendle 上市自己的资产，借助 PT / YT 获取 TVL、建立收益率曲线</td><td><span class="tag green">强</span>“When Pendle market?”已成为新收益资产上线的标配问题</td></tr>
+  </table>
+
+  <h3>2.5 完整案例：一个 Ethena 积分季在 Pendle 上是怎么跑完的</h3>
+  <p class="lead">用一个虚构但贴近真实量级的例子，把上面的机制串起来。只需要记住一个等式：<b>1 份 sUSDe = 1 份 PT（本金）+ 1 份 YT（利息与积分）</b>。Pendle 做的事，就是把同一份资产拆成两半，分别卖给需求相反的两类人。</p>
+  <p class="small">⚠️ 本节数字为说明机制而构造（取整、简化），Ethena 积分倍数等细节不代表真实参数；第 ⑤ 步的 TVL 曲线为 DefiLlama 真实数据。</p>
+
+  <div class="grid3">
+    <div class="box"><b>背景：持有 sUSDe 能拿到什么</b><p>把 USDe 质押成 sUSDe，可获得约 10% 年化利息（来自永续合约资金费率）；积分季期间每天还累积 Sats 积分，季末按积分发放 ENA 空投。</p></div>
+    <div class="box"><b>矛盾：两类人想要的东西相反</b><p>保守资金只想要确定的利息，不想赌空投；空投猎人只想要积分，但本金不够多。单独持有 sUSDe，两类人都不满意。</p></div>
+    <div class="box"><b>Pendle 的解法</b><p>上线一个 180 天后到期的 sUSDe 市场：把每份 sUSDe 拆成 PT 和 YT，前者卖给要确定性的人，后者卖给要积分杠杆的人。</p></div>
+  </div>
+
+  <h4><span class="step">1</span>拆分与定价：一份资产，两个买家</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 330" role="img" aria-label="sUSDe 拆分与定价示意图">
+      <defs><marker id="mkC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <rect class="n" x="20" y="45" width="200" height="82" rx="8"/>
+      <text class="t" x="120" y="75" text-anchor="middle">存入 10,000 sUSDe</text>
+      <text class="s" x="120" y="98" text-anchor="middle">约 $10,000</text>
+      <text class="s" x="120" y="116" text-anchor="middle">利息约 10% + Sats 积分</text>
+      <rect class="n hl" x="290" y="45" width="170" height="82" rx="8"/>
+      <text class="t" x="375" y="75" text-anchor="middle">SY 外壳</text>
+      <text class="s" x="375" y="98" text-anchor="middle">统一格式，可忽略</text>
+      <text class="s" x="375" y="116" text-anchor="middle">10,000 SY</text>
+      <rect class="n gr" x="540" y="5" width="200" height="72" rx="8"/>
+      <text class="t" x="640" y="33" text-anchor="middle">10,000 PT</text>
+      <text class="s" x="640" y="56" text-anchor="middle">价格 0.946，到期兑 1 sUSDe</text>
+      <rect class="n or" x="540" y="97" width="200" height="72" rx="8"/>
+      <text class="t" x="640" y="125" text-anchor="middle">10,000 YT</text>
+      <text class="s" x="640" y="148" text-anchor="middle">价格 0.054，拿 180 天利息 + 积分</text>
+      <rect class="n" x="800" y="5" width="180" height="72" rx="8"/>
+      <text class="t" x="890" y="33" text-anchor="middle">小王（保守资金）</text>
+      <text class="s" x="890" y="56" text-anchor="middle">锁定年化 12%</text>
+      <rect class="n" x="800" y="97" width="180" height="72" rx="8"/>
+      <text class="t" x="890" y="125" text-anchor="middle">小李（空投猎人）</text>
+      <text class="s" x="890" y="148" text-anchor="middle">约 18 倍积分杠杆</text>
+      <path class="a" d="M222,86 H286" marker-end="url(#mkC)"/>
+      <path class="a" d="M462,86 H500 V41 H536" marker-end="url(#mkC)"/>
+      <path class="a" d="M500,86 V133 H536" marker-end="url(#mkC)"/>
+      <text class="l" x="506" y="80">拆分</text>
+      <path class="a" d="M742,41 H796" marker-end="url(#mkC)"/>
+      <path class="a" d="M742,133 H796" marker-end="url(#mkC)"/>
+      <!-- 价格构成条 -->
+      <text class="l" x="20" y="212">每 1 份 sUSDe 由谁出钱买下：</text>
+      <rect x="20" y="222" width="908" height="40" rx="4" style="fill:var(--c3);opacity:.85"/>
+      <rect x="928" y="222" width="52" height="40" rx="4" style="fill:var(--c7)"/>
+      <text x="474" y="247" text-anchor="middle" style="fill:#fff;font-size:13px;font-weight:600">小王出 $0.946 买走“本金”（PT）</text>
+      <path class="a" d="M954,266 V286 H860" />
+      <text class="l" x="855" y="290" text-anchor="end">小李出 $0.054 买走“利息 + 积分”（YT）</text>
+      <text class="l acc" x="20" y="318">0.946 + 0.054 = 1：两人合起来正好买下一份完整的 sUSDe，Pendle 的池子负责自动撮合</text>
+    </svg>
+  </div>
+  <div class="grid2">
+    <div>
+      <h4>为什么隐含收益率是 12%，而不是实际的 10%？</h4>
+      <p class="muted">如果 YT 只拿利息，按 10% 计它值 0.0459。但 YT 还能拿积分，空投猎人愿意多付钱，把 YT 抬到 0.0544：</p>
+      <div class="bar100"><span style="width:84.4%;background:var(--c1)">利息价值 0.0459</span><span style="width:15.6%;background:var(--c7)">积分 0.0085</span></div>
+      <p class="small">YT 价格上升 → PT 价格下降（0.954 → 0.946）→ PT 的固定收益从 10% 升到 12%。<b>积分季越火，PT 的固定收益越高</b>，这是整个循环的源头。</p>
+    </div>
+    <div>
+      <h4>两个关键价格</h4>
+      <table>
+        <tr><th>代币</th><th class="r">价格</th><th>买家得到什么</th></tr>
+        <tr><td>PT</td><td class="r">0.946</td><td>180 天后兑回 1 sUSDe，期间什么都不拿</td></tr>
+        <tr><td>YT</td><td class="r">0.054</td><td>180 天内 1 sUSDe 产生的全部利息和积分，到期作废</td></tr>
+        <tr class="hl"><td>合计</td><td class="r">1.000</td><td>= 1 份完整 sUSDe（到期前可随时重新合并）</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h4><span class="step">2</span>四类参与者各取所需</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 400" role="img" aria-label="四类参与者与 Pendle 市场关系图">
+      <defs><marker id="mkD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <rect class="n" x="380" y="5" width="240" height="70" rx="8"/>
+      <text class="t" x="500" y="33" text-anchor="middle">Ethena</text>
+      <text class="s" x="500" y="56" text-anchor="middle">sUSDe 利息约 10% + Sats 积分</text>
+      <rect class="n hl" x="380" y="150" width="240" height="96" rx="8"/>
+      <text class="t" x="500" y="180" text-anchor="middle">Pendle sUSDe 市场</text>
+      <text class="s" x="500" y="202" text-anchor="middle">180 天到期，隐含年化 12%</text>
+      <text class="s" x="500" y="222" text-anchor="middle">PT / SY 池子自动撮合</text>
+      <rect class="n gr" x="20" y="50" width="260" height="96" rx="8"/>
+      <text class="t" x="150" y="78" text-anchor="middle">小王 · 买 PT</text>
+      <text class="s" x="150" y="100" text-anchor="middle">$1 万 → 10,575 PT</text>
+      <text class="s" x="150" y="120" text-anchor="middle">半年后兑回约 $10,575，年化 12%</text>
+      <rect class="n or" x="720" y="50" width="260" height="96" rx="8"/>
+      <text class="t" x="850" y="78" text-anchor="middle">小李 · 买 YT</text>
+      <text class="s" x="850" y="100" text-anchor="middle">$1 万 → 约 18.4 万 YT</text>
+      <text class="s" x="850" y="120" text-anchor="middle">拿 18.4 万 sUSDe 的利息与积分</text>
+      <rect class="n" x="20" y="270" width="260" height="110" rx="8"/>
+      <text class="t" x="150" y="298" text-anchor="middle">小张 · PT 循环贷</text>
+      <text class="s" x="150" y="320" text-anchor="middle">PT 抵押 Aave → 借 USDC</text>
+      <text class="s" x="150" y="340" text-anchor="middle">→ 再买 PT，做到约 4 倍</text>
+      <text class="s" x="150" y="360" text-anchor="middle">年化约 30%</text>
+      <rect class="n" x="720" y="270" width="260" height="110" rx="8"/>
+      <text class="t" x="850" y="298" text-anchor="middle">老赵 · LP 做市</text>
+      <text class="s" x="850" y="320" text-anchor="middle">放入 PT + SY 供大家买卖</text>
+      <text class="s" x="850" y="340" text-anchor="middle">手续费 20% + 利息 + 积分</text>
+      <text class="s" x="850" y="360" text-anchor="middle">+ PT 回归面值 + PENDLE 激励</text>
+      <rect class="n gr" x="380" y="310" width="240" height="70" rx="8"/>
+      <text class="t" x="500" y="338" text-anchor="middle">Pendle 协议</text>
+      <text class="s" x="500" y="361" text-anchor="middle">YT 收益抽 5% + 手续费 → 80% 回购</text>
+      <path class="a" d="M500,77 V146" marker-end="url(#mkD)"/>
+      <text class="l" x="508" y="118">利息 + 积分流入 SY</text>
+      <path class="a" d="M282,110 L376,178" marker-end="url(#mkD)"/>
+      <text class="l" x="300" y="166">付 0.946 得 PT</text>
+      <path class="a" d="M718,110 L624,178" marker-end="url(#mkD)"/>
+      <text class="l" x="700" y="166" text-anchor="end">付 0.054 得 YT</text>
+      <path class="a" d="M282,310 L376,232" marker-end="url(#mkD)"/>
+      <text class="l" x="300" y="262">借来的钱买 PT</text>
+      <path class="a" d="M718,310 L624,232" marker-end="url(#mkD)"/>
+      <text class="l" x="700" y="262" text-anchor="end">提供流动性</text>
+      <path class="a" d="M500,248 V306" marker-end="url(#mkD)"/>
+      <text class="l" x="508" y="282">5% 抽成 + 手续费</text>
+    </svg>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h4>小李：投入 $1 万，到期利息能收回多少</h4>
+      <div class="chart" id="ch-case-yt"></div>
+      <p class="small">按 18.4 万 YT、180 天计，利息已扣 5% 协议抽成。橙色 = 要回本，积分换来的空投至少要值这么多。收益率越低，YT 越依赖空投。</p>
+    </div>
+    <div>
+      <h4>小张：杠杆在两个时期的效果完全相反</h4>
+      <div class="chart" id="ch-case-loop"></div>
+      <p class="small">4 倍循环：自有 $1 万，持有 $4 万 PT，借款 $3 万。高峰期 PT 12%、借款 6%；积分季结束后 PT 4.7%、借款 5%。杠杆后的收益反而低于不加杠杆，还要承担爆仓风险。</p>
+    </div>
+  </div>
+
+  <h4><span class="step">3</span>Pendle 怎么赚钱</h4>
+  <div class="grid-32">
+    <div>
+      <table>
+        <tr><th>收入来源</th><th>本例中的样子</th></tr>
+        <tr><td>YT 收益抽成 5%</td><td>小李收到的利息和积分，Pendle 先扣 5%；积分由 Ethena 直接扣下打给 Pendle，换成的 ENA 空投以实物分给 sPENDLE 持有人</td></tr>
+        <tr><td>交易手续费</td><td>小王、小李、小张每次买卖 PT / YT 都收，20% 给老赵这样的 LP</td></tr>
+        <tr><td>到期未赎回的收益</td><td>到期后没取走的 sUSDe 继续产生的利息，全部划入国库</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <b>放大到整个市场</b>
+      <p>假设 Pendle 中有 $50 亿 sUSDe、年化 10%：一年利息 $5 亿 × 5% = <b>约 $2,500 万</b>，再加手续费，就是 2025 年全年约 $4,000 万费用的量级，其中 80%（约 $2,000 万以上）用于回购 PENDLE。<br><br>同一个公式反过来看：利息跌到 4.7%、规模缩到十分之一，收入就只剩约 5%。</p>
+    </div>
+  </div>
+
+  <h4><span class="step">4</span>正循环与反循环</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 230" role="img" aria-label="积分季正循环与反循环">
+      <defs><marker id="mkE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <text class="ok" x="10" y="16">积分季进行中：正循环</text>
+      <rect class="n gr" x="10" y="26" width="172" height="70" rx="8"/><text class="t" x="96" y="56" text-anchor="middle">积分季开启</text><text class="s" x="96" y="78" text-anchor="middle">YT 能刷 Sats</text>
+      <rect class="n gr" x="212" y="26" width="172" height="70" rx="8"/><text class="t" x="298" y="56" text-anchor="middle">抢购 YT</text><text class="s" x="298" y="78" text-anchor="middle">YT 价格上升</text>
+      <rect class="n gr" x="414" y="26" width="172" height="70" rx="8"/><text class="t" x="500" y="56" text-anchor="middle">PT 收益升到 12%</text><text class="s" x="500" y="78" text-anchor="middle">固定收益很有吸引力</text>
+      <rect class="n gr" x="616" y="26" width="172" height="70" rx="8"/><text class="t" x="702" y="56" text-anchor="middle">循环贷利差 +6%</text><text class="s" x="702" y="78" text-anchor="middle">资金加杠杆涌入</text>
+      <rect class="n gr" x="818" y="26" width="172" height="70" rx="8"/><text class="t" x="904" y="56" text-anchor="middle">TVL 冲到 $134 亿</text><text class="s" x="904" y="78" text-anchor="middle">费用与回购暴涨</text>
+      <path class="a" d="M184,61 H208" marker-end="url(#mkE)"/><path class="a" d="M386,61 H410" marker-end="url(#mkE)"/><path class="a" d="M588,61 H612" marker-end="url(#mkE)"/><path class="a" d="M790,61 H814" marker-end="url(#mkE)"/>
+      <text class="bad" x="10" y="136">积分季结束 + 池子到期：反循环</text>
+      <rect class="n rd" x="10" y="146" width="172" height="70" rx="8"/><text class="t" x="96" y="176" text-anchor="middle">第 4 季结束</text><text class="s" x="96" y="198" text-anchor="middle">YT 没有积分可刷</text>
+      <rect class="n rd" x="212" y="146" width="172" height="70" rx="8"/><text class="t" x="298" y="176" text-anchor="middle">没人买 YT</text><text class="s" x="298" y="198" text-anchor="middle">YT 价格塌陷</text>
+      <rect class="n rd" x="414" y="146" width="172" height="70" rx="8"/><text class="t" x="500" y="176" text-anchor="middle">PT 收益跌到 4.7%</text><text class="s" x="500" y="198" text-anchor="middle">sUSDe 本身也在降</text>
+      <rect class="n rd" x="616" y="146" width="172" height="70" rx="8"/><text class="t" x="702" y="176" text-anchor="middle">利差转负</text><text class="s" x="702" y="198" text-anchor="middle">还 Aave、平仓</text>
+      <rect class="n rd" x="818" y="146" width="172" height="70" rx="8"/><text class="t" x="904" y="176" text-anchor="middle">到期不续</text><text class="s" x="904" y="198" text-anchor="middle">两天 TVL -49%</text>
+      <path class="a" d="M184,181 H208" marker-end="url(#mkE)"/><path class="a" d="M386,181 H410" marker-end="url(#mkE)"/><path class="a" d="M588,181 H612" marker-end="url(#mkE)"/><path class="a" d="M790,181 H814" marker-end="url(#mkE)"/>
+    </svg>
+  </div>
+
+  <h4><span class="step">5</span>真实的到期日：2025 年 9 月发生了什么</h4>
+  <p class="muted">到期日那天，小王用 PT 兑回 sUSDe，小李的 YT 归零，小张必须还款或续期，老赵也要决定是否换池子。如果新池子还有高收益和新一季积分，大家会续期；2025-09 的情况是三件事挤在同一周：</p>
+  <div class="chart" id="ch-case-tvl"></div>
+  <p class="small">图：Pendle 每日 TVL（亿美元），2025-09-08 至 2025-10-12 · 来源：DefiLlama。09-24 Ethena 第 4 季积分结束；09-25 33 个 Ethena 相关池子（约 $13.5 亿）同时到期；同期 sUSDe 收益约 4.7%，低于 Aave 约 5% 的借款利率。09-24 至 09-26 TVL 从 $122.4 亿跌到 $68.4 亿。</p>
+  <table>
+    <tr><th>角色</th><th>积分季中</th><th>到期日</th><th>续期吗</th></tr>
+    <tr><td>小王（PT）</td><td>锁定 12%</td><td>兑回 sUSDe</td><td class="r"><span class="tag red">否</span>新 PT 只有约 4.7%</td></tr>
+    <tr><td>小李（YT）</td><td>刷 18 倍积分</td><td>YT 归零，等空投</td><td class="r"><span class="tag red">否</span>没有新一季积分</td></tr>
+    <tr><td>小张（循环贷）</td><td>年化约 30%</td><td>还款或续期</td><td class="r"><span class="tag red">否</span>利差为负</td></tr>
+    <tr><td>老赵（LP）</td><td>多重收益</td><td>池子到期</td><td class="r"><span class="tag orange">部分</span>交易量下降，激励减少</td></tr>
+  </table>
+  <div class="callout info"><b class="t">这个案例说明了什么</b>Pendle 本身没坏：它是一台“把收益和积分拆开定价”的机器，这台机器转多快，取决于外面有没有高收益和积分可拆。积分季让四类人都有理由进场，所以 TVL 和收入暴涨；积分季结束加上到期日，又让四类人同时失去续期的理由。这也是本报告把 PENDLE 定义为“收益率周期的高贝塔看涨期权”的原因。</div>
+
+  <h3>2.6 Boros：把“资金费率”也变成可交易资产</h3>
+  <p class="muted">永续合约的资金费率是加密市场最大的浮动利率，每天影响上千亿美元的持仓，但此前没有工具可以锁定它。Boros 把资金费率代币化为“收益单位”（Yield Unit），用户用保证金做多或做空某个交易所、某个币种在一段时间内的资金费率。典型用途：Ethena 这类期现套利机构可以卖出资金费率锁定收入；高杠杆多头可以买入资金费率对冲持仓成本。Boros 部署在 Arbitrum，采用订单簿 + AMM 混合撮合。</p>
+  <table>
+    <tr><th>指标</th><th class="r">数值</th><th>来源 / 时间</th></tr>
+    <tr><td>累计交易量</td><td class="r">超 $200 亿</td><td>Boros 官方，2026-07-06（上线不到一年）</td></tr>
+    <tr><td>未平仓量（OI）</td><td class="r">$6,000 万 → 峰值 $2.45 亿 → $1.49 亿</td><td>2025-09 / 2025-12-26 / 2026-05</td></tr>
+    <tr><td>保证金存量（TVL）</td><td class="r">$756 万</td><td>DefiLlama，2026-10</td></tr>
+    <tr class="hl"><td>近 12 个月费用</td><td class="r">$69 万</td><td>DefiLlama；近 30 天仅 $3.4 万</td></tr>
+    <tr><td>市场数量</td><td class="r">170+</td><td>覆盖 BTC、ETH、SOL、XRP、HYPE，以及黄金、白银、原油、纳斯达克等</td></tr>
+  </table>
+  <p class="small">Boros 的费用每季度为 $9.3 万（2025Q3）→ $20.8 万 → $22.5 万 → $15.7 万 → $11.0 万（2026Q3），在 2026Q1 见顶后随资金费率波动减弱而回落。</p>
+
+  <!-- ============ 三 ============ -->
+  <h2 id="s3">三、为什么前两年能涨百倍：行情复盘</h2>
+  <p class="lead">先给结论：PENDLE 从 2022-11 的约 $0.04 涨到 2024-04-11 的 $7.50，约 180 倍。这轮上涨有扎实的基本面同步：同期 TVL 从约 $800 万涨到 $43 亿（约 540 倍），协议费用从 2023 年下半年的约 $19 万涨到 2024 年全年 $1,910 万（约 100 倍）。<b>与众不同之处在于：极低的起点估值，叠加它恰好是三轮收益叙事的“必经之路”，而且 YT 天然就是积分时代最好用的杠杆工具。</b></p>
+
+  <h3>3.1 价格走势</h3>
+  <div class="chart" id="ch-price"></div>
+  <p class="small">图：PENDLE 月度价格（美元，对数坐标）· 来源：DefiLlama 价格接口（CoinGecko 数据源），每月首个双周采样点；2026-10 为 10-09 现价</p>
+
+  <h3>3.2 基本面与价格的同步关系</h3>
+  <table>
+    <tr><th>时点</th><th class="r">PENDLE 价格</th><th class="r">完全稀释估值（约）</th><th class="r">TVL</th><th>阶段特征</th></tr>
+    <tr><td>2022-11（熊市底）</td><td class="r">$0.04</td><td class="r">约 $1,000 万</td><td class="r">$800 万</td><td>V1 失败、熊市、TVL 从 2021 年高点缩水约 80%；V2 刚上线</td></tr>
+    <tr><td>2023-04（上海升级）</td><td class="r">$0.51</td><td class="r">约 $1.3 亿</td><td class="r">$4,200 万</td><td>stETH 可提取，LSD 叙事爆发，Pendle 成为 LSD 收益的交易场所</td></tr>
+    <tr><td>2023-12</td><td class="r">$1.05</td><td class="r">约 $2.6 亿</td><td class="r">$2.3 亿</td><td>上线币安（2023-07）、获币安实验室投资（2023-08）、部署 Arbitrum / BNB Chain</td></tr>
+    <tr class="hl"><td>2024-04（ATH）</td><td class="r">$7.50</td><td class="r">约 $19 亿</td><td class="r">$43 亿</td><td>EigenLayer、ether.fi、Kelp、Renzo 再质押积分潮；Ethena 积分接力</td></tr>
+    <tr><td>倍数</td><td class="r">约 180×</td><td class="r">约 190×</td><td class="r">约 540×</td><td>估值涨幅小于 TVL 涨幅，说明上涨并非脱离基本面的泡沫</td></tr>
+  </table>
+  <p class="small">完全稀释估值按当时总供应量约 2.5–2.6 亿枚粗算。TVL 取 DefiLlama 月末值。</p>
+
+  <h3>3.3 六个关键驱动</h3>
+  <div class="grid3">
+    <div class="box"><b>1. 起点估值极低</b><p>2022 年底完全稀释估值仅约 $1,000 万，相当于一个有真实产品、团队完整的协议被市场“遗忘”。V1 的失败与熊市让几乎所有人放弃了它，这是百倍行情的前提，下一次很难复制。</p></div>
+    <div class="box"><b>2. 卡位三轮收益叙事</b><p>2023 年 LSD（上海升级后质押收益可交易）、2024 年 LRT 再质押积分、2024–2025 年 Ethena 合成美元。每一轮都需要一个地方来给“收益”和“积分”定价，Pendle 是唯一有深度流动性的场所。</p></div>
+    <div class="box"><b>3. YT 是积分时代的完美杠杆</b><p>1 美元买 YT-eETH 能获得约 10–30 美元本金对应的 EigenLayer + ether.fi 积分。在“积分 = 未来空投”的狂热中，这个产品几乎自带病毒传播。2024 年 eETH 市场一度成为 Pendle 交易量最大的池子。</p></div>
+    <div class="box"><b>4. vePENDLE 与“Pendle 战争”</b><p>锁仓 PENDLE 可以分到协议费用并决定激励去向。Penpie、Equilibria、StakeDAO 争夺锁仓份额，新资产发行方为了拿激励去贿选，形成“协议越火 → 锁仓需求越大 → 流通筹码越少”的飞轮。</p></div>
+    <div class="box"><b>5. 渠道与背书</b><p>2023-07 上线币安现货（当日涨约 50%），2023-08 获币安实验室投资，之后陆续拿到 Arbitrum、Mantle 的生态补助。对一个中小市值 DeFi 代币来说，这是决定性的流动性跃迁。</p></div>
+    <div class="box"><b>6. “真实收益”叙事</b><p>2023–2024 年市场厌倦了纯排放的 DeFi 代币，Pendle 有可验证的费用并分给锁仓者。2024 年费用 $1,910 万，按 ATH 时约 $19 亿估值计约 100 倍市销率，贵，但有增长兑现。</p></div>
+  </div>
+
+  <div class="callout info"><b class="t">一个反常识的细节：2025 年生意更大，币价却没创新高</b>2025 年 Pendle 的 TVL 峰值 $133.9 亿，是 2024 年峰值的 2.2 倍；全年费用 $3,955 万，是 2024 年的 2.1 倍。但 PENDLE 全年最高只到约 $5.4（2025-08），比 2024 年 ATH 低约 28%。市场已经开始按“周期股”给 Pendle 定价：它看到了 TVL 高度集中于 Ethena、增长依赖 Aave 循环贷和积分活动，并据此打了折扣。2026 年的塌缩证明这个折扣是对的。</div>
+
+  <!-- ============ 四 ============ -->
+  <h2 id="s4">四、2025 巅峰与 2026 塌缩</h2>
+  <h3>4.1 TVL 走势</h3>
+  <div class="chart" id="ch-tvl"></div>
+  <p class="small">图：Pendle TVL（亿美元，每月 1 日值）· 来源：DefiLlama · 日度峰值为 2025-09-19 的 $133.9 亿</p>
+
+  <h3>4.2 2025 年的增长引擎：Ethena × Pendle × Aave 三角循环</h3>
+  <div class="grid2">
+    <div>
+      <p class="muted">2025-04 起，Aave 开始接受 Ethena 的 PT（PT-sUSDe、PT-USDe）作为抵押品，并多次上调额度。一个标准操作随之形成：</p>
+      <ol class="muted">
+        <li>以约 12–13% 的隐含固定收益买入 PT-sUSDe；</li>
+        <li>把 PT 存入 Aave 作为抵押，以约 5–7% 借出 USDC；</li>
+        <li>用 USDC 换成 USDe 再买 PT，重复若干轮；</li>
+        <li>每一轮约 5–6% 的利差被杠杆放大，同时 YT 端吃 Ethena 第 4 季积分。</li>
+      </ol>
+      <p class="muted">这让 Pendle、Ethena、Aave 三方的 TVL 同时被放大。峰值时 Aave 上的 Ethena PT 抵押品约 $46 亿，超过 Pendle TVL 的三分之一；约 70% 的稳定币 TVL 集中在 USDe 系资产。</p>
+    </div>
+    <div>
+      <h4>循环贷的利差为什么会翻转</h4>
+      <table>
+        <tr><th>时点</th><th class="r">PT-sUSDe 收益</th><th class="r">Aave 借款利率</th><th class="r">单轮利差</th></tr>
+        <tr class="good"><td>2025 年中（高峰）</td><td class="r">约 12–13%</td><td class="r">约 5–7%</td><td class="r">+5–6%</td></tr>
+        <tr class="bad"><td>2025-09 下旬（续期时）</td><td class="r">约 4.7%</td><td class="r">约 5%</td><td class="r">约 -0.3%</td></tr>
+      </table>
+      <p class="small">来源：TokenInsight《Deep Dive of Pendle》（2026-02）、Alea Research、Sandmark。利差为负后，平仓是机械性的：还 Aave 借款 → 卖出 PT / YT → 赎回 USDe。</p>
+    </div>
+  </div>
+
+  <h3>4.3 塌缩的五个阶段</h3>
+  <table>
+    <tr><th style="width:150px">时间</th><th class="r">TVL 变化</th><th>触发因素</th></tr>
+    <tr class="bad"><td>2025-09-19 → 09-30</td><td class="r">$133.9 亿 → $66.0 亿</td><td>09-24 Ethena 第 4 季积分结束；09-25 33 个 Ethena 相关池子（约 $13.5 亿）同时到期；sUSDe 收益跌到借款成本以下，两天内蒸发 49%</td></tr>
+    <tr class="bad"><td>2025-10 → 12</td><td class="r">→ $34 亿</td><td>10-10 全市场大清算消灭杠杆用户；资金费率与收益率减半；11 月又一批到期未续</td></tr>
+    <tr><td>2026-01 → 03</td><td class="r">→ $21 亿</td><td>Plasma 链空投驱动的 TVL 退潮（Plasma 上 Pendle TVL 2026-01-09 峰值约 $14 亿，现 $4,300 万）；算法排放上线后激励大幅减少</td></tr>
+    <tr class="bad"><td>2026-04</td><td class="r">→ $13.6 亿（04-24 低点）</td><td>04-18 Kelp rsETH 跨链桥被盗约 $2.9 亿，Pendle 暂停 rsETH 的 PT / YT 市场；全 DeFi TVL 一周内减少约 $150 亿；PENDLE 跌至约 $1.0</td></tr>
+    <tr><td>2026-06 → 10</td><td class="r">$9.5 亿 → $12.2 亿</td><td>6 月底触底；Monad（$1.5 亿）、X Layer（$6,400 万）、Robinhood Chain 等新部署与 RWA 市场带来温和回升</td></tr>
+  </table>
+  <p class="small">来源：DefiLlama TVL；Galaxy Research《KelpDAO/LayerZero Hack》；Pendle 官方 Plasma 公告。Sonic 链是另一个例子：2026-05 TVL 一个月涨 520% 到 $1.55 亿（靠 Sonic 积分），S 空投发放后跌到约 $50 万。</p>
+
+  <div class="callout warn"><b class="t">结构性问题：到期日让 TVL 天生不粘</b>普通借贷协议的存款没有期限，不主动取就一直在。Pendle 的每个池子都有到期日，到期时用户必须重新决定是否续期。收益好时这是优点（新池子不断吸引资金），收益差时就变成“集体强制离场”。Blockworks 统计 Pendle 的 TVL 波动率是 DeFi 整体的 3 倍以上。<b>Pendle 的 TVL 本质上是“租来的”，租金就是底层收益率和积分。</b></div>
+
+  <!-- ============ 五 ============ -->
+  <h2 id="s5">五、经营数据</h2>
+  <h3>5.1 收入公式：为什么 Pendle 的收入是双重顺周期</h3>
+  <div class="formula">协议费用 ≈ TVL × 底层平均收益率 × 5%（YT 抽成）× (1 + 交易手续费占比) + Boros 费用</div>
+  <p class="muted">YT 抽成按“收益”而不是按“本金”收，所以收入同时取决于规模和收益率两个因子。牛市时两者同涨（TVL 扩张 + 资金费率、积分价值上升），熊市时两者同跌。用这个公式粗略校验：2025 年平均 TVL 约 $55 亿、平均收益率约 12%，推算费用约 $4,300 万，实际为 $3,955 万；当前 TVL $12.2 亿、收益率约 6.6%，推算约 $520 万，与近 30 天年化 $527 万吻合。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>5.2 年度费用</h3>
+      <div class="chart" id="ch-fee-y"></div>
+      <p class="small">图：协议费用（百万美元）· 来源：DefiLlama · 2023 年仅含下半年；“近 30 天年化” = 近 30 天 × 12.17</p>
+    </div>
+    <div>
+      <h3>5.3 季度费用与持币者收入</h3>
+      <div class="chart" id="ch-fee-q"></div>
+      <p class="small">图：季度协议费用 vs 持币者收入（百万美元）· 持币者收入 = 分给 vePENDLE / sPENDLE 的部分 · 来源：DefiLlama</p>
+    </div>
+  </div>
+
+  <h3>5.4 月度费用与交易量（2025-01 至 2026-09）</h3>
+  <div class="chart" id="ch-fee-m"></div>
+  <p class="small">图：月度费用（百万美元，左）与月度交易量（亿美元，右）· 来源：DefiLlama · 2025-01 的 $883 万含积分空投等一次性收入，月度数据在到期日前后有明显脉冲</p>
+
+  <h3>5.5 关键经营指标</h3>
+  <table>
+    <tr><th>指标</th><th class="r">2024</th><th class="r">2025</th><th class="r">2026 前三季度</th><th class="r">近 30 天年化</th><th>说明</th></tr>
+    <tr><td>协议费用</td><td class="r">$1,910 万</td><td class="r">$3,955 万</td><td class="r">$877 万</td><td class="r">$527 万</td><td>近 30 天年化比 2025 年少 87%</td></tr>
+    <tr><td>协议收入</td><td class="r">$1,771 万</td><td class="r">$3,837 万</td><td class="r">$865 万</td><td class="r">$518 万</td><td>LP 退出后，收入占费用比例升到约 98%</td></tr>
+    <tr><td>持币者收入</td><td class="r">$1,417 万</td><td class="r">$3,578 万</td><td class="r">$653 万</td><td class="r">$382 万</td><td>2026 年起以回购形式发放</td></tr>
+    <tr><td>交易量</td><td class="r">$111 亿</td><td class="r">$406 亿</td><td class="r">$58 亿</td><td class="r">$95 亿</td><td>2025-09 单月 $82 亿为历史最高</td></tr>
+    <tr><td>期末 TVL</td><td class="r">$44 亿</td><td class="r">$37 亿</td><td class="r">$12.6 亿</td><td class="r">$12.2 亿</td><td>峰值 $133.9 亿</td></tr>
+    <tr><td>费用 / 平均 TVL</td><td class="r">约 0.6%</td><td class="r">约 0.7%</td><td class="r">约 0.6%</td><td class="r">约 0.43%</td><td>货币化率随底层收益率下降而下降</td></tr>
+  </table>
+  <p class="small">来源：DefiLlama（Pendle 费用、收入、持币者收入、交易量，2026-10-09 拉取）。2026 年前三季度按 1–9 月合计。DefiLlama 的利润表显示，计入 PENDLE 排放成本后，Pendle 在 2023Q3–2024Q4 的“净利润”持续为负，2025 年起转正，2026Q3 为约 $169 万。</p>
+
+  <div class="grid-32">
+    <div>
+      <h3>5.6 TVL 的链分布</h3>
+      <div class="chart" id="ch-chain"></div>
+      <p class="small">图：各链 TVL（百万美元）· 来源：DefiLlama，2026-10-09 · 以太坊占 62%</p>
+    </div>
+    <div>
+      <h3>5.7 资产构成的变化</h3>
+      <table>
+        <tr><th>类别</th><th class="r">2025 高峰</th><th class="r">2026-05</th></tr>
+        <tr><td>Ethena 系（sUSDe / USDe）</td><td class="r">约 50–70%</td><td class="r">约 12%</td></tr>
+        <tr><td>其他稳定币 / CDP 类</td><td class="r">较低</td><td class="r">约 67%</td></tr>
+        <tr><td>积分 / 空投类</td><td class="r">—</td><td class="r">约 16%</td></tr>
+        <tr><td>LST / LRT</td><td class="r">2024 年主力</td><td class="r">约 5%</td></tr>
+      </table>
+      <p class="small">来源：TokenInsight（2026-02）；2026-05 为前 25 大池子口径（第三方研究，⚠️ 未逐池核对）。Ethena 依赖已大幅下降，但新的稳定币池子收益率更低，单位 TVL 能产生的费用也更少。</p>
+    </div>
+  </div>
+
+  <h3>5.8 竞争格局</h3>
+  <table>
+    <tr><th>协议</th><th>链</th><th class="r">TVL</th><th class="r">近 30 天费用</th><th>状态</th></tr>
+    <tr class="hl"><td>Pendle</td><td>EVM 多链</td><td class="r">$12.6 亿</td><td class="r">$55 万</td><td>赛道份额超 95%</td></tr>
+    <tr><td>Exponent</td><td>Solana</td><td class="r">约 $7,300 万</td><td class="r">—</td><td>“Solana 上的 Pendle”，2024 年上线</td></tr>
+    <tr><td>Spectra</td><td>EVM</td><td class="r">约 $2,000 万</td><td class="r">约 $0</td><td>无许可建池、主打稳定币收益</td></tr>
+    <tr><td>Napier</td><td>EVM</td><td class="r">约 $0</td><td class="r">约 $0</td><td>基本停滞</td></tr>
+    <tr><td>Voltz / IPOR</td><td>EVM</td><td class="r">极低</td><td class="r">—</td><td>Voltz 已进入关停期，IPOR 仅数百万美元</td></tr>
+  </table>
+  <p class="small">来源：DefiLlama（2026-09-28，经 CoinTalks 汇总）；Exponent 为 2026-04 数据（GFdaily）。<b>Pendle 的问题不是被对手抢份额，而是整个赛道的蛋糕变小了。</b></p>
+
+  <h3>5.9 营收驱动拆解：四个常见问题</h3>
+  <p class="muted">5.1 的公式说明了营收由哪些因子决定，这一节回答四个追问：底层收益率到底是什么、哪些因素能推高营收、空投项目越多是否越好、美债利率高对 Pendle 意味着什么。</p>
+
+  <h4><span class="step">1</span>“底层收益率”就是资金费率吗？</h4>
+  <p class="muted">不完全是。底层收益率是<b>被拆分的生息资产本身产生的收益率</b>，资产不同，来源也不同。资金费率只是其中一种，只是恰好是 Pendle 最大的一种：高峰期大部分 TVL 在 Ethena 相关池子里，而 sUSDe 的收益主要由资金费率决定。公式里的“底层平均收益率”是所有池子按 TVL 加权的平均值。</p>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>底层资产</th><th>收益来自哪里</th><th class="r">典型水平</th></tr>
+        <tr class="hl"><td>sUSDe（Ethena）</td><td>主要是永续合约<b>资金费率</b>，加上质押 ETH 收益和储备资产利息</td><td class="r">牛市 15–30%<br>熊市约 4–5%</td></tr>
+        <tr><td>syrupUSDC（Maple）</td><td>机构信贷利息</td><td class="r">约 8–10%</td></tr>
+        <tr><td>aUSDC 等借贷凭证</td><td>借贷市场的借款利息</td><td class="r">随借贷需求波动</td></tr>
+        <tr><td>sUSDS、USD0++、代币化货币基金</td><td>主要是<b>美国国债利率</b></td><td class="r">约 4% 上下</td></tr>
+        <tr><td>stETH、eETH 等 LST / LRT</td><td>ETH 质押奖励（再质押另有奖励和积分）</td><td class="r">约 3%</td></tr>
+      </table>
+      <p class="small">积分和空投<b>不算</b>底层收益率，但 YT 拿到的积分同样被 Pendle 抽 5%。Boros 交易的才是资金费率本身（见 2.6）；Pendle V2 拆分的是“含有资金费率收益的资产”，属于间接关系。</p>
+    </div>
+    <div>
+      <div class="chart" id="ch-q-yield"></div>
+      <p class="small">图：每 $10 亿 TVL 一年产生的 YT 抽成（万美元）= $10 亿 × 底层收益率 × 5%，未含交易手续费 · 收益率取上表的示意值。<b>同样的 TVL，放在牛市 sUSDe 池和放在国债类池，给 Pendle 带来的收入相差约 5 倍。</b>这也是 5.7 中“TVL 结构转向低收益稳定币后，单位 TVL 的费用变少”的原因。</p>
+    </div>
+  </div>
+
+  <h4><span class="step">2</span>哪些因素会推高 Pendle 的需求和营收？</h4>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 372" role="img" aria-label="营收驱动因素与公式因子的关系">
+      <defs><marker id="mkF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" class="mk"/></marker></defs>
+      <text class="l" x="200" y="16" text-anchor="middle">驱动因素</text><text class="l" x="560" y="16" text-anchor="middle">作用于公式中的哪个因子</text><text class="l" x="875" y="16" text-anchor="middle">结果</text>
+      <rect class="n" x="10" y="28" width="380" height="70" rx="8"/><text class="t" x="200" y="57" text-anchor="middle">新资产上市 · PT 抵押扩容 · 新链与机构</text><text class="s" x="200" y="80" text-anchor="middle">每个新池子都是增量；借贷协议提高 PT 上限会放大循环贷</text>
+      <rect class="n or" x="10" y="114" width="380" height="70" rx="8"/><text class="t" x="200" y="143" text-anchor="middle">加密牛市 · 资金费率走高</text><text class="s" x="200" y="166" text-anchor="middle">sUSDe 收益从约 4% 升到 15% 以上；美债利率提供底部</text>
+      <rect class="n or" x="10" y="200" width="380" height="70" rx="8"/><text class="t" x="200" y="229" text-anchor="middle">积分季 · 利率预期分歧</text><text class="s" x="200" y="252" text-anchor="middle">抢 YT、锁 PT，看法分歧越大交易越活跃</text>
+      <rect class="n gr" x="10" y="286" width="380" height="70" rx="8"/><text class="t" x="200" y="315" text-anchor="middle">资金费率对冲需求 · 新品种</text><text class="s" x="200" y="338" text-anchor="middle">套利机构锁收入、杠杆多头锁成本；扩展到黄金、原油等</text>
+      <rect class="n hl" x="450" y="28" width="220" height="70" rx="8"/><text class="t" x="560" y="57" text-anchor="middle">TVL</text><text class="s" x="560" y="80" text-anchor="middle">资金规模</text>
+      <rect class="n hl" x="450" y="114" width="220" height="70" rx="8"/><text class="t" x="560" y="143" text-anchor="middle">底层收益率</text><text class="s" x="560" y="166" text-anchor="middle">所有池子按 TVL 加权</text>
+      <rect class="n hl" x="450" y="200" width="220" height="70" rx="8"/><text class="t" x="560" y="229" text-anchor="middle">交易量 / 手续费</text><text class="s" x="560" y="252" text-anchor="middle">按剩余期限收费</text>
+      <rect class="n hl" x="450" y="286" width="220" height="70" rx="8"/><text class="t" x="560" y="315" text-anchor="middle">Boros 费用</text><text class="s" x="560" y="338" text-anchor="middle">资金费率直接交易</text>
+      <path class="a" d="M392,63 H446" marker-end="url(#mkF)"/><path class="a" d="M392,149 H446" marker-end="url(#mkF)"/><path class="a" d="M392,235 H446" marker-end="url(#mkF)"/><path class="a" d="M392,321 H446" marker-end="url(#mkF)"/>
+      <rect class="n gr" x="760" y="122" width="230" height="140" rx="8"/><text class="t" x="875" y="158" text-anchor="middle">协议费用</text><text class="s" x="875" y="184" text-anchor="middle">TVL × 收益率 × 5%</text><text class="s" x="875" y="204" text-anchor="middle">+ 手续费 + Boros</text><text class="l acc" x="875" y="236" text-anchor="middle">80% 用于回购 PENDLE</text>
+      <path class="a" d="M672,63 L756,160" marker-end="url(#mkF)"/><path class="a" d="M672,149 L756,182" marker-end="url(#mkF)"/><path class="a" d="M672,235 L756,204" marker-end="url(#mkF)"/><path class="a" d="M672,321 L756,226" marker-end="url(#mkF)"/>
+    </svg>
+  </div>
+  <p class="small">图例：橙框 = 弹性最大但强周期；绿框 = 不依赖积分季、能改善营收质量；灰框 = 中性的结构性增量。</p>
+  <table>
+    <tr><th>驱动因素</th><th>营收弹性</th><th>持续性</th><th>2026-10 现状</th></tr>
+    <tr><td>加密牛市、资金费率走高</td><td><span class="tag orange">最大</span>TVL 与收益率同时放大，牛熊之间差 10 倍以上</td><td><span class="tag red">强周期</span></td><td>低谷：全平台加权收益率约 6.6%，近 30 天年化费用 $527 万</td></tr>
+    <tr><td>头部积分季</td><td><span class="tag orange">大</span>带动 YT 投机、PT 收益和循环贷</td><td><span class="tag red">脉冲式</span></td><td>积分疲劳，暂无 Ethena 级别的新积分季</td></tr>
+    <tr><td>新资产上市、多链部署</td><td><span class="tag blue">中</span></td><td><span class="tag green">较好</span></td><td>Monad $1.5 亿、X Layer $6,400 万、Robinhood Chain 等新部署</td></tr>
+    <tr><td>PT 作为抵押品扩容</td><td><span class="tag blue">中</span>放大 TVL，自有循环贷产品另收约 10% 费用</td><td><span class="tag orange">依赖利差</span></td><td>PT 循环贷 2026-09 正式上线</td></tr>
+    <tr><td>Boros 资金费率市场</td><td><span class="tag blue">潜在大</span>拿到 2% 永续未平仓量份额，年费用约 $1,100 万</td><td><span class="tag green">好</span></td><td>年化费用不到 $70 万，仍在早期</td></tr>
+    <tr><td>机构分发（Citadels、Galaxy PT 金库）</td><td><span class="tag blue">中</span></td><td><span class="tag green">好</span>长期资金，不追积分</td><td>2026-07 Galaxy 通过 Fireblocks 上线 PT 金库，规模未披露</td></tr>
+  </table>
+
+  <h4><span class="step">3</span>市场上空投预期项目越多，是否越利好 Pendle？</h4>
+  <div class="grid2">
+    <div class="card good"><div class="hd">利好：过去两年最强的增长引擎</div><div class="bd">
+      <b>① 积分直接创造 YT 需求</b>：YT 是获取积分最便宜的杠杆（2.5 案例中约 18 倍），交易量和手续费随之上升；<br>
+      <b>② 积分抬高 PT 固定收益</b>：YT 越贵 PT 越便宜，PT 收益从 10% 升到 12%，高于借款成本，循环贷资金涌入，TVL 被放大数倍；<br>
+      <b>③ Pendle 对积分本身也抽 5%</b>：项目方空投越多，Pendle 直接分得越多。
+    </div></div>
+    <div class="card bad"><div class="hd">限制：带来的是“周期性”而非“持续性”增长</div><div class="bd">
+      <b>① 只有挂在生息资产上的积分才有用</b>：Pendle 拆的是存款凭证，纯交互、任务型和 meme 空投与 Pendle 无关；<br>
+      <b>② 雇佣兵资金</b>：积分季结束、池子到期即集体撤离，2025-09 两天内 TVL 跌 49%（见 2.5 第 5 步）；<br>
+      <b>③ 空投疲劳</b>：市场对积分的折现越来越狠，YT 里的积分溢价越来越薄，项目多不等于效果好。
+    </div></div>
+  </div>
+  <table>
+    <tr><th>空投类型</th><th>例子</th><th>对 Pendle 的作用</th><th>说明</th></tr>
+    <tr class="hl"><td>存款型积分（存生息资产拿积分）</td><td>Ethena Sats、ether.fi、各类 LRT</td><td><span class="tag green">强</span></td><td>一个池子能带来几十亿美元 TVL，是 2024–2025 增长的主体</td></tr>
+    <tr><td>新链生态积分</td><td>Plasma、Sonic</td><td><span class="tag orange">中，退潮快</span></td><td>Sonic 池子一个月涨 520% 到 $1.55 亿，空投发放后跌到约 $50 万</td></tr>
+    <tr><td>交互 / 任务型空投</td><td>链上交互、测试网任务</td><td><span class="tag red">无</span></td><td>没有可拆分的生息资产</td></tr>
+    <tr><td>Meme、社区空投</td><td>—</td><td><span class="tag red">无</span></td><td>同上</td></tr>
+  </table>
+  <div class="callout info"><b class="t">结论</b>更准确的说法是：<b>头部的存款型积分项目越多，Pendle 的营收弹性越大，但营收质量不会因此变好。</b>关键不在项目数量，而在于有没有像 Ethena 那样一个池子就能带来几十亿美元 TVL 的头部项目。</div>
+
+  <h4><span class="step">4</span>美债利率高，Pendle 有相应产品吗？</h4>
+  <p class="muted">有，但还不是主力生意。PT 本身就相当于零息国债，Pendle 的整套机制就是“链上的国债本息拆离（STRIPS）”。和国债直接相关的产品有三类：</p>
+  <table>
+    <tr><th>产品类型</th><th>例子</th><th>用户怎么用</th></tr>
+    <tr><td>代币化国债 / 货币基金市场</td><td>华夏基金美元货币基金、USDG 等（见 9.1）</td><td>买 PT 锁定一个固定美元收益，相当于链上的贴现国债</td></tr>
+    <tr><td>国债收益型稳定币市场</td><td>Usual 的 USD0++、Sky 的 sUSDS 等</td><td>收益主要来自国债，拆分后可以锁定或押注稳定币储蓄利率</td></tr>
+    <tr><td>机构渠道</td><td>Citadels（KYC 机构版、伊斯兰合规版）、Galaxy PT 金库</td><td>面向想要固定收益、不追积分的机构资金</td></tr>
+  </table>
+  <div class="grid2">
+    <div>
+      <div class="chart" id="ch-q-rate"></div>
+      <p class="small">图：sUSDe PT 固定收益与美债利率对比（%）· 美债按约 4% 示意 · 积分季高峰时 PT 比美债高 8 个百分点，链上资金有充足理由承担合约和脱锚风险；积分季结束后两者只差约 0.7 个百分点，资金就缺乏留在链上的理由，这是 2026 年 TVL 回不去的原因之一。</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>高美债利率的影响</th><th>方向</th></tr>
+        <tr><td><b>底层收益率有托底</b>：国债类资产 4% 左右，Pendle 抽 5% 即 0.2%；链上稳定币在熊市里的收益很大一部分也来自国债类储备</td><td><span class="tag green">利</span></td></tr>
+        <tr><td><b>国债收益太稳定，交易价值低</b>：Pendle 靠收益的“不确定性”赚钱；国债收益几乎可预测，YT 没有积分也没有波动，投机需求和手续费都很薄。真想锁定国债收益，直接买国债即可</td><td><span class="tag red">弊</span></td></tr>
+        <tr><td><b>抬高 DeFi 的机会成本</b>：链上收益必须明显高于无风险利率，才能吸引资金承担额外风险</td><td><span class="tag red">弊</span></td></tr>
+        <tr><td><b>降息预期反而更有利</b>：预期利率下行时，机构有强烈动机“现在就锁定高利率”，PT 需求上升；对利率路径的分歧还会带来交易量</td><td><span class="tag green">利</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout info"><b class="t">结论</b>Pendle 真正受益的不是“利率高”，而是“<b>利率要变</b>”和“<b>链上收益明显高于无风险利率</b>”。高美债利率提供了收入底部，但也抬高了链上资金的门槛；国债类资产让 Pendle 的 TVL 更稳定，却撑不起 2025 年那样的营收规模。</div>
+
+  <!-- ============ 六 ============ -->
+  <h2 id="s6">六、PENDLE 代币</h2>
+  <h3>6.1 基本信息</h3>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>项目</th><th class="r">数值</th></tr>
+        <tr><td>当前价格</td><td class="r">$2.09（2026-10-09）</td></tr>
+        <tr><td>总供应量</td><td class="r">2.815 亿枚</td></tr>
+        <tr><td>流通量（CoinGecko 口径）</td><td class="r">1.738 亿枚</td></tr>
+        <tr><td>质押量（sPENDLE + 存量 vePENDLE）</td><td class="r">约 0.95–1.0 亿枚（约 35%）</td></tr>
+        <tr><td>流通市值 / 完全稀释估值</td><td class="r">约 $3.6 亿 / $5.9 亿</td></tr>
+        <tr><td>历史最高 / 最低</td><td class="r">$7.50（2024-04-11）/ 约 $0.03（2022）</td></tr>
+        <tr><td>2026 年低点</td><td class="r">约 $1.0（2026-04）</td></tr>
+        <tr><td>团队与投资人</td><td class="r">2024-09 已全部解锁</td></tr>
+        <tr><td>持有地址</td><td class="r">约 15.9 万</td></tr>
+      </table>
+      <p class="small">来源：DefiLlama、Pendle 文档、Bitrue（2026-09-15）。质押量按 DefiLlama 质押合约价值 $1.99 亿 ÷ 现价推算，官方 2026-07 公布已超 1 亿枚。</p>
+    </div>
+    <div>
+      <div class="callout warn" style="margin-top:8px"><b class="t">流通量口径存在歧义</b>Pendle 文档定义的“流通量”不含 sPENDLE、vePENDLE 合约里的质押代币，以及生态基金、治理多签、团队多签中的代币。若第三方行情网站沿用这一定义，流通市值会因质押率上升而被低估，官方所说“流通量创历史新低”也部分来自这个口径。<b>本报告的估值主要以完全稀释估值为分母</b>，更保守，也避免口径问题。⚠️ 第三方网站的实际口径未核实。</div>
+      <h4>排放规则演变</h4>
+      <ul class="muted">
+        <li>2024-09：每周排放 216,076 枚，之后每周递减 1.1%，原计划 2026-04 后转为每年 2% 的永久通胀；</li>
+        <li>2025 年底：每周排放约 10 万枚；</li>
+        <li>2026-01-29：算法激励模型（AIM）上线，按池子的 TVL 和手续费贡献自动分配，单池按手续费获得的排放每周最多 7,500 枚；第三方报告称全部排放每周上限 9 万枚、未用完部分退回国库（⚠️ 官方原文未见总上限）；</li>
+        <li>2026-09：官方称排放比年初下降 92–93%，年通胀率约 0.2%（约每周 1 万枚）。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>6.2 代币改革：vePENDLE → sPENDLE</h3>
+  <table>
+    <tr><th>维度</th><th>vePENDLE（2022–2026-01）</th><th>sPENDLE（2026-01-20 起）</th></tr>
+    <tr><td>锁仓方式</td><td>锁 1 周至 2 年，锁定期内无法取出、不可转让</td><td>1:1 质押，14 天冷却期取出，或立即取出并支付 5% 费用；可转让、可组合</td></tr>
+    <tr><td>收益来源</td><td>YT 抽成 + 交易手续费（2025-05 起以稳定币发放）</td><td>80% 费用在公开市场 TWAP 回购 PENDLE，每两周以 sPENDLE 形式发放；积分空投实物发放</td></tr>
+    <tr><td>激励分配</td><td>持有人投票决定各池排放（催生贿选市场）</td><td>算法按 TVL 与手续费自动分配，取消人工投票</td></tr>
+    <tr><td>领取条件</td><td>锁仓即可</td><td>需为“活跃”持有人：有治理提案开放时须参与投票；合格的 DeFi 集成仓位视为活跃</td></tr>
+    <tr><td>参与率</td><td>约 20% 总供应量</td><td>2026-07 超 1 亿枚，约 36% 总供应量；约 92% 的 sPENDLE 地址从未取出</td></tr>
+    <tr><td>旧仓位处理</td><td colspan="2">2026-01-29 快照，存量 vePENDLE 获得不可转让的“虚拟 sPENDLE”，加成最高 4 倍（剩余 2 年），线性衰减到解锁日为 1 倍，最晚 2028-01 全部到期</td></tr>
+  </table>
+  <p class="small">来源：Pendle Medium《Introducing sPENDLE》《Algorithmic Incentive Model》、docs.pendle.finance、CoinDesk（2026-01-20）、The Block（2026-01-20）、The Pendle Print #122（2026-07）。</p>
+
+  <div class="grid2">
+    <div>
+      <h3>6.3 排放 vs 回购（每周，千枚）</h3>
+      <div class="chart" id="ch-emit"></div>
+      <p class="small">图：千枚 / 周 · 2025-12 由 216,076 × 0.989^69 推算；AIM 上限为第三方报告口径；回购为 Alea Research 2026-07 统计；2026-09 排放按官方“年通胀 0.2%”推算</p>
+    </div>
+    <div>
+      <h3>6.4 回购执行情况</h3>
+      <table>
+        <tr><th>时间</th><th class="r">累计回购</th><th>备注</th></tr>
+        <tr><td>2026-06-15</td><td class="r">172.2 万枚</td><td>另有约 $140 万空投分发</td></tr>
+        <tr><td>2026-07 下旬</td><td class="r">196 万枚</td><td>“回购速度超过排放 5 倍”</td></tr>
+        <tr class="hl"><td>2026-09 中旬</td><td class="r">超 280 万枚（约 $400 万）</td><td>官方称回购约为排放的 10 倍</td></tr>
+      </table>
+      <p class="small">来源：Bitget News、Value The Markets、CoinMarketCap、The Pendle Print #125–#126。按 $400 万 / 约 8 个月推算，年化回购约 $600 万。</p>
+    </div>
+  </div>
+
+  <!-- ============ 七 ============ -->
+  <h2 id="s7">七、代币价值捕获能力</h2>
+  <p class="lead">结论：<b>机制在 DeFi 里属第一梯队，但被捕获的现金流太小。</b>80% 费用回购、通胀约 0.2%、无团队和投资人抛压，这三点同时满足的 DeFi 代币不多。但按当前收入，回购收益率只有约 1%（以完全稀释估值计），远不足以支撑现价。</p>
+
+  <h3>7.1 现金流估值</h3>
+  <table>
+    <tr><th>口径</th><th class="r">年化金额</th><th class="r">完全稀释估值倍数</th><th class="r">流通市值倍数</th><th class="r">回购收益率（完全稀释）</th></tr>
+    <tr><td>近 12 个月协议收入</td><td class="r">$1,667 万</td><td class="r">35x</td><td class="r">22x</td><td class="r">—</td></tr>
+    <tr><td>近 12 个月持币者收入</td><td class="r">$1,282 万</td><td class="r">46x</td><td class="r">28x</td><td class="r">2.2%</td></tr>
+    <tr><td>2026 年实际回购（年化）</td><td class="r">约 $600 万</td><td class="r">98x</td><td class="r">61x</td><td class="r">1.0%</td></tr>
+    <tr class="hl"><td>近 30 天持币者收入（年化）</td><td class="r">$382 万</td><td class="r">154x</td><td class="r">95x</td><td class="r">0.65%</td></tr>
+    <tr><td>2025 年持币者收入（参照）</td><td class="r">$3,578 万</td><td class="r">16x</td><td class="r">10x</td><td class="r">6.1%</td></tr>
+  </table>
+  <p class="small">完全稀释估值 $5.90 亿、流通市值 $3.64 亿，按 $2.09 计。官方口径“年回购率约 2%”高于本表按近 30 天收入推算的结果，差异可能来自统计窗口和是否计入空投价值。sPENDLE 持有人的实际收益率 = 回购金额 ÷ 质押市值，按约 $600 万 ÷ 约 $2.0 亿计约 3%，另加空投；vePENDLE 时代 2024–2025 年常见 20–40%。</p>
+
+  <h3>7.2 价值捕获评分</h3>
+  <table>
+    <tr><th>维度</th><th>评价</th><th>说明</th></tr>
+    <tr><td>费用分配比例</td><td><span class="tag green">强</span></td><td>80% 费用回购，高于大多数 DeFi 协议；剩余 20% 用于国库与运营</td></tr>
+    <tr><td>稀释压力</td><td><span class="tag green">极低</span></td><td>团队和投资人已全部解锁，年通胀约 0.2%，回购约为排放的 10 倍</td></tr>
+    <tr><td>执行透明度</td><td><span class="tag green">好</span></td><td>每两周收取费用、下一周按小时 TWAP 链上执行，可验证</td></tr>
+    <tr><td>回购后去向</td><td><span class="tag orange">中性</span></td><td>回购的代币分给 sPENDLE 持有人，<b>不销毁</b>，总供应量不减少；本质是以 PENDLE 支付的分红，加上一份持续的二级市场买盘</td></tr>
+    <tr><td>现金流规模</td><td><span class="tag red">弱</span></td><td>当前年化回购仅约 $400–600 万，对 $5.9 亿估值几乎无支撑力</td></tr>
+    <tr><td>现金流稳定性</td><td><span class="tag red">强周期</span></td><td>收入 = TVL × 收益率 × 费率，两个因子同向波动；单季度费用最大回撤约 85%</td></tr>
+    <tr><td>Boros 价值归属</td><td><span class="tag orange">已纳入、量小</span></td><td>Boros 费用进入同一回购池，但年化仅约 $40–70 万；TN Lee 表示在 Boros 达到产品市场匹配前不承诺更多价值累积机制</td></tr>
+  </table>
+
+  <div class="callout info"><b class="t">改革的真正意义：把“排放经济”变成“利润经济”</b>vePENDLE 时代，Pendle 每年要排放约 500–1,100 万枚 PENDLE 来补贴 LP，按当时价格价值数千万美元，DefiLlama 口径的“净利润”在 2023Q3–2024Q4 持续为负。AIM 把补贴砍掉 90% 以上，协议首次在熊市保持正利润，流动性深度据官方称还提升了约 40%。这说明以前大量排放是浪费的。代价是：一旦下一轮收益周期来临，Pendle 用排放“抢 TVL”的火力也会比以前弱。</div>
+
+  <!-- ============ 八 ============ -->
+  <h2 id="s8">八、估值模拟器</h2>
+  <p class="muted">用第五部分的收入公式，把 TVL、底层收益率、Boros 规模换算成年回购金额和隐含价格。默认值按 2026-10-09 实际数据校准（推算费用约 $563 万，实际近 30 天年化 $527 万 + Boros $41 万）。</p>
+  <div class="presets" id="presets"></div>
+  <div class="sim">
+    <div class="ctrl" id="ctrl"></div>
+    <div>
+      <div class="stats" id="simstats" style="grid-template-columns: repeat(3, 1fr);"></div>
+      <table id="simtable"></table>
+      <h4>隐含价格随 TVL 变化（当前收益率下，三种回购倍数）</h4>
+      <div class="chart" id="ch-sim1"></div>
+    </div>
+  </div>
+  <p class="small">模拟器为简化模型：V2 费用 = TVL × 收益率 × YT 抽成 × (1 + 手续费占比)；回购 = (V2 费用 + Boros 费用) × 回购比例；隐含价格 = 回购 × 倍数 ÷ 总供应量 2.815 亿枚。未考虑空投收入、回购对价格的反身性、国库资产，以及 TVL 与收益率之间的相关性。</p>
+
+  <h3>8.1 情景表</h3>
+  <table>
+    <tr><th>情景</th><th class="r">TVL</th><th class="r">收益率</th><th class="r">Boros</th><th class="r">年回购</th><th class="r">隐含价格（30x）</th><th class="r">隐含价格（50x）</th></tr>
+    <tr class="bad"><td>熊市深化</td><td class="r">$8 亿</td><td class="r">5%</td><td class="r">$30 万</td><td class="r">$232 万</td><td class="r">$0.25</td><td class="r">$0.41</td></tr>
+    <tr class="hl"><td>维持现状</td><td class="r">$12.2 亿</td><td class="r">6.6%</td><td class="r">$40 万</td><td class="r">$450 万</td><td class="r">$0.48</td><td class="r">$0.80</td></tr>
+    <tr><td>回到 2026 年初</td><td class="r">$30 亿</td><td class="r">7%</td><td class="r">$100 万</td><td class="r">$1,172 万</td><td class="r">$1.25</td><td class="r">$2.08</td></tr>
+    <tr class="good"><td>回到 2025 年均水平</td><td class="r">$55 亿</td><td class="r">12%</td><td class="r">$200 万</td><td class="r">$3,592 万</td><td class="r">$3.83</td><td class="r">$6.38</td></tr>
+    <tr class="good"><td>新一轮超级周期</td><td class="r">$150 亿</td><td class="r">12%</td><td class="r">$2,000 万</td><td class="r">$1.10 亿</td><td class="r">$11.7</td><td class="r">$19.5</td></tr>
+  </table>
+  <p class="small">读法：当前 $2.09 大约对应“TVL 回到 $30 亿、按 50 倍回购估值”，或“回到 2025 年均水平、按约 16 倍估值”。<b>也就是说，现价已经计入了相当程度的复苏预期。</b>倍数仅作对比用，不代表合理估值。</p>
+
+  <!-- ============ 九 ============ -->
+  <h2 id="s9">九、前景判断与跟踪</h2>
+  <h3>9.1 真的很有前景吗？</h3>
+  <div class="grid3">
+    <div class="card good"><div class="hd">作为基础设施：确定性高</div><div class="bd">链上固定收益是真需求，PT 已经成为 Aave、Morpho、Euler 的标准抵押品，新收益资产上线几乎都会问“什么时候上 Pendle”。赛道份额超 95%，对手规模差一到两个数量级；团队执行力强，核心合约五年无事故。稳定币、代币化 RWA、永续合约三个增长最快的领域，Pendle 都已有产品覆盖。</div></div>
+    <div class="card bad"><div class="hd">作为生意：强周期，正处低谷</div><div class="bd">收入 = TVL × 收益率 × 5%，2026 年两个因子同时塌缩，近 30 天年化费用比 2025 年少约 87%。TVL 靠收益率和积分“租来”，到期即离场。积分潮退去后，YT 投机这台最强引擎熄火了；Boros 被寄予厚望，但年化费用不到 $70 万，且 2026Q1 后在下滑。</div></div>
+    <div class="card"><div class="hd">作为代币：机制优秀，估值偏贵</div><div class="bd">价值捕获机制已经修好：80% 回购、近零通胀、无解锁压力。但按当前现金流，完全稀释估值约为回购的 100–150 倍；现价是在为“收益率周期回归”提前付钱。从 $5.9 亿估值再涨 100 倍不现实；如果 2025 年的水平重现，3 倍左右的空间是有现金流依据的。</div></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h4>看多逻辑</h4>
+      <ul class="muted">
+        <li><b>周期必然回来</b>：加密牛市一定伴随资金费率上升、新收益资产和积分活动，而每一轮 Pendle 都是最直接的受益者，2023、2024、2025 已经验证了三次；</li>
+        <li><b>机制改进放大弹性</b>：同样的收入回到 2025 年水平时，sPENDLE 的回购力度明显强于 vePENDLE 时代（当时大量收入被排放成本抵消）；</li>
+        <li><b>RWA 与稳定币是长期增量</b>：华夏基金美元货币基金、Partners Group 基础设施基金、USDG、代币化黄金都已在 Pendle 上市；收益资产越多，Pendle 的潜在市场越大；</li>
+        <li><b>Boros 的期权价值</b>：永续合约未平仓量约 $700 亿以上，Boros 渗透率约 0.2%；拿到 2% 份额，年费用约 $1,100 万，相当于 V2 当前收入的两倍。</li>
+      </ul>
+    </div>
+    <div>
+      <h4>看空逻辑</h4>
+      <ul class="muted">
+        <li><b>“收益率被压平”的世界</b>：如果加密收益长期向美债利率靠拢（3–5%），收益拆分和杠杆收益的吸引力会系统性下降；</li>
+        <li><b>积分时代可能不再回来</b>：积分疲劳已是行业共识，YT 投机这台最强引擎未必能重启；</li>
+        <li><b>集中度风险换了个形式</b>：Ethena 依赖下降了，但新增 TVL 依旧依赖各链空投（Plasma、Sonic 已示范退潮速度）；</li>
+        <li><b>底层资产风险传导</b>：PT 价格包含底层信用风险，rsETH 事件说明任何底层资产出事，Pendle 都要暂停市场并承受声誉冲击；</li>
+        <li><b>估值已计入复苏</b>：当前价格对应的回购倍数高，若 2027 年前收入没有回升，存在杀估值风险。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout good"><b class="t">一句话判断</b>Pendle 是一家优秀公司处在糟糕的行业周期里。它的护城河和代币机制都经得起推敲，但它不是“成长股”，而是“DeFi 收益率周期的高贝塔看涨期权”。适合的问题不是“它会不会再涨百倍”，而是“你是否相信 12–24 个月内会出现新一轮高收益周期”。如果相信，PENDLE 是最纯粹的标的之一；如果不相信，当前约 100 倍以上的回购倍数偏贵。</div>
+
+  <h3>9.2 后续跟踪指标</h3>
+  <table>
+    <tr><th>指标 / 事件</th><th>为什么重要</th><th>频率</th></tr>
+    <tr class="hl"><td>Pendle TVL 与月度费用</td><td>收入公式的两个核心变量；月费用能否回到 $150 万以上（对应年化约 $1,800 万）</td><td>每月</td></tr>
+    <tr><td>BTC / ETH 资金费率、sUSDe 收益率</td><td>决定 Ethena 系 PT 的吸引力和循环贷利差是否为正</td><td>每周</td></tr>
+    <tr><td>Aave / Morpho 上 PT 抵押品规模</td><td>循环贷需求的直接指标，峰值约 $46 亿，2026 年初约 $5 亿</td><td>每月</td></tr>
+    <tr><td>Boros 未平仓量与费用</td><td>能否稳定在 $2.5 亿以上并持续增长，决定第二增长曲线是否成立</td><td>每月</td></tr>
+    <tr><td>sPENDLE 质押率与回购量</td><td>质押率 36% 是否维持；每两周回购金额</td><td>每两周</td></tr>
+    <tr><td>RWA 池子规模（华夏、Partners Group、USDG 等）</td><td>能否形成不依赖积分的长期 TVL</td><td>每季度</td></tr>
+    <tr><td>新链部署的留存（Monad、X Layer、Robinhood Chain）</td><td>空投驱动的 TVL 在激励结束后能留下多少，Plasma、Sonic 是反面案例</td><td>每季度</td></tr>
+    <tr><td>2028-01 前存量 vePENDLE 的迁移</td><td>虚拟 sPENDLE 加成衰减，旧持有人是迁移为 sPENDLE 还是卖出</td><td>每季度</td></tr>
+  </table>
+
+  <h3>9.3 大事记</h3>
+  <table>
+    <tr><th style="width:130px">时间</th><th>事件</th></tr>
+    <tr><td>2021-04</td><td>$370 万种子轮；PENDLE 通过流动性引导池发行</td></tr>
+    <tr><td>2021-06</td><td>V1 上线以太坊（独立的 OT / YT 池子），流动性分散，熊市中 TVL 从约 $3,800 万跌到约 $400 万</td></tr>
+    <tr class="good"><td>2022-11</td><td>V2 上线：SY 标准、PT / SY 单池 AMM、YT 闪电兑换；PENDLE 处于约 $0.04 的历史底部区域</td></tr>
+    <tr><td>2023-04</td><td>以太坊上海升级，LSD 叙事爆发，Pendle 成为 stETH、rETH 收益的主要交易场所</td></tr>
+    <tr><td>2023-07 / 08</td><td>上线币安现货、部署 BNB Chain；获币安实验室投资</td></tr>
+    <tr class="good"><td>2024-01 → 06</td><td>再质押积分潮，TVL 从 $2.3 亿涨到 $62 亿；04-11 PENDLE 创历史最高 $7.50</td></tr>
+    <tr class="bad"><td>2024-06 / 09</td><td>6 月 LRT 大批量到期、TVL 回落约 40%；09-03 生态项目 Penpie 被盗约 $2,700 万，Pendle 暂停合约；团队与投资人代币全部解锁</td></tr>
+    <tr><td>2025-01</td><td>公布 2025 路线图：Boros、Citadels</td></tr>
+    <tr><td>2025-04 / 05</td><td>Aave 接受 Ethena PT 抵押；05-02 YT 抽成由 3% 上调至 5%，vePENDLE 收益改为稳定币发放</td></tr>
+    <tr><td>2025-08-05</td><td>Boros 在 Arbitrum 上线</td></tr>
+    <tr class="hl"><td>2025-09-19</td><td>TVL 创历史最高 $133.9 亿</td></tr>
+    <tr class="bad"><td>2025-09-24 / 25</td><td>Ethena 第 4 季结束 + 33 个池子到期，两天内 TVL 下降 49%；10-10 全市场大清算</td></tr>
+    <tr><td>2026-01-20 / 29</td><td>sPENDLE 上线；vePENDLE 停止新锁仓；算法激励模型（AIM）上线</td></tr>
+    <tr class="bad"><td>2026-04-18</td><td>Kelp rsETH 跨链桥被盗约 $2.9 亿，Pendle 暂停 rsETH 市场；04-24 TVL 跌至 $13.6 亿，PENDLE 跌至约 $1.0</td></tr>
+    <tr><td>2026-07</td><td>质押量超 1 亿枚；Boros 累计交易量超 $200 亿；Galaxy 通过 Fireblocks 上线 PT 金库；发布下半年 RWA 路线图</td></tr>
+    <tr><td>2026-08 / 09</td><td>部署 X Layer（一个月成为该链第二大协议）、Robinhood Chain；PT 循环贷正式上线；排放比年初下降 92–93%</td></tr>
+  </table>
+
+  <div class="callout warn"><b class="t">数据分歧说明</b>一篇第三方研究报告（DefiLlama 导出的《Pendle Finance: State of the Protocol》）称 YT 抽成在 2026-02-02 从 5% 下调到 3%。但 Pendle 官方文档（2026-10-09 查阅）仍写明 5%，官方可查的唯一一次调整是 2025-05-02 由 3% 上调至 5%。本报告采用官方文档口径。⚠️ 如该下调属实，当前收入公式中的抽成系数应为 3%，对应的底层收益率推算值会相应上升。</div>
+
+  <h2>主要数据来源</h2>
+  <ul class="small">
+    <li><a href="https://www.pendle.finance/">Pendle 官网</a> · <a href="https://docs.pendle.finance/pendle-v2/ProtocolMechanics/Mechanisms/Fees">文档：Fees</a> · <a href="https://docs.pendle.finance/pendle-v2/ProtocolMechanics/Mechanisms/sPENDLE">文档：sPENDLE</a> · <a href="https://docs.pendle.finance/pendle-v2/ProtocolMechanics/Mechanisms/Tokenomics">文档：Tokenomics</a></li>
+    <li>Pendle Medium：<a href="https://medium.com/pendle/introducing-spendle-8479744dfdf8">Introducing sPENDLE</a>、<a href="https://pendle.medium.com/algorithmic-incentive-model-aim-ca12950fb8ba">Algorithmic Incentive Model</a>、<a href="https://medium.com/pendle/pendle-2025-zenith-cf1a91e6e23f">Pendle 2025: Zenith</a> · <a href="https://pendlefi.substack.com/p/pendle-print-126">The Pendle Print #126</a>、<a href="https://pendlefi.substack.com/p/pendle-print-122">#122</a></li>
+    <li><a href="https://defillama.com/protocol/pendle">DefiLlama Pendle</a>（TVL、费用、收入、持币者收入、交易量、利润表）· <a href="https://defillama.com/protocol/boros">DefiLlama Boros</a> · DefiLlama 价格接口（CoinGecko 数据源）</li>
+    <li><a href="https://www.coindesk.com/markets/2026/01/20/pendle-introduces-spendle-removing-the-need-for-long-lockups">CoinDesk：sPENDLE</a> · <a href="https://www.theblock.co/news/ecosystems/2026-01-20-pendle-retires-vependle-multi-year-lockups-as-spendle-staking-goes-live-386255">The Block：vePENDLE 退役</a> · <a href="https://www.galaxy.com/insights/research/kelpdao-layerzero-exploit-defi">Galaxy：KelpDAO 事件</a> · <a href="https://cryptobriefing.com/pendle-100m-staked-emissions-cut/">Crypto Briefing：质押破 1 亿</a></li>
+    <li><a href="https://tokeninsight.com/en/research/reports/deep-dive-of-pendle">TokenInsight：Deep Dive of Pendle</a> · <a href="https://alearesearch.io/reports/theses/pendle-one-venue-all-of-fixed-income">Alea Research：Pendle thesis</a> · <a href="https://app.blockworksresearch.com/research/pendle-yield-king/">Blockworks Research：Yield King</a> · <a href="https://www.sandmark.com/news/analysis/pendle-fixed-leg-world-floating-rates">Sandmark</a> · <a href="https://www.panews.io/articles/f47ed02c-7899-486b-96e8-55dd9b88a318">PANews：TN Lee 访谈</a></li>
+    <li>2023–2024 行情复盘：<a href="https://www.coinspeaker.com/binance-listing-pendle-price/">Coinspeaker：币安上线</a> · <a href="https://www.dlnews.com/articles/defi/eigenlayer-airdrop-hunters-piling-into-pendle-drives-surge/">DL News：EigenLayer 积分</a> · <a href="https://thedefiant.io/news/defi/pendle-attracts-over-usd125m-in-tvl-with-discounted-assets">The Defiant</a> · <a href="https://alearesearch.substack.com/p/pendles-success-what-you-need-to">Alea：Pendle's Success</a></li>
+  </ul>
+  <p class="small">本报告仅为研究分析，不构成投资建议。不同来源对“费用”“收入”“流通量”的口径存在差异，已在文中标注；收入公式与情景测算为简化估算。加密资产存在本金全部损失的风险。</p>
+</div>
+
+<script>
+(function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const PAL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7"];
+  const color = (i, tone) => css(tone || PAL[i % PAL.length]);
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 100) / 100).toString());
+
+  function niceRange(min, max) {
+    min = Math.min(0, min); max = Math.max(0, max);
+    if (max === min) max = min + 1;
+    const span = max - min, raw = span / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= 6);
+    return { lo: Math.floor(min / step) * step, hi: Math.ceil(max / step) * step, step };
+  }
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    if (series.length < 2) return;
+    const d = document.createElement("div"); d.className = "legend";
+    series.forEach((s, i) => { d.insertAdjacentHTML("beforeend", `<span><i style="background:${color(i, s.tone)}"></i>${s.name}</span>`); });
+    host.appendChild(d);
+  }
+
+  function lineChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = opt.width || 640, H = opt.height || 260, L = 52, R = 12, T = 12, B = 32;
+    const all = series.flatMap((s) => s.data).filter((v) => v !== null);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const x = (i) => L + (cats.length === 1 ? 0 : (i * (W - L - R)) / (cats.length - 1));
+    let y;
+    if (opt.log) {
+      const lo = Math.floor(Math.log10(Math.min(...all))), hi = Math.ceil(Math.log10(Math.max(...all)));
+      y = (v) => T + ((hi - Math.log10(v)) * (H - T - B)) / (hi - lo);
+      for (let e = lo; e <= hi; e++) {
+        [1, 2, 5].forEach((m) => {
+          const v = m * Math.pow(10, e);
+          if (Math.log10(v) > hi + 1e-9) return;
+          el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": m === 1 ? 0.9 : 0.4 }, svg);
+          el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, (opt.prefix || "") + (v < 1 ? v.toFixed(Math.max(0, -e)) : v) + (opt.suffix || ""));
+        });
+      }
+    } else {
+      const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+      y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, (opt.prefix || "") + fmt(v) + (opt.suffix || ""));
+      }
+    }
+    const every = Math.ceil(cats.length / (opt.ticks || 12));
+    cats.forEach((c, i) => { if (i % every === 0) el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, svg, c); });
+    (opt.marks || []).forEach((m) => {
+      el("line", { x1: x(m.i), x2: x(m.i), y1: T, y2: H - B, stroke: css("--orange"), "stroke-dasharray": "4 3" }, svg);
+      el("text", { x: x(m.i) + (m.left ? -4 : 4), y: T + 10 + (m.dy || 0), "text-anchor": m.left ? "end" : "start" }, svg, m.label);
+    });
+    series.forEach((s, si) => {
+      const col = color(si, s.tone);
+      let seg = [];
+      const flush = () => { if (seg.length > 1) el("polyline", { points: seg.join(" "), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": s.dash ? "5 4" : "" }, svg); seg = []; };
+      s.data.forEach((v, i) => { if (v === null) flush(); else seg.push(`${x(i)},${y(v)}`); });
+      flush();
+      s.data.forEach((v, i) => {
+        if (v === null) return;
+        const c = el("circle", { cx: x(i), cy: y(v), r: cats.length > 24 ? 2 : 3, fill: col }, svg);
+        el("title", {}, c, `${s.name}｜${cats[i]}：${(opt.prefix || "") + fmt(v)}${opt.suffix || ""}`);
+      });
+    });
+    legend(host, series);
+  }
+
+  function barChart(id, cats, series, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const horiz = !!opt.horizontal;
+    const n = cats.length, m = series.length;
+    const all = series.flatMap((s) => s.data);
+    const { lo, hi, step } = niceRange(Math.min(...all), Math.max(...all));
+    const W = opt.width || 640, L = horiz ? (opt.labelWidth || 150) : 48, R = horiz ? 60 : 16, T = 12, B = horiz ? 24 : 32;
+    const H = opt.height || (horiz ? T + B + n * 30 : 260);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    if (!horiz) {
+      const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (W - L - R) / n, bw = Math.min(40, (band * 0.75) / m);
+      const every = Math.ceil(n / (opt.ticks || 12));
+      cats.forEach((c, i) => {
+        if (i % every === 0) el("text", { x: L + band * (i + 0.5), y: H - 10, "text-anchor": "middle" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i];
+          const x0 = L + band * (i + 0.5) - (bw * m) / 2 + si * bw;
+          const col = m === 1 ? (opt.highlight !== undefined && opt.highlight.includes(i) ? css("--orange") : color(0, s.tone)) : color(si, s.tone);
+          const r = el("rect", { x: x0, y: Math.min(y(v), y(0)), width: bw - 2, height: Math.abs(y(v) - y(0)), fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${s.name}｜${c}：${fmt(v)}${opt.suffix || ""}`);
+          if (!opt.noLabels) el("text", { x: x0 + bw / 2 - 1, y: y(v) - 4, "text-anchor": "middle", style: m > 1 ? "font-size:9px" : "" }, svg, fmt(v));
+        });
+      });
+    } else {
+      const x = (v) => L + ((v - lo) * (W - L - R)) / (hi - lo);
+      for (let v = lo; v <= hi + 1e-9; v += step) {
+        el("line", { x1: x(v), x2: x(v), y1: T, y2: H - B, stroke: css("--line"), "stroke-width": v === 0 ? 1.2 : 0.6 }, svg);
+        el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, svg, fmt(v) + (opt.suffix || ""));
+      }
+      const band = (H - T - B) / n, bh = Math.min(20, (band * 0.7) / m);
+      cats.forEach((c, i) => {
+        el("text", { x: L - 8, y: T + band * (i + 0.5) + 4, "text-anchor": "end" }, svg, c);
+        series.forEach((s, si) => {
+          const v = s.data[i], y0 = T + band * (i + 0.5) - (bh * m) / 2 + si * bh;
+          const col = opt.highlight !== undefined ? (opt.highlight.includes(i) ? css("--orange") : css("--c1")) : color(si, s.tone);
+          const r = el("rect", { x: Math.min(x(v), x(0)), y: y0, width: Math.abs(x(v) - x(0)), height: bh - 2, fill: col, rx: 2 }, svg);
+          el("title", {}, r, `${c}：${fmt(v)}${opt.suffix || ""}`);
+          el("text", { x: x(v) + 4, y: y0 + bh / 2 + 3 }, svg, fmt(v) + (opt.suffix || ""));
+        });
+      });
+    }
+    legend(host, series);
+  }
+
+  /* 柱线组合图：左轴柱、右轴线 */
+  function comboChart(id, cats, bar, line, opt = {}) {
+    const host = document.getElementById(id); host.innerHTML = "";
+    const W = opt.width || 1000, H = opt.height || 280, L = 48, R = 52, T = 12, B = 32;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+    const a = niceRange(0, Math.max(...bar.data)), b = niceRange(0, Math.max(...line.data));
+    const ticks = Math.max(Math.round((a.hi - a.lo) / a.step), 1);
+    const bStep = b.hi / ticks;
+    const ya = (v) => T + ((a.hi - v) * (H - T - B)) / (a.hi - a.lo);
+    const yb = (v) => T + ((ticks * bStep - v) * (H - T - B)) / (ticks * bStep);
+    for (let k = 0; k <= ticks; k++) {
+      const v = a.lo + k * a.step;
+      el("line", { x1: L, x2: W - R, y1: ya(v), y2: ya(v), stroke: css("--line"), "stroke-width": k === 0 ? 1.2 : 0.6 }, svg);
+      el("text", { x: L - 6, y: ya(v) + 4, "text-anchor": "end" }, svg, fmt(v));
+      el("text", { x: W - R + 6, y: ya(v) + 4 }, svg, fmt(k * bStep));
+    }
+    const n = cats.length, band = (W - L - R) / n, bw = Math.min(30, band * 0.6);
+    const cx = (i) => L + band * (i + 0.5);
+    cats.forEach((c, i) => {
+      if (i % Math.ceil(n / 14) === 0) el("text", { x: cx(i), y: H - 10, "text-anchor": "middle" }, svg, c);
+      const v = bar.data[i];
+      const r = el("rect", { x: cx(i) - bw / 2, y: ya(v), width: bw, height: ya(0) - ya(v), fill: css("--c1"), rx: 2 }, svg);
+      el("title", {}, r, `${bar.name}｜${c}：${fmt(v)}`);
+    });
+    el("polyline", { points: line.data.map((v, i) => `${cx(i)},${yb(v)}`).join(" "), fill: "none", stroke: css("--c7"), "stroke-width": 2 }, svg);
+    line.data.forEach((v, i) => { const c = el("circle", { cx: cx(i), cy: yb(v), r: 2.5, fill: css("--c7") }, svg); el("title", {}, c, `${line.name}｜${cats[i]}：${fmt(v)}`); });
+    legend(host, [{ name: bar.name, tone: "--c1" }, { name: line.name, tone: "--c7" }]);
+  }
+
+  /* ---------- 第二部分：Ethena 积分季案例 ---------- */
+  barChart("ch-case-yt", ["sUSDe 实际收益 10%", "sUSDe 实际收益 4.7%"], [
+    { name: "利息收回（美元）", data: [8400, 4000], tone: "--c1" },
+    { name: "回本所需空投价值（美元）", data: [1600, 6000], tone: "--c7" },
+  ], { height: 230 });
+  barChart("ch-case-loop", ["积分季高峰期", "积分季结束后"], [
+    { name: "不加杠杆（只买 PT）", data: [12, 4.7], tone: "--c6" },
+    { name: "4 倍循环贷", data: [30, 3.8], tone: "--c1" },
+  ], { height: 230, suffix: "%" });
+  const DC = ["09-08", "09-09", "09-10", "09-11", "09-12", "09-13", "09-14", "09-15", "09-16", "09-17", "09-18", "09-19", "09-20", "09-21", "09-22", "09-23", "09-24", "09-25", "09-26", "09-27", "09-28", "09-29", "09-30", "10-01", "10-02", "10-03", "10-04", "10-05", "10-06", "10-07", "10-08", "10-09", "10-10", "10-11", "10-12"];
+  const DV = [114.4, 116.6, 118.6, 120.5, 122.6, 124.7, 126.8, 126.8, 128.6, 130.8, 131.2, 133.9, 133.8, 132.3, 130.9, 128.0, 122.4, 102.2, 68.4, 67.2, 66.0, 66.7, 66.1, 65.1, 65.9, 64.3, 68.9, 69.4, 68.9, 69.8, 69.5, 70.3, 70.0, 67.0, 64.7];
+  lineChart("ch-case-tvl", DC, [{ name: "TVL（亿美元）", data: DV, tone: "--c1" }], {
+    width: 1000, height: 280, ticks: 18,
+    marks: [{ i: 11, label: "09-19 峰值 $133.9 亿", left: true }, { i: 16, label: "09-24 第 4 季结束", dy: 14 }, { i: 17, label: "09-25 33 个池子到期", dy: 28 }, { i: 32, label: "10-10 全市场清算", left: true }],
+  });
+
+  /* ---------- 第三部分：价格 ---------- */
+  const PM = ["22-11", "22-12", "23-01", "23-02", "23-03", "23-04", "23-05", "23-06", "23-07", "23-08", "23-09", "23-10", "23-11", "23-12", "24-01", "24-02", "24-03", "24-04", "24-05", "24-06", "24-07", "24-08", "24-09", "24-10", "24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  const PP = [0.040, 0.049, 0.067, 0.095, 0.213, 0.506, 0.401, 0.359, 0.806, 0.701, 0.613, 0.661, 0.902, 1.046, 1.880, 2.850, 3.240, 6.260, 4.535, 4.963, 3.599, 2.770, 2.690, 3.680, 5.110, 6.070, 3.940, 2.890, 2.440, 3.170, 3.510, 3.870, 4.050, 5.020, 4.500, 5.015, 2.508, 2.298, 2.107, 1.141, 1.276, 1.083, 2.016, 1.246, 1.518, 1.365, 1.971, 2.095];
+  lineChart("ch-price", PM, [{ name: "PENDLE 价格", data: PP, tone: "--c7" }], {
+    log: true, prefix: "$", width: 1000, height: 300, ticks: 16,
+    marks: [{ i: 5, label: "上海升级" }, { i: 8, label: "上线币安", dy: 14 }, { i: 17, label: "ATH $7.50（24-04-11）" }, { i: 34, label: "TVL 峰值", left: true }, { i: 38, label: "sPENDLE", dy: 28 }],
+  });
+
+  /* ---------- 第四部分：TVL ---------- */
+  const TM = ["23-01", "23-02", "23-03", "23-04", "23-05", "23-06", "23-07", "23-08", "23-09", "23-10", "23-11", "23-12", "24-01", "24-02", "24-03", "24-04", "24-05", "24-06", "24-07", "24-08", "24-09", "24-10", "24-11", "24-12", "25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09", "26-10"];
+  const TV = [0.15, 0.2, 0.24, 0.42, 0.65, 0.81, 1.23, 1.48, 1.36, 1.58, 1.92, 2.35, 2.34, 6.12, 19.32, 35.5, 40.82, 62.23, 37.05, 31.81, 25.52, 19.73, 24.76, 42.12, 44.05, 54.92, 46.54, 31.04, 42.53, 44.16, 48.9, 66.38, 106.08, 65.11, 69.45, 34.08, 36.92, 29.24, 22.66, 20.82, 14.95, 14.56, 9.62, 11.92, 11.94, 12.17];
+  lineChart("ch-tvl", TM, [{ name: "TVL（亿美元）", data: TV, tone: "--c1" }], {
+    width: 1000, height: 300, ticks: 16,
+    marks: [{ i: 17, label: "24-06 再质押积分高峰" }, { i: 27, label: "Aave 接受 PT", dy: 14 }, { i: 32, label: "25-09-19 日峰值 $133.9 亿", left: true }, { i: 39, label: "rsETH 事件", dy: 28 }],
+  });
+
+  /* ---------- 第五部分 ---------- */
+  barChart("ch-fee-y", ["2023 下半年", "2024", "2025", "2026 1–9 月", "近 30 天年化"],
+    [{ name: "协议费用", data: [0.19, 19.10, 39.55, 8.77, 5.27], tone: "--c1" }], { height: 240, highlight: [4] });
+  const QC = ["24Q1", "24Q2", "24Q3", "24Q4", "25Q1", "25Q2", "25Q3", "25Q4", "26Q1", "26Q2", "26Q3"];
+  barChart("ch-fee-q", QC, [
+    { name: "协议费用", data: [1.54, 8.48, 3.12, 5.96, 12.93, 8.01, 9.75, 8.85, 2.87, 4.00, 1.89], tone: "--c1" },
+    { name: "持币者收入", data: [1.04, 6.25, 2.41, 4.48, 12.58, 7.89, 8.61, 6.70, 2.09, 3.04, 1.40], tone: "--c3" },
+  ], { height: 240, noLabels: true });
+  const MC = ["25-01", "25-02", "25-03", "25-04", "25-05", "25-06", "25-07", "25-08", "25-09", "25-10", "25-11", "25-12", "26-01", "26-02", "26-03", "26-04", "26-05", "26-06", "26-07", "26-08", "26-09"];
+  comboChart("ch-fee-m", MC,
+    { name: "月度费用（百万美元，左轴）", data: [8.83, 2.63, 1.47, 1.57, 4.92, 1.52, 2.16, 4.09, 3.50, 4.37, 3.10, 1.39, 1.23, 0.98, 0.66, 1.75, 1.16, 1.10, 0.63, 0.70, 0.56] },
+    { name: "月度交易量（亿美元，右轴）", data: [34.0, 20.9, 27.6, 21.4, 36.4, 18.0, 42.9, 51.9, 81.7, 37.5, 23.8, 9.5, 7.9, 6.5, 4.7, 6.3, 9.1, 7.3, 3.6, 5.4, 7.3] });
+  barChart("ch-chain", ["以太坊", "Arbitrum", "Monad", "X Layer", "Plasma", "HyperEVM", "BNB Chain", "Base", "其他"],
+    [{ name: "TVL", data: [759.2, 179.2, 149.8, 64.4, 43.3, 8.6, 7.7, 3.3, 1.3] }], { horizontal: true, labelWidth: 80, width: 560, highlight: [] });
+  barChart("ch-q-yield", ["sUSDe 牛市（20%）", "syrupUSDC（9%）", "sUSDe 熊市（4.7%）", "国债类（4%）", "stETH（3%）"],
+    [{ name: "万美元 / 年", data: [1000, 450, 235, 200, 150] }], { horizontal: true, labelWidth: 130, width: 560, highlight: [3] });
+  barChart("ch-q-rate", ["2025 积分季高峰", "积分季结束后"], [
+    { name: "sUSDe PT 固定收益", data: [12, 4.7], tone: "--c1" },
+    { name: "美债利率（示意）", data: [4, 4], tone: "--c6" },
+  ], { height: 230, suffix: "%" });
+
+  /* ---------- 第六部分 ---------- */
+  barChart("ch-emit", ["24-09 周排放", "25-12 周排放", "AIM 周上限", "26-09 周排放", "26-07 周回购"],
+    [{ name: "千枚 / 周", data: [216, 101, 90, 11, 77], tone: "--c1" }], { height: 230, highlight: [4] });
+
+  /* ---------- PT / YT 计算器 ---------- */
+  (function () {
+    const D = { implied: 10, days: 180, realized: 15, fee: 5 };
+    const C = [
+      ["implied", "PT 隐含年化收益率", 1, 40, 0.5, (v) => v.toFixed(1) + "%"],
+      ["days", "剩余天数", 7, 365, 1, (v) => v + " 天"],
+      ["realized", "到期实际年化收益率（底层）", 0, 60, 0.5, (v) => v.toFixed(1) + "%"],
+      ["fee", "YT 收益抽成", 0, 10, 0.5, (v) => v.toFixed(1) + "%"],
+    ];
+    let S = Object.assign({}, D);
+    const host = document.getElementById("pt-ctrl");
+    host.innerHTML = C.map((c) => `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="pv-${c[0]}"></b></div><input type="range" id="pi-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`).join("") + `<div class="presets" id="pt-presets"></div>`;
+    const PRE = [["默认示例", {}], ["积分狂热：隐含 30%、90 天", { implied: 30, days: 90, realized: 20 }], ["收益下行：实际 4%", { realized: 4 }], ["短期限：30 天", { days: 30 }]];
+    document.getElementById("pt-presets").innerHTML = PRE.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+    document.querySelectorAll("#pt-presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, D, PRE[+b.dataset.i][1]); C.forEach((c) => (document.getElementById("pi-" + c[0]).value = S[c[0]])); upd(); }));
+    C.forEach((c) => document.getElementById("pi-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); upd(); }));
+    const ytRet = (real, s) => {
+      const t = s.days / 365, pt = 1 / Math.pow(1 + s.implied / 100, t), yt = 1 - pt;
+      const pay = (Math.pow(1 + real / 100, t) - 1) * (1 - s.fee / 100);
+      return (pay / yt - 1) * 100;
+    };
+    function upd() {
+      C.forEach((c) => (document.getElementById("pv-" + c[0]).textContent = c[5](S[c[0]])));
+      const t = S.days / 365, pt = 1 / Math.pow(1 + S.implied / 100, t), yt = 1 - pt, r = ytRet(S.realized, S);
+      const be = (Math.pow(1 + (yt / (1 - S.fee / 100)), 1 / t) - 1) * 100;
+      document.getElementById("pt-stats").innerHTML = [
+        ["", pt.toFixed(4), "PT 价格（以底层资产计）"],
+        ["", yt.toFixed(4), "YT 价格"],
+        ["blue", (1 / yt).toFixed(1) + "x", "YT 收益杠杆（1 / YT 价格）"],
+        ["green", ((1 / pt - 1) * 100).toFixed(2) + "%", `PT 持有到期回报（年化 ${S.implied.toFixed(1)}%）`],
+        [r >= 0 ? "green" : "red", (r >= 0 ? "+" : "") + r.toFixed(1) + "%", "YT 持有到期回报"],
+        ["orange", be.toFixed(2) + "%", "YT 盈亏平衡所需实际年化收益率"],
+      ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+      const g = [0, 2, 4, 6, 8, 10, 12, 15, 20, 25, 30, 40];
+      lineChart("ch-ptyt", g.map((v) => v + "%"), [
+        { name: "YT 回报", data: g.map((v) => Math.round(ytRet(v, S) * 10) / 10), tone: "--c7" },
+        { name: "PT 回报", data: g.map(() => Math.round((1 / pt - 1) * 1000) / 10), tone: "--c3" },
+      ], { suffix: "%", height: 230, ticks: 12 });
+    }
+    upd();
+  })();
+
+  /* ---------- 估值模拟器 ---------- */
+  const TOTAL = 281.53, CIRC = 173.76;
+  const DEF = { tvl: 12.2, apy: 6.6, ytfee: 5, swap: 30, boros: 0.4, share: 80, price: 2.09, mult: 30, emit: 11 };
+  const PRESETS = [
+    ["当前（2026-10）", {}],
+    ["熊市深化：$8 亿、5%", { tvl: 8, apy: 5, boros: 0.3, price: 1.2 }],
+    ["回到 2026 年初：$30 亿、7%", { tvl: 30, apy: 7, boros: 1 }],
+    ["回到 2025 年均：$55 亿、12%", { tvl: 55, apy: 12, boros: 2 }],
+    ["超级周期：$150 亿 + Boros $2,000 万", { tvl: 150, apy: 12, boros: 20, price: 6 }],
+    ["Boros 拿下 2% 永续未平仓量", { boros: 11 }],
+  ];
+  const usd = (m) => { const s = m < 0 ? "-" : "", a = Math.abs(m); if (a < 0.005) return "$0"; return a >= 100 ? `${s}$${(a / 100).toFixed(2)} 亿` : `${s}$${Math.round(a * 100).toLocaleString("en-US")} 万`; };
+  const CTRL = [
+    ["Pendle V2"],
+    ["tvl", "TVL", 3, 200, 0.1, (v) => "$" + v.toFixed(1) + " 亿"],
+    ["apy", "底层资产平均收益率", 2, 25, 0.1, (v) => v.toFixed(1) + "%"],
+    ["ytfee", "YT 收益抽成", 1, 10, 0.5, (v) => v.toFixed(1) + "%"],
+    ["swap", "交易手续费 / YT 抽成", 0, 100, 1, (v) => v + "%"],
+    ["Boros 与分配"],
+    ["boros", "Boros 年费用（百万美元）", 0, 50, 0.1, (v) => "$" + v.toFixed(1) + "M"],
+    ["share", "回购比例", 50, 100, 1, (v) => v + "%"],
+    ["代币"],
+    ["price", "PENDLE 价格", 0.3, 15, 0.01, (v) => "$" + v.toFixed(2)],
+    ["mult", "估值倍数（完全稀释估值 / 年回购）", 10, 80, 1, (v) => v + "x"],
+    ["emit", "每周排放（千枚）", 0, 90, 1, (v) => v + "k"],
+  ];
+  let S = Object.assign({}, DEF);
+  const ctrl = document.getElementById("ctrl");
+  function buildCtrl() {
+    ctrl.innerHTML = CTRL.map((c) => c.length === 1 ? `<h4>${c[0]}</h4>` : `<div class="row"><div class="lbl"><span>${c[1]}</span><b id="v-${c[0]}"></b></div><input type="range" id="in-${c[0]}" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${S[c[0]]}"></div>`).join("");
+    CTRL.filter((c) => c.length > 1).forEach((c) => document.getElementById("in-" + c[0]).addEventListener("input", (e) => { S[c[0]] = Number(e.target.value); update(); }));
+  }
+  document.getElementById("presets").innerHTML = PRESETS.map((p, i) => `<button data-i="${i}">${p[0]}</button>`).join("");
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => { S = Object.assign({}, DEF, PRESETS[+b.dataset.i][1]); buildCtrl(); update(); }));
+
+  const v2Of = (tvl, s) => tvl * 100 * (s.apy / 100) * (s.ytfee / 100) * (1 + s.swap / 100);
+  const buyOf = (tvl, s) => (v2Of(tvl, s) + s.boros) * (s.share / 100);
+  function update() {
+    CTRL.filter((c) => c.length > 1).forEach((c) => { document.getElementById("v-" + c[0]).textContent = c[5](S[c[0]]); });
+    const v2 = v2Of(S.tvl, S), fees = v2 + S.boros, buy = buyOf(S.tvl, S);
+    const fdv = TOTAL * S.price, mcap = CIRC * S.price;
+    const bought = buy / S.price, emitY = S.emit * 52 / 1000;
+    const implied = (buy * S.mult) / TOTAL, curMult = buy > 0 ? fdv / buy : Infinity;
+    document.getElementById("simstats").innerHTML = [
+      ["blue", usd(fees), "年协议费用（V2 + Boros）"],
+      ["green", usd(buy), "年回购金额"],
+      ["", ((buy / fdv) * 100).toFixed(2) + "%", "回购 / 完全稀释估值"],
+      [implied >= S.price ? "green" : "red", "$" + implied.toFixed(2), `隐含价格（${S.mult}x）`],
+      ["", curMult === Infinity ? "∞" : curMult.toFixed(0) + "x", "当前价格对应的回购倍数"],
+      [bought > emitY ? "green" : "orange", (bought - emitY).toFixed(2) + "M", "年回购 − 年排放（百万枚）"],
+    ].map((s) => `<div class="stat ${s[0]}"><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+    document.getElementById("simtable").innerHTML = `<tr><th>衍生指标</th><th class="r">数值</th></tr>` + [
+      ["V2 费用 / Boros 费用", usd(v2) + " / " + usd(S.boros)],
+      ["每年回购 PENDLE 数量", bought.toFixed(2) + "M 枚（占总量 " + ((bought / TOTAL) * 100).toFixed(2) + "%）"],
+      ["每年排放", emitY.toFixed(2) + "M 枚（年通胀 " + ((emitY / TOTAL) * 100).toFixed(2) + "%）"],
+      ["完全稀释估值 / 流通市值", usd(fdv) + " / " + usd(mcap)],
+      ["sPENDLE 收益率（按 1 亿枚质押）", ((bought / 100) * 100).toFixed(2) + "%"],
+      ["费用 / TVL（货币化率）", ((fees / (S.tvl * 100)) * 100).toFixed(2) + "%"],
+    ].map((r) => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join("");
+    const g = [5, 10, 12.2, 20, 30, 40, 55, 75, 100, 133.9, 150, 200];
+    lineChart("ch-sim1", g.map((v) => "$" + v + "亿"), [
+      { name: "隐含价格 @20x", data: g.map((t) => Math.round((buyOf(t, S) * 20 / TOTAL) * 100) / 100), tone: "--c6" },
+      { name: "隐含价格 @30x", data: g.map((t) => Math.round((buyOf(t, S) * 30 / TOTAL) * 100) / 100), tone: "--c1" },
+      { name: "隐含价格 @50x", data: g.map((t) => Math.round((buyOf(t, S) * 50 / TOTAL) * 100) / 100), tone: "--c3" },
+      { name: "当前价格", data: g.map(() => S.price), tone: "--c7", dash: true },
+    ], { prefix: "$", height: 250, ticks: 12 });
+  }
+  buildCtrl(); update();
+})();
+</script>
+</body>
+</html>

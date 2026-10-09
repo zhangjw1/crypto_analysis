@@ -1,0 +1,41 @@
+{
+ "hype-hyperliquid": {
+  "err": "fetch failed"
+ },
+ "sky-sky": {
+  "err": "fetch failed"
+ },
+ "gmx-gmx": {
+  "err": "fetch failed"
+ },
+ "bnb-binance-coin": {
+  "err": "fetch failed"
+ },
+ "jup-jupiter": {
+  "err": "fetch failed"
+ },
+ "pendle-pendle": {
+  "err": "fetch failed"
+ },
+ "ldo-lido-dao": {
+  "err": "fetch failed"
+ },
+ "dydx-dydx": {
+  "err": "fetch failed"
+ },
+ "aster-aster": {
+  "err": "fetch failed"
+ },
+ "pump-pumpfun": {
+  "err": "fetch failed"
+ },
+ "ena-ethena": {
+  "err": "fetch failed"
+ },
+ "uni-uniswap": {
+  "err": "fetch failed"
+ },
+ "aave-new": {
+  "err": "fetch failed"
+ }
+}

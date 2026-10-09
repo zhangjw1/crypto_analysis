@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "libreoffice",
+  "source": "saved",
+  "inputPath": "Pendle_Finance_分析报告_20261009.docx",
+  "sourceSha256": "2563884d3fe343ae0f0c4d830211d5bfe3aa75657a73add3c6478d87cdaf75cf",
+  "dpi": 110,
+  "pageCount": 12,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "page-0001.png",
+      "width": 910,
+      "height": 1287,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 131057
+    },
+    {
+      "index": 2,
+      "page": 6,
+      "path": "page-0002.png",
+      "width": 910,
+      "height": 1287,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 103378
+    },
+    {
+      "index": 3,
+      "page": 12,
+      "path": "page-0003.png",
+      "width": 910,
+      "height": 1287,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 28236
+    }
+  ],
+  "missingFonts": [
+    "Courier"
+  ]
+}
