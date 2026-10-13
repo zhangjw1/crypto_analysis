@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anchor · 地址成交监控</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #14212b;
+      --ink-soft: #3a4a57;
+      --mute: #6b7c89;
+      --line: rgba(20, 33, 43, 0.12);
+      --panel: rgba(255, 252, 248, 0.72);
+      --panel-solid: #fffdf9;
+      --bg0: #e7eef2;
+      --bg1: #f4ebe3;
+      --brand: #0b3d4a;
+      --signal: #0f8a7a;
+      --signal-soft: rgba(15, 138, 122, 0.12);
+      --buy: #0f8a7a;
+      --sell: #c45c2a;
+      --warn: #b8860b;
+      --radius: 14px;
+      --shadow: 0 18px 50px rgba(20, 33, 43, 0.08);
+      --font-display: "Syne", sans-serif;
+      --font-body: "Manrope", sans-serif;
+      --font-mono: "IBM Plex Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--font-body);
+      color: var(--ink);
+      background:
+        radial-gradient(900px 480px at 12% -10%, rgba(15, 138, 122, 0.18), transparent 55%),
+        radial-gradient(700px 420px at 90% 0%, rgba(196, 92, 42, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--bg0), var(--bg1) 55%, #edf2f4);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(rgba(20, 33, 43, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 33, 43, 0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at 40% 20%, #000 20%, transparent 75%);
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* —— Header composition —— */
+    .top {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+      animation: rise 0.7s ease both;
+    }
+
+    .brand-block { min-width: 0; }
+    .brand {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(3.4rem, 8vw, 5.6rem);
+      line-height: 0.92;
+      letter-spacing: -0.04em;
+      color: var(--brand);
+      margin: 0;
+    }
+    .brand span {
+      display: block;
+      font-size: 0.28em;
+      letter-spacing: 0.28em;
+      font-weight: 700;
+      color: var(--mute);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .lede {
+      margin: 14px 0 0;
+      max-width: 34ch;
+      color: var(--ink-soft);
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: var(--ink-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 0 0 rgba(15, 138, 122, 0.55);
+      animation: pulse 2.2s ease-out infinite;
+    }
+    .chip strong {
+      font-family: var(--font-mono);
+      font-weight: 560;
+      color: var(--ink);
+      font-size: 0.82rem;
+    }
+
+    /* —— Main layout —— */
+    .board {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) 300px;
+      gap: 16px;
+      align-items: start;
+      animation: rise 0.8s ease 0.08s both;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-hd h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+    }
+    .panel-hd p {
+      margin: 0;
+      color: var(--mute);
+      font-size: 0.78rem;
+    }
+
+    /* Addresses */
+    .addr-list { padding: 8px; }
+    .addr {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      border-radius: 10px;
+      padding: 12px 12px;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .addr:hover { background: rgba(15, 138, 122, 0.08); }
+    .addr.active {
+      background: var(--signal-soft);
+      outline: 1px solid rgba(15, 138, 122, 0.28);
+    }
+    .addr .name {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 650;
+      margin-bottom: 4px;
+    }
+    .addr .tag {
+      font-size: 0.72rem;
+      color: var(--signal);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .addr .hex {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--mute);
+    }
+    .addr .meta {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 8px 12px;
+    }
+    .add-row input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 0.85rem;
+      color: var(--ink);
+    }
+    .add-row input:focus {
+      outline: 2px solid rgba(15, 138, 122, 0.35);
+      border-color: transparent;
+    }
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      background: var(--brand);
+      color: #f7fbfb;
+      transition: transform 0.15s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); background: #0e4f5f; }
+    .btn.ghost {
+      background: transparent;
+      color: var(--brand);
+      border: 1px solid var(--line);
+    }
+
+    /* Swaps */
+    .swaps { padding: 4px 0 10px; }
+    .swap {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(20, 33, 43, 0.06);
+      align-items: center;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: rowIn 0.45s ease forwards;
+    }
+    .swap:last-child { border-bottom: 0; }
+    .side {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 8px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .side.buy { color: var(--buy); background: rgba(15, 138, 122, 0.12); }
+    .side.sell { color: var(--sell); background: rgba(196, 92, 42, 0.12); }
+    .pair {
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+    .pair small {
+      display: block;
+      margin-top: 3px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--mute);
+    }
+    .amt {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .amt b { display: block; font-weight: 600; }
+    .amt span { color: var(--mute); font-size: 0.72rem; }
+
+    /* Quote + balances */
+    .stack { display: grid; gap: 16px; }
+    .balances, .quote-body { padding: 14px 18px 18px; }
+    .bal {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px dashed rgba(20, 33, 43, 0.1);
+      font-variant-numeric: tabular-nums;
+    }
+    .bal:last-child { border-bottom: 0; }
+    .bal .sym { font-weight: 650; }
+    .bal .val { font-family: var(--font-mono); font-size: 0.9rem; }
+    .bal .usd { display: block; text-align: right; color: var(--mute); font-size: 0.72rem; margin-top: 2px; }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--mute);
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 650;
+    }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font: inherit;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+    .field input:focus, .field select:focus {
+      outline: 2px solid rgba(15, 138, 122, 0.35);
+      border-color: transparent;
+    }
+    .quote-out {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(15, 138, 122, 0.12), rgba(11, 61, 74, 0.08));
+      border: 1px solid rgba(15, 138, 122, 0.2);
+    }
+    .quote-out .big {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--brand);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .quote-out .big.flash {
+      opacity: 0.35;
+      transform: translateY(4px);
+    }
+    .quote-meta {
+      margin-top: 8px;
+      display: grid;
+      gap: 4px;
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+    }
+    .quote-meta strong {
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .footnote {
+      margin-top: 22px;
+      color: var(--mute);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      max-width: 70ch;
+      animation: rise 0.8s ease 0.16s both;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(15, 138, 122, 0.45); }
+      70% { box-shadow: 0 0 0 10px rgba(15, 138, 122, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(15, 138, 122, 0); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes rowIn {
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 960px) {
+      .top { grid-template-columns: 1fr; }
+      .status-strip { justify-content: flex-start; }
+      .board { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 20px, 1180px); padding-top: 18px; }
+      .brand { font-size: 3.2rem; }
+      .swap { grid-template-columns: 64px 1fr; }
+      .amt { grid-column: 2; text-align: left; margin-top: -4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand-block">
+        <h1 class="brand"><span>On-chain desk</span>Anchor</h1>
+        <p class="lede">盯住地址上的 Swap，核对余额，并拿到一笔可读的报价。单链原型，后续再扩发现与多链。</p>
+      </div>
+      <div class="status-strip" aria-label="系统状态">
+        <div class="chip"><span class="dot" aria-hidden="true"></span>Indexer 同步中</div>
+        <div class="chip">链 <strong>Base</strong></div>
+        <div class="chip">落后 <strong id="lag">2</strong> 块</div>
+        <div class="chip">确认 <strong>12</strong></div>
+      </div>
+    </header>
+
+    <main class="board">
+      <section class="panel" aria-labelledby="addr-title">
+        <div class="panel-hd">
+          <h2 id="addr-title">地址簿</h2>
+          <p>Watchlist</p>
+        </div>
+        <div class="addr-list" id="addrList"></div>
+        <div class="add-row">
+          <input id="newAddr" placeholder="0x… 粘贴地址" spellcheck="false" />
+          <button class="btn" id="addBtn" type="button">添加</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="swap-title">
+        <div class="panel-hd">
+          <h2 id="swap-title">最近成交</h2>
+          <p id="swapSub">选中地址的 Swap 事件</p>
+        </div>
+        <div class="swaps" id="swapList"></div>
+      </section>
+
+      <div class="stack">
+        <section class="panel" aria-labelledby="bal-title">
+          <div class="panel-hd">
+            <h2 id="bal-title">余额</h2>
+            <p>Multicall</p>
+          </div>
+          <div class="balances" id="balList"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="quote-title">
+          <div class="panel-hd">
+            <h2 id="quote-title">报价</h2>
+            <p>Quoter · 缓存 8s</p>
+          </div>
+          <div class="quote-body">
+            <div class="field">
+              <label for="sellToken">卖出</label>
+              <select id="sellToken">
+                <option value="USDC">USDC</option>
+                <option value="WETH">WETH</option>
+                <option value="cbBTC">cbBTC</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="buyToken">买入</label>
+              <select id="buyToken">
+                <option value="WETH">WETH</option>
+                <option value="USDC">USDC</option>
+                <option value="cbBTC">cbBTC</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="amount">数量</label>
+              <input id="amount" value="1000" inputmode="decimal" />
+            </div>
+            <button class="btn" id="quoteBtn" type="button" style="width:100%">获取报价</button>
+            <div class="quote-out" id="quoteOut">
+              <div class="big" id="quoteBig">0.2841 WETH</div>
+              <div class="quote-meta">
+                <div>路径 <strong id="quotePath">USDC → WETH · V3 0.05%</strong></div>
+                <div>Gas 估 <strong id="quoteGas">~$0.42</strong></div>
+                <div>报价龄 <strong id="quoteAge">刚刚</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <p class="footnote">原型说明：数据为演示用 mock。完整版将接入 Base RPC、Uniswap V3 日志解析、确认高度重组处理，以及 Redis 短缓存报价。不做私钥托管与代发交易。</p>
+  </div>
+
+  <script>
+    const addresses = [
+      {
+        id: "a1",
+        name: "自营观察",
+        tag: "Watch",
+        hex: "0x71C7…9A2E",
+        full: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+        swaps: 18,
+        lag: "12 确认",
+        balances: [
+          { sym: "ETH", val: "1.842", usd: "$6,240" },
+          { sym: "USDC", val: "12,480.55", usd: "$12,481" },
+          { sym: "WETH", val: "0.610", usd: "$2,066" },
+        ],
+        rows: [
+          { side: "buy", pair: "USDC → WETH", hash: "0x9f2a…c1e4", inAmt: "1,000 USDC", outAmt: "0.2839 WETH", t: "14s" },
+          { side: "sell", pair: "WETH → USDC", hash: "0x18bb…90d2", inAmt: "0.50 WETH", outAmt: "1,762 USDC", t: "2m" },
+          { side: "buy", pair: "USDC → cbBTC", hash: "0x77de…aa01", inAmt: "2,400 USDC", outAmt: "0.0271 cbBTC", t: "11m" },
+          { side: "sell", pair: "WETH → USDC", hash: "0x4c10…ee88", inAmt: "0.22 WETH", outAmt: "774 USDC", t: "41m" },
+          { side: "buy", pair: "USDC → WETH", hash: "0xab90…4412", inAmt: "500 USDC", outAmt: "0.1418 WETH", t: "1h" },
+        ],
+      },
+      {
+        id: "a2",
+        name: "对手方 A",
+        tag: "Counter",
+        hex: "0x3B9F…771C",
+        full: "0x3B9F6654E0C2d2dC0dAf8a0b0c771C8811223344",
+        swaps: 6,
+        lag: "12 确认",
+        balances: [
+          { sym: "ETH", val: "0.220", usd: "$745" },
+          { sym: "USDC", val: "3,105.00", usd: "$3,105" },
+          { sym: "cbBTC", val: "0.041", usd: "$3,640" },
+        ],
+        rows: [
+          { side: "sell", pair: "cbBTC → USDC", hash: "0xd01c…55af", inAmt: "0.01 cbBTC", outAmt: "886 USDC", t: "3m" },
+          { side: "buy", pair: "USDC → WETH", hash: "0x6aa1…029c", inAmt: "800 USDC", outAmt: "0.2268 WETH", t: "28m" },
+          { side: "buy", pair: "USDC → cbBTC", hash: "0xef44…bb70", inAmt: "1,200 USDC", outAmt: "0.0135 cbBTC", t: "2h" },
+        ],
+      },
+      {
+        id: "a3",
+        name: "路由合约",
+        tag: "Router",
+        hex: "0x2626…6666",
+        full: "0x2626664c72E3aAE2A8aC7C5C4b8dE0C266666666",
+        swaps: 240,
+        lag: "流式",
+        balances: [
+          { sym: "WETH", val: "128.40", usd: "$434,900" },
+          { sym: "USDC", val: "890,221", usd: "$890,221" },
+        ],
+        rows: [
+          { side: "buy", pair: "USDC → WETH", hash: "0x1010…a9f3", inAmt: "25,000 USDC", outAmt: "7.102 WETH", t: "5s" },
+          { side: "sell", pair: "WETH → USDC", hash: "0x2020…b1c8", inAmt: "3.10 WETH", outAmt: "10,920 USDC", t: "19s" },
+          { side: "buy", pair: "USDC → WETH", hash: "0x3030…d442", inAmt: "8,800 USDC", outAmt: "2.498 WETH", t: "47s" },
+          { side: "sell", pair: "WETH → USDC", hash: "0x4040…ee11", inAmt: "1.05 WETH", outAmt: "3,701 USDC", t: "1m" },
+        ],
+      },
+    ];
+
+    let activeId = "a1";
+    let quoteStamp = Date.now();
+
+    const addrList = document.getElementById("addrList");
+    const swapList = document.getElementById("swapList");
+    const balList = document.getElementById("balList");
+    const swapSub = document.getElementById("swapSub");
+    const lagEl = document.getElementById("lag");
+
+    function active() {
+      return addresses.find((a) => a.id === activeId) || addresses[0];
+    }
+
+    function renderAddresses() {
+      addrList.innerHTML = addresses.map((a) => `
+        <button class="addr ${a.id === activeId ? "active" : ""}" data-id="${a.id}" type="button">
+          <div class="name"><span>${a.name}</span><span class="tag">${a.tag}</span></div>
+          <div class="hex">${a.hex}</div>
+          <div class="meta"><span>${a.swaps} swaps</span><span>${a.lag}</span></div>
+        </button>
+      `).join("");
+      addrList.querySelectorAll(".addr").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeId = btn.dataset.id;
+          render();
+        });
+      });
+    }
+
+    function renderSwaps() {
+      const a = active();
+      swapSub.textContent = a.hex + " · Base";
+      swapList.innerHTML = a.rows.map((r, i) => `
+        <article class="swap" style="animation-delay:${i * 0.05}s">
+          <div class="side ${r.side}">${r.side}</div>
+          <div class="pair">${r.pair}<small>${r.hash} · ${r.t}</small></div>
+          <div class="amt"><b>${r.outAmt}</b><span>in ${r.inAmt}</span></div>
+        </article>
+      `).join("");
+    }
+
+    function renderBalances() {
+      const a = active();
+      balList.innerHTML = a.balances.map((b) => `
+        <div class="bal">
+          <span class="sym">${b.sym}</span>
+          <div>
+            <span class="val">${b.val}</span>
+            <span class="usd">${b.usd}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function render() {
+      renderAddresses();
+      renderSwaps();
+      renderBalances();
+    }
+
+    document.getElementById("addBtn").addEventListener("click", () => {
+      const input = document.getElementById("newAddr");
+      const v = input.value.trim();
+      if (!v) return;
+      const short = v.length > 10 ? `${v.slice(0, 4)}…${v.slice(-4)}` : v;
+      const id = "a" + Date.now();
+      addresses.unshift({
+        id,
+        name: "新建地址",
+        tag: "New",
+        hex: short,
+        full: v,
+        swaps: 0,
+        lag: "待回填",
+        balances: [{ sym: "ETH", val: "—", usd: "待同步" }],
+        rows: [],
+      });
+      activeId = id;
+      input.value = "";
+      render();
+    });
+
+    const rates = {
+      "USDC>WETH": 0.0002841,
+      "WETH>USDC": 3518,
+      "USDC>cbBTC": 0.00001128,
+      "cbBTC>USDC": 88620,
+      "WETH>cbBTC": 0.0397,
+      "cbBTC>WETH": 25.2,
+    };
+
+    function runQuote() {
+      const sell = document.getElementById("sellToken").value;
+      const buy = document.getElementById("buyToken").value;
+      const amount = Number(document.getElementById("amount").value) || 0;
+      const big = document.getElementById("quoteBig");
+      if (sell === buy) {
+        big.textContent = "选择不同代币";
+        return;
+      }
+      const key = sell + ">" + buy;
+      const rate = rates[key] || 1;
+      const out = amount * rate;
+      const formatted = out >= 100 ? out.toLocaleString("en-US", { maximumFractionDigits: 2 })
+        : out.toLocaleString("en-US", { maximumFractionDigits: 4 });
+      big.classList.add("flash");
+      setTimeout(() => {
+        big.textContent = formatted + " " + buy;
+        big.classList.remove("flash");
+        document.getElementById("quotePath").textContent = sell + " → " + buy + " · V3 0.05%";
+        document.getElementById("quoteGas").textContent = "~$" + (0.28 + Math.random() * 0.3).toFixed(2);
+        quoteStamp = Date.now();
+        document.getElementById("quoteAge").textContent = "刚刚";
+      }, 180);
+    }
+
+    document.getElementById("quoteBtn").addEventListener("click", runQuote);
+
+    setInterval(() => {
+      const sec = Math.floor((Date.now() - quoteStamp) / 1000);
+      document.getElementById("quoteAge").textContent = sec < 2 ? "刚刚" : sec + "s 前";
+      lagEl.textContent = String(1 + Math.floor(Math.random() * 3));
+    }, 2000);
+
+    // Simulate a live swap arriving on the first address
+    setInterval(() => {
+      if (activeId !== "a1") return;
+      const a = addresses[0];
+      const sample = {
+        side: Math.random() > 0.5 ? "buy" : "sell",
+        pair: Math.random() > 0.5 ? "USDC → WETH" : "WETH → USDC",
+        hash: "0x" + Math.random().toString(16).slice(2, 6) + "…" + Math.random().toString(16).slice(2, 6),
+        inAmt: Math.random() > 0.5 ? "250 USDC" : "0.12 WETH",
+        outAmt: Math.random() > 0.5 ? "0.0710 WETH" : "422 USDC",
+        t: "刚刚",
+      };
+      a.rows.unshift(sample);
+      a.rows = a.rows.slice(0, 6);
+      a.swaps += 1;
+      render();
+    }, 9000);
+
+    render();
+  </script>
+</body>
+</html>
